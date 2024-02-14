@@ -1,7 +1,7 @@
 ---
-title: "Ch 2 Hugo Content Structure"
+title: "Ch 2 Kubernetes Overview"
 chapter: false
-menuTitle: "Ch 2: Hugo Content"
+menuTitle: "Ch 2: Kubernetes Overview"
 weight: 20
 ---
 
