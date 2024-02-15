@@ -24,6 +24,7 @@ sudo apt-get update -y
 sudo apt-get install socat conntrack -y
 sudo apt-get install jq -y
 sudo apt-get install apt-transport-https ca-certificates -y
+sudo apt-get install hey -y
 ```
 ## Step 1: Setting Kernel Parameters for k8s
 * install dep module for cri-o runtime
@@ -184,6 +185,7 @@ echo $IPADDR $NODENAME  | sudo tee -a  /etc/hosts
 ```
 Initializing the Kubernetes Cluster
 ```
+sudo kubeadm reset -f 
 sudo kubeadm init --cri-socket=unix:///var/run/crio/crio.sock --apiserver-advertise-address=$IPADDR  --apiserver-cert-extra-sans=$IPADDR,k8strainingmaster001.westus.cloudapp.azure.com  --service-cidr=$SERVICE_CIDR --pod-network-cidr=$POD_CIDR --node-name $NODENAME  --token-ttl=0 -v=5
 ```
 
@@ -191,10 +193,10 @@ Configuring kubectl for the Current User and Root
 
 ```
 mkdir -p /home/ubuntu/.kube
-sudo cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+sudo cp -f /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
 sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config
 sudo mkdir -p /root/.kube
-sudo cp /home/ubuntu/.kube/config /root/.kube/config
+sudo cp -f /home/ubuntu/.kube/config /root/.kube/config
 kubectl --kubeconfig /home/ubuntu/.kube/config config set-cluster kubernetes --server "https://$local_ip:6443"
 
 ```
@@ -383,6 +385,7 @@ EOF
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
 ```
+use `kubectl rollout status deployment controller -n metallb-system` to check status` 
 forice metallb controller pod to run on master node
 
 ```
@@ -425,7 +428,6 @@ metadata:
   annotations:
     metallb.universe.tf/loadBalancerIPs: 10.0.0.4
 spec:
-  sessionAffinity: ClientIP
   ports:
   - port: 8000
     targetPort: 80
@@ -457,4 +459,239 @@ ubuntu@ubuntu22:~$ kubectl exec -it po/multitool01-deployment-5c8996747c-9txnw -
 PING 10.244.158.1 (10.244.158.1) 56(84) bytes of data.
 64 bytes from 10.244.158.1: icmp_seq=1 ttl=63 time=0.104 ms
 ```
+## Step 15 Create host-local storage class
+```
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
+
+kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+verify
+```
+kubectl create -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/examples/pvc/pvc.yaml
+kubectl create -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/examples/pod/pod.yaml
+```
+## Step 16 Enable resource-API 
+```
+curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml" -o components.yaml
+sed -i '/- --metric-resolution/a \ \ \ \ \ \ \ \ - --kubelet-insecure-tls' components.yaml
+
+kubectl apply -f components.yaml
+```
+use `kubectl rollout status deployment metrics-server -n kube-system` to check the deployment
+use `kubectl top node` and `kubectl top pod` to check the pod and node resource usage
+
+## Step 17 HPA
+create nginx deployment with replicas set to 1.
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"  # Minimum memory requested to start the container
+            cpu: "10m"     # 100 millicpu (0.1 CPU) requested to start the container
+          limits:
+            memory: "128Mi" # Maximum memory limit for the container
+            cpu: "40m"     # 200 millicpu (0.2 CPU) maximum limit for the container
+EOF
+
+```
+create HPA for nginx deployment, allow increase replicas upon container CPU utlization over the threshold
+```
+cat << EOF | kubectl apply -f -
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+EOF
+```
+after that. use `kubectl get hpa` and `kubectl describe hpa` to check the status 
+
+use *hey* to stress the nginx webserver , then monitor the pod creation
+```bash
+hey -n 10000 -c 100 http://10.0.0.4:8000
+```
+
+use `kubectl get deployment nginx-deployment` to check the change of deployment. 
+use `kubectl get hpa` and `kubectl describe hpa` to check the new size of replicas.
+
+after a while, when the traffic to nginx pod decreased, check hpa and deployment again for the size of replicas.
+use `kubectl top pod` and `kubectl top node` to check the resource usage status
+
+
+## Step 15 create ingress rule
+install ingress controller, kong is a popular ingress controller. let's install kong ingress controller. 
+
+```bash
+kubectl apply -f  https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.10.0/deploy/single/all-in-one-dbless.yaml
+```
+use `kubectl rollout status deployment proxy-kong -n kong` and `kubectl rollout status deployment ingress-kong -n kong` to check deployment status 
+
+use `kubectl get svc kong-proxy -n kong` to check now the load balancer is kong-proxy
+use `kubectl get ingress-class` to check kong become the ingress controller. 
+create nginx clusterIP svc for ingress rule to use as backend.
+
+```bash
+cat << EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx-deployment
+  namespace: default
+spec:
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  sessionAffinity: None
+  type: ClusterIP
+EOF
+```
+
+
+create ingress rule 
+```bash
+cat << EOF | kubectl apply -f - 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    konghq.com/strip-path: 'true'
+spec:
+  ingressClassName: kong
+  rules:
+  - host: ubuntu22
+    http:
+      paths:
+      - path: /default
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nginx-deployment
+            port:
+              number: 80
+EOF 
+```
+after deploy ingress rule. now you shall able to access nginx via `curl http://ubuntu22/default`, while use `curl http://ubuntu22/` will got error message  
+
+use `kubectl get ingress nginx` and `kubectl describe ingress nginx` to check the ingress rule
+
+## Step 16 create https ingress rule
+
+deploy cert-manager which is used to issue certificate needed for service
+```bash
+kubectl get namespace cert-manager || kubectl create namespace cert-manager 
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+```
+use `k rollout status deployment cert-manager -n cert-manager` to check the deployment status
+
+once deployed. we need to create a certificate for service. 
+```bash
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer-test
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-tls-test
+spec:
+  secretName: test-tls-test
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  issuerRef:
+    name: selfsigned-issuer-test
+    kind: ClusterIssuer
+  commonName: kong.example
+  dnsNames:
+  - ubuntu22
+```
+use `k get secret  test-tls-test` and `k get cert test-tls-test` to check deployment
+
+then use `k delete ingress nginx` to delete previous http ingress rule, then use below to create new one 
+```
+cat EOF >> | kubectl apply -f - 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    konghq.com/strip-path: 'true'
+    cert-manager.io/cluster-issuer: selfsigned-issuer-test
+spec:
+  tls:
+  - hosts:
+    - ubuntu22 
+  ingressClassName: kong
+  rules:
+  - host: ubuntu22
+    http:
+      paths:
+      - path: /default
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nginx-deployment
+            port:
+              number: 80
+EOF
+```
+use `k get ingress nginx` and `k describe ingress nginx` to check status
+
+use `curl -k  https://ubuntu22/default` and `curl http://ubuntu22/default` to verify 
+
+## Step 18 rollupdate deployment
+
+The default update strategy for Kubernetes Deployments, specifically the RollingUpdate strategy, is designed to update pods in a deployment with zero downtime by gradually replacing old pods with new ones. This strategy ensures that your application remains available during the update process. The rollingUpdate field specifies how the rolling update will proceed.
+```bash
+kubectl set image deployment/nginx-deployment nginx=nginx:stable
+kubectl rollout status deployment/nginx-deployment
+```
+
+
 
