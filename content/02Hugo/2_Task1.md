@@ -1,5 +1,5 @@
 ---
-title: "Task 1 - use Kubeadm to install kubernetes"
+title: "Task 1 - Install kubernetes"
 menuTitle: "Installation"
 weight: 1
 ---
