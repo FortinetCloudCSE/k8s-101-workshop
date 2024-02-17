@@ -69,6 +69,8 @@ the **POD** is the group of your containers which share common storage and netwo
 We have just used deployment to deploy the application , so what is Deployment ?
 A Deployment in Kubernetes is like a manager for your apps running in containers, a Deployment in Kubernetes manages a set of replicas of your application, ensuring they are running and updating them in a controlled way. It makes managing and scaling your applications easier, handling the details of how many instances should run and how updates to those instances are rolled out.  for example, we can use Deployment to scale your POD from 1 to 10 to server more users.
 
+### Scale the deployment 
+
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
 kubectl rollout status deployment kubernetes-bootcamp
@@ -101,6 +103,47 @@ kubernetes-bootcamp-bcbb7fc75-nh9sn   1/1     Running   0          44s
 kubernetes-bootcamp-bcbb7fc75-q7sqc   1/1     Running   0          44s
 kubernetes-bootcamp-bcbb7fc75-t4tkm   1/1     Running   0          44s
 ```
+
+### Upgrade the deployment
+
+Upgrading a deployment in Kubernetes, particularly changing the version of the application your pods are running, can be smoothly managed using Kubernetes' built-in strategies to ensure minimal downtime and maintain stability. The most popular strategies for upgrading a deployment are:
+
+1. Rolling Update (Default Strategy)
+
+How It Works: This strategy updates the pods in a rolling fashion, gradually replacing old pods with new ones. Kubernetes automatically manages this process, ensuring that a specified number of pods are running at all times during the update.
+Advantages: Zero downtime, as the service remains available during the update. It allows for easy rollback in case the new version is faulty.
+How to Perform:
+```bash
+
+kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
+kubectl rollout status deployment/kubernetes-bootcamp
+```
+you will see
+
+```bash
+ubuntu@ubuntu22:~$ kubectl rollout status deployment/kubernetes-bootcamp
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 5 out of 10 new replicas have been updated...
+deployment "kubernetes-bootcamp" successfully rolled out
+
+```
+to rollback to old version just 
+```bash
+kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v1 
+kubectl rollout status deployment/kubernetes-bootcamp
+```
+
+2. Blue/Green Deployment 
+This strategy involves running two versions of the application simultaneously - the current (blue) and the new (green) versions. Once the new version is ready and tested, traffic is switched from the old version to the new version, either gradually or all at once.
+
+3. Canary Deployment
+A small portion of the traffic is gradually shifted to the new version of the application. Based on feedback and metrics, the traffic is slowly increased to the new version until it handles all the traffic.
+
+4. ReCreate Strategy
+The "Recreate" strategy is a deployment strategy in Kubernetes that is particularly useful for managing stateful applications during updates. Unlike the default "RollingUpdate" strategy, which updates pods in a rolling fashion to ensure no downtime, the "Recreate" strategy works by terminating all the existing pods before creating new ones with the updated configuration or image. 
+
+the use case for Recreate Strategy is for stateful application  where it's critical to avoid running multiple versions of the application simultaneously.
+
+
 ### What is POD
 
 A Pod models an application-specific "logical host" and can contain different application containers which are relatively tightly coupled. The containers in a Pod share an IP Address and port space, are always co-located and co-scheduled, and run in a shared context on the same Node. POD is the smallest unit in Kubernetes, not the container. 
@@ -300,6 +343,38 @@ Using NodePort services in Kubernetes, while useful for certain scenarios, comes
 
 ### LoadBalancer Service
 
+A LoadBalancer service in Kubernetes is a way to expose an application running on a set of Pods to the external internet in a more accessible manner than NodePort.  
+
+we can use the kubectl expose command as follow to create a loadbalancer service for deployment kubernetes-bootcamp.
+
+```bash
+kubectl expose deployment kubernetes-bootcamp --port=80 --type=LoadBalancer --target-port=8080 --name=kubernetes-bootcamp-lb-svc 
+```
+then check the svc, the External-IP  
+```bash
+ubuntu@ubuntu22:~$ kubectl get svc kubernetes-bootcamp-lb-svc
+NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+kubernetes-bootcamp-lb-svc   LoadBalancer   10.106.121.27   10.0.0.4      80:32537/TCP   26s
+```
+and verify with `curl http://10.0.0.4`
+```bash
+curl http://10.0.0.4
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-bcbb7fc75-nh9sn | v=1
+```
+
+When we use the `kubectl expose` command to create a LoadBalancer service in a Kubernetes cluster with MetalLB installed in Layer 2 (L2) advertisement mode, the process simplifies to these key points:
+
+Creating the Service: The command creates a LoadBalancer type service named kubernetes-bootcamp-lb-svc, which targets the kubernetes-bootcamp deployment.
+
+Assigning an External IP: MetalLB automatically assigns an external IP address from its configured IP pool to the service, making it accessible outside the Kubernetes cluster.
+
+L2 Advertisement: MetalLB advertises the assigned IP address across the local network using ARP, directing traffic to the Kubernetes node responsible for the service.
+
+Traffic Routing: Incoming traffic to the external IP is routed to the targeted pods within the cluster, enabling external access to the application.
+
+This streamlined process allows MetalLB to provide external IPs for services, enabling external access in environments without native cloud provider LoadBalancer support.
+
+If you use cloud managed kubernetes like EKS, GKE, AKE, then cloud provider will responsible for create loadbalancer instance and assign ip address , then Metallb is not reqiured in that case. 
 
 ### What is ingress and ingress controller
 Ingress is not classified as a type of Kubernetes Service because it operates at a higher layer in the network stack and serves a different purpose. 
@@ -312,6 +387,65 @@ An Ingress typically routes traffic to one or more Kubernetes Services. It acts 
 
 Ingress requires an Ingress controller to be running in the cluster, which is a separate component that watches the Ingress resources and processes the rules they define. While Kubernetes supports Ingress resources natively, the actual routing logic is handled by this external component. There are many Ingress controller you can use for example, nginx based ingress controller, kong ingress controller, also some vendor like fortinet offer fortiweb as ingress controller.
 
+We will cover more about ingress and ingress controller in <placehold>
+
+### What is namespace
+
+A namespace in Kubernetes is like a folder that helps you organize and separate your cluster's resources (like applications, services, and pods) into distinct groups. It's useful for managing different projects, environments (such as development, staging, and production), or teams within the same Kubernetes cluster. Namespaces help avoid conflicts between names and make it easier to apply policies, limits, and permissions on a per-group basis
+
+Kubernetes come with a namespace with name "default", anything created without specify the namespace is place in namespace "default".
+`kubectl get deployment kubernetes-bootcamp -n default` is same as `k get deployment kubernetes-bootcamp`.
+
+we can use `kubectl create namespace` to create different namespace name. below we create two new deployment in two different namespace. 
+
+```bash
+# Create namespaces
+kubectl create namespace namespace-a
+kubectl create namespace namespace-b
+
+# Create the kubernetes-bootcamp deployment in namespace-a
+kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --namespace=namespace-a
+
+# Create the kubernetes-bootcamp deployment in namespace-b
+kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --namespace=namespace-b
+
+kubectl get pod --namespace=namespace-a 
+kubectl get pod -n=namespace-b
+```
+use `kubectl delete namespace namespace-a` and `kubectl delete namespace namespace-b` will delete both namespace and everything in that namespace.
+
+### POD life-cycle 
+
+The life cycle of a Kubernetes Pod involves several key stages from creation to termination. Here's a brief overview of these stages, illustrated with commands related to deploying a Pod using the `gcr.io/google-samples/kubernetes-bootcamp:v1` image:
+
+1 **Pod Creation**
+
+A Pod is created when you deploy it using a YAML file or directly via the kubectl command.
+
+2 **Pending**
+The Pod enters the Pending state as Kubernetes schedules the Pod on a node and the container image is being pulled from the registry.
+
+3 **Running**
+Once the image is pulled and the Pod is scheduled, it moves to the Running state. The Pod remains in this state until it is terminated or stopped for some reason.
+
+4 **Succeeded/Failed**
+
+A Pod reaches Succeeded if all of its containers exit without error and do not restart.
+A Pod is marked as Failed if any of its containers exit with an error.
+
+5 **CrashLoopBackOff**
+
+This status indicates that a container in the Pod is failing to start properly and Kubernetes is repeatedly trying to restart it.
+
+6 **Termination** 
+Pods can be terminated gracefully by deleting them. Kubernetes first sends a SIGTERM signal to allow containers to shut down gracefully.
+
+7 **Deletion**
+The Pod's entry remains in the system for a period after termination, allowing you to inspect its status posthumously. Eventually, Kubernetes cleans it up automatically.
+
+Through these stages, Kubernetes manages the application's lifecycle, ensuring that the desired state specified by the deployment configurations is maintained. Monitoring the Pod's lifecycle helps in managing and troubleshooting applications running on Kubernetes.
+
+we can use `kubectl get pod` and `kbuectl describe pod` to check the detail state for a POD.
 
 
 
@@ -322,80 +456,3 @@ Ingress requires an Ingress controller to be running in the cluster, which is a 
 
 
 
-
-
-
-1. Each Chapter can have 1 or more tasks which should be completed by the participants 
-2. Naming of the task Markdown pages doesn't matter, and is only used to aid the content author in organizing the content.
-    {{% notice info %}} Note that the filename doesn't matter other than to help organize content.  The Title and Weight dictate the leftnav visual and ordering of the pages.  Lower weight pages are displayed first{{% /notice %}}
-    ![taskPage](taskPage.png)
-
-
-{{% notice warning %}} Because the file and folder names are very similar in our example repo, it can become confusing to know where to make edits.  Make sure you're editing the correct file in your IDE/editor {{% /notice%}}
-
-3. This page contains several useful markdown shortcodes you can use for visual pop-outs on the the site
-
-###  [Lots of shortcodes & Features available here](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/index.html)
-
-- [Badges](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/badge/index.html): 
-
-    {{% badge %}}Important{{% /badge %}}
-    {{% badge style="primary" title="Version" %}}6.6.6{{% /badge %}}
-    {{% badge style="red" icon="angle-double-up" %}}Captain{{% /badge %}}
-    {{% badge style="info" %}}New{{% /badge %}}
-    {{% badge color="fuchsia" icon="fab fa-hackerrank" %}}Awesome{{% /badge %}}
-
-- [Icons](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/icon/index.html):
-
-    :star: Tips this is a star
-    :bulb: this is a lightbulb
-    {{% icon icon="exclamation-triangle" %}}
-    {{% icon icon="angle-double-up" %}}
-    {{% icon icon="skull-crossbones" %}}
-
-- [Notices](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/notice/index.html)
-
-    {{% notice note %}} this is a note box {{% /notice %}}
-    {{% notice tip %}} this is a tip box {{% /notice %}}
-    {{% notice info %}} this is a tip box {{% /notice %}}
-    {{%notice warning %}} The examples and sample code provided in this workshop are intended to be consumed as instructional content. These will help you understand how various Fortinet and Azure services can be architected to build a solution while demonstrating best practices along the way. These examples are not intended for use in production environments without full understanding of how they operate. {{% /notice %}}
-
-- [Expandable sections](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/expand/index.html)":
-
-    {{% expand title="Expand me..." %}}Thank you!{{% /expand %}}
-
-- [Buttons](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/button/index.html):
-
-    {{% button href="https://gohugo.io/" %}}Get Hugo{{% /button %}}
-    {{% button href="https://gohugo.io/" style="warning" icon="dragon" %}}Get Hugo{{% /button %}}
-
-- [Mermaid (diagrams & charts)](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/mermaid/index.html):
-
-    ```mermaid { align="center" zoom="true" }
-        graph LR;
-            If --> Then
-            Then --> Else
-    ```
-
-    {{< mermaid >}}
-%%{init:{"theme":"forest"}}%%
-graph LR;
-    A[Hard edge] -->|Link text| B(Round edge)
-    B --> C{<strong>Decision</strong>}
-    C -->|One| D[Result one]
-    C -->|Two| E[Result two]
-{{< /mermaid >}}
-
-
-{{< mermaid >}}
-%%{init:{"fontFamily":"monospace", "sequence":{"showSequenceNumbers":true}}}%%
-sequenceDiagram
-    Alice->>John: Hello John, how are you?
-    loop Healthcheck
-        John->>John: Fight against hypochondria
-    end
-    Note right of John: Rational thoughts!
-    John-->>Alice: Great!
-    John->>Bob: How about you?
-    Bob-->>John: Jolly good!
-{{< /mermaid >}}
