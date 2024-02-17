@@ -112,25 +112,7 @@ Upgrading a deployment in Kubernetes, particularly changing the version of the a
 
 How It Works: This strategy updates the pods in a rolling fashion, gradually replacing old pods with new ones. Kubernetes automatically manages this process, ensuring that a specified number of pods are running at all times during the update.
 Advantages: Zero downtime, as the service remains available during the update. It allows for easy rollback in case the new version is faulty.
-How to Perform:
-```bash
 
-kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
-kubectl rollout status deployment/kubernetes-bootcamp
-```
-you will see
-
-```bash
-ubuntu@ubuntu22:~$ kubectl rollout status deployment/kubernetes-bootcamp
-Waiting for deployment "kubernetes-bootcamp" rollout to finish: 5 out of 10 new replicas have been updated...
-deployment "kubernetes-bootcamp" successfully rolled out
-
-```
-to rollback to old version just 
-```bash
-kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v1 
-kubectl rollout status deployment/kubernetes-bootcamp
-```
 
 2. Blue/Green Deployment 
 This strategy involves running two versions of the application simultaneously - the current (blue) and the new (green) versions. Once the new version is ready and tested, traffic is switched from the old version to the new version, either gradually or all at once.
