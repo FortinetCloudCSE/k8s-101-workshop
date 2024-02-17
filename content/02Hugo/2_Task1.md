@@ -108,8 +108,17 @@ echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg]
 
 
 mkdir -p /usr/share/keyrings
-sudo curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
-sudo curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp
+sudo mv -f /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-archive-keyring.gpg
+
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp
+sudo mv -f /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+
+
+
+
+
+
 
 sudo apt-get update
 sudo apt-get install cri-o cri-o-runc -y
@@ -241,8 +250,10 @@ echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] http
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
 
 mkdir -p /usr/share/keyrings
-sudo curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
-sudo curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp
+sudo mv -f /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-archive-keyring.gpg
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp
+sudo mv -f /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
 
 sudo apt-get update
 sudo apt-get install cri-o cri-o-runc -y
@@ -292,9 +303,15 @@ cd $HOME
 after done the installation for master node and all worker node. 
 `ssh ubuntu@k8strainingmaster001.westus.cloudapp.azure.com` then type 
 `cat /home/ubuntu/workloadtojoin.sh` copy the output from this cat command. this is what you will need to paste on each worker node. 
-then `ssh ubuntu@k8strainingworker001.westus.cloudapp.azure.com` to paste previously copied text to join workder node to kubernetes cluster.  after a while. use `kubectl get node` on **master** node will see all nodes in **ready** status. which means you have installed a full functional multiple nodes cluster.
+then `ssh ubuntu@k8strainingworker001.westus.cloudapp.azure.com` to paste previously copied text to join workder node to kubernetes cluster. use sudo to execute the command, for example 
 
-after sucessfully join worker node to cluster. paste below cli command to continue
+```bash 
+sudo kubadm reset -f 
+sudo kubeadm join 10.0.0.4:6443 --token <paste your token here> --discovery-token-ca-cert-hash <paste your hash here>
+``` 
+after a while. use `kubectl get node` on **master** node will see all nodes in **ready** status. which means you have installed a full functional multiple nodes cluster.
+
+after sucessfully join worker node to cluster. paste below cli command to continue on **master** node
 ```bash
 kubectl get node | grep worker | grep Ready && echo "Worker node exists"
 kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
@@ -541,8 +558,8 @@ echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg]
 
 ```
 mkdir -p /usr/share/keyrings
-sudo curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
-sudo curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
 
 ```
 3. **Install CRI-O**
