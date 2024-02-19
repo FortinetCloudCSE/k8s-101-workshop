@@ -1,9 +1,14 @@
 ---
 title: "Task 3 - Deployments, Scaling , Upgrade Applications"
-menuTitle: "Deployments, Scaling, UpGrade Applications"
+menuTitle: "Deployments, Scaling, Upgrade Applications"
 chapter: false
 weight: 3
 ---
+
+Objective: Understand how to create and manage Deployments.
+Description: Focus on Deployments as a method for deploying applications. Learn about creating Deployments, scaling them, and updating applications with zero downtime. Lab exercises include deploying a multi-replica application and performing rolling updates.
+
+
 ### Deploy a application with deployment 
 Let's use yaml  version for `kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1`. kubernets support use yaml or json to do the deployment, which give more flexiblity than use `kubectl` cli. and also for version control.
 
@@ -101,7 +106,8 @@ Command:
 kubectl autoscale deployment kubernetes-bootcamp --min=1 --max=10 --cpu-percent=80
 ```
 
-Use autoscale will require cluster to enable resource-API, if have not enabled. we need to enable it by following below description.
+using the kubectl autoscale command to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
+
 
 #### Enable resource-API 
 

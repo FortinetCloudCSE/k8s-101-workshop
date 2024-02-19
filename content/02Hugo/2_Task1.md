@@ -4,9 +4,14 @@ menuTitle: "Installation"
 weight: 1
 ---
 
-Although Cloud-Managed Kubernetes becoming the popular choice for enteprise to use in production network, But Self Managed Kubernetes  give users full control over their Kubernetes environments. Choosing the right method to install Self Managed Kubernetes can vary significantly based on the intended use case, from development and testing environments to production deployments. Here's a short description of different ways to install Kubernetes, tailored to specific needs:
+Objective: Pick a right kubernetes to install also show you how easy to use kubernetes to scale your application.
+
+
 
 ## Choose your kubernetes 
+
+Although Cloud-Managed Kubernetes becoming the popular choice for enteprise to use in production network, But Self Managed Kubernetes  give users full control over their Kubernetes environments. Choosing the right method to install Self Managed Kubernetes can vary significantly based on the intended use case, from development and testing environments to production deployments. Here's a short description of different ways to install Kubernetes, tailored to specific needs:
+
 ### For Development and Testing
 - Minikube:
 
@@ -293,10 +298,13 @@ echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg]
 
 ```
 mkdir -p /usr/share/keyrings
-sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
-sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp
+sudo mv -f /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-archive-keyring.gpg
 
+sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp
+sudo mv -f /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
 ```
+
 3. **Install CRI-O**
 
 CRI-O is an open-source container runtime specifically designed for Kubernetes. It implements the Kubernetes Container Runtime Interface (CRI), allowing Kubernetes to use any OCI (Open Container Initiative)-compliant runtime as the container runtime for running pods. all Docker image are OCI-compliant. 
@@ -466,6 +474,8 @@ sed -i -e "s?192.168.0.0/16?10.244.0.0/16?g" custom-resources.yaml
 sed -i '/calicoNetwork:/a\    containerIPForwarding: Enabled ' custom-resources.yaml
 sed -i '/calicoNetwork:/a\    bgp: Disabled ' custom-resources.yaml
 kubectl --kubeconfig /home/ubuntu/.kube/config create namespace calico-system
+sleep 1
+kubectl  get namespace calico-system
 kubectl --kubeconfig /home/ubuntu/.kube/config apply  -f custom-resources.yaml
 kubectl rollout status deployment calico-kube-controllers -n calico-system
 kubectl rollout status ds calico-node -n calico-system
