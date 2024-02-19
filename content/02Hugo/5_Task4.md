@@ -5,22 +5,11 @@ chapter: false
 weight: 4
 ---
 
-### Externalizing config using MicroProfile, ConfigMaps and Secrets
+### Configuring Applications with ConfigMaps and Secrets
 
 Creating Kubernetes ConfigMaps & Secrets
 
 
-- Option 1: use externally fully qualified absolutely path (this can be a pain)
-- Option 2: if you have a directory with all your images.... 
-  - put it in "/content/images"
-  - MD usage(from a chapter page in "content/chapter01") 
-    ```
-        ![Magic](../images/magic.gif)
-    ```
-- Option 3:  I find it easier to organize images with the pages they go with (this is how the template repo is setup
-  - put images in the chapter directory
-    - e.g. images in "/content/chapter1/"
-      - MD Usage:
-        ```
-            ![Magic](magic.gif)
-        ```
+Chapter 5: Configuring Applications with ConfigMaps and the Downward API - Srija
+Objective: Master injecting configuration into Pods.
+Description: Learn to externalize application configuration using ConfigMaps and the Downward API. Understand how to pass environment variables, configure application settings, and expose Pod and container metadata to applications. Labs include creating ConfigMaps and using the Downward API to expose Pod information.

@@ -67,64 +67,15 @@ the **POD** is the group of your containers which share common storage and netwo
 ### What is Deployment
 
 We have just used deployment to deploy the application , so what is Deployment ?
-A Deployment in Kubernetes is like a manager for your apps running in containers, a Deployment in Kubernetes manages a set of replicas of your application, ensuring they are running and updating them in a controlled way. It makes managing and scaling your applications easier, handling the details of how many instances should run and how updates to those instances are rolled out.  for example, we can use Deployment to scale your POD from 1 to 10 to server more users.
-
-### Scale the deployment 
-
+A Deployment in Kubernetes is like a manager for your apps running in containers, a Deployment in Kubernetes manages a set of replicas of your application, ensuring they are running and updating them in a controlled way. It makes managing and scaling your applications easier, handling the details of how many instances should run and how updates to those instances are rolled out.  for example, we can use kubectl to scale your POD from 1 to 10 to server more users.
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
-kubectl rollout status deployment kubernetes-bootcamp
-kubectl get deployment kubernetes-bootcamp
-kubectl get pod -l app=kubernetes-bootcamp
 ```
-we shall see 10 POD will be created to meet the requirment from Deployment.
+use `kubectl get pod` to check the pod now become 10.
 
 ```bash
-ubuntu@ubuntu22:~$ kubectl get deployment
-NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
-kubernetes-bootcamp   1/1     1            1           63m
-ubuntu@ubuntu22:~$ kubectl scale deployment kubernetes-bootcamp --replicas=10
-deployment.apps/kubernetes-bootcamp scaled
-ubuntu@ubuntu22:~$ kubectl rollout status deployment kubernetes-bootcamp
-deployment "kubernetes-bootcamp" successfully rolled out
-ubuntu@ubuntu22:~$ kubectl get deployment kubernetes-bootcamp
-NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
-kubernetes-bootcamp   10/10   10           10          64m
-ubuntu@ubuntu22:~$ kubectl get pod -l app=kubernetes-bootcamp
-NAME                                  READY   STATUS    RESTARTS   AGE
-kubernetes-bootcamp-bcbb7fc75-5fjhc   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-5kjd7   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-5r649   1/1     Running   0          30m
-kubernetes-bootcamp-bcbb7fc75-bmzbv   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-fn29h   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-fp2d9   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-jfdvf   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-nh9sn   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-q7sqc   1/1     Running   0          44s
-kubernetes-bootcamp-bcbb7fc75-t4tkm   1/1     Running   0          44s
+kubectl get pod
 ```
-
-### Upgrade the deployment
-
-Upgrading a deployment in Kubernetes, particularly changing the version of the application your pods are running, can be smoothly managed using Kubernetes' built-in strategies to ensure minimal downtime and maintain stability. The most popular strategies for upgrading a deployment are:
-
-1. Rolling Update (Default Strategy)
-
-How It Works: This strategy updates the pods in a rolling fashion, gradually replacing old pods with new ones. Kubernetes automatically manages this process, ensuring that a specified number of pods are running at all times during the update.
-Advantages: Zero downtime, as the service remains available during the update. It allows for easy rollback in case the new version is faulty.
-
-
-2. Blue/Green Deployment 
-This strategy involves running two versions of the application simultaneously - the current (blue) and the new (green) versions. Once the new version is ready and tested, traffic is switched from the old version to the new version, either gradually or all at once.
-
-3. Canary Deployment
-A small portion of the traffic is gradually shifted to the new version of the application. Based on feedback and metrics, the traffic is slowly increased to the new version until it handles all the traffic.
-
-4. ReCreate Strategy
-The "Recreate" strategy is a deployment strategy in Kubernetes that is particularly useful for managing stateful applications during updates. Unlike the default "RollingUpdate" strategy, which updates pods in a rolling fashion to ensure no downtime, the "Recreate" strategy works by terminating all the existing pods before creating new ones with the updated configuration or image. 
-
-the use case for Recreate Strategy is for stateful application  where it's critical to avoid running multiple versions of the application simultaneously.
-
 
 ### What is POD
 
