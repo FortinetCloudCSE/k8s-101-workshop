@@ -18,6 +18,13 @@ Best For: Individual developers and small teams experimenting with Kubernetes ap
 Description: Kind runs Kubernetes clusters in Docker containers. It's primarily designed for testing Kubernetes itself but is also an excellent tool for developers who want to test their applications, CI pipelines, or experiment with Kubernetes.
 Best For: Kubernetes contributors, developers working on CI/CD pipelines, and testing Kubernetes configurations.
 
+- OrbStack Kubernetes:
+
+Description : OrbStack is a Lightweight single-node cluster: Is has Built-in container engine without need to install Docker desktop, also no need to push images to a separate registry. Images built within OrbStack are readily available to Kubernetes. It has Developer-friendly features like Automatic HTTPS for services, advanced logging, and integration with popular tools like kubectl and Helm. 
+
+Best For : Perfect for development and testing on **MacOS desktop with Apple Silicon or intel chipset** , it eliminates the complexity of setting up and managing full-fledged Kubernetes clusters.
+
+
 ### For Lightweight or Edge Environments
 - K3s:
 
@@ -29,11 +36,7 @@ Best For: Scenarios requiring a lightweight footprint, including edge computing,
 Description: MicroK8s provides a low-maintenance, easily installable Kubernetes for workstations and edge/IoT devices. It offers a simple, fast, and secure way to run Kubernetes, with a focus on quick installation and operation.
 Best For: Developers, edge computing scenarios, and IoT applications requiring quick setup and minimal Kubernetes operation knowledge.
 
-- OrbStack Kubernetes:
 
-Description : OrbStack is a Lightweight single-node cluster: Is has Built-in container engine without need to install Docker desktop, also no need to push images to a separate registry. Images built within OrbStack are readily available to Kubernetes. It has Developer-friendly features like Automatic HTTPS for services, advanced logging, and integration with popular tools like kubectl and Helm. 
-
-Best For : Perfect for development and testing on **MacOS desktop with Apple Silicon or intel chipset** , it eliminates the complexity of setting up and managing full-fledged Kubernetes clusters.
 
 ### For Production Deployment
 
