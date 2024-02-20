@@ -360,6 +360,19 @@ NodePort: Exposes the Service on the same port of each selected node in the clus
 LoadBalancer: Exposes the Service externally using a cloud provider’s load balancer. It assigns a fixed, external IP address to the Service.
 
 
+### Use Label
+
+Labels in Kubernetes are key/value pairs attached to objects, such as Pods, Services, and Deployments. They serve to organize, select, and group objects in ways meaningful to users, allowing the mapping of organizational structures onto system objects in a loosely coupled fashion without necessitating clients to store these mappings.
+
+Labels can be utilized to filter resources when using kubectl commands. For example, executing `kubectl get pods -l app=kubernetes-bootcamp` retrieves all Pods labeled with app=kubernetes-bootcamp.
+
+Many kubectl commands include the option `--show-labels`` to display the labels attached to objects. This can be used with various resource types, such as nodes, pods, services, and deployments, through commands like `kubectl get nodes --show-labels``, `kubectl get pods --show-labels``, `kubectl get svc --show-labels``, and `kubectl get deployments --show-labels``.
+
+Labels can be added to an object using the `kubectl label`` command. For instance, executing `kubectl label deployment nginx stage=development`` will add the key:value pair stage=development to the deployment named nginx.
+
+
+
+
 ### POD life-cycle 
 
 The life cycle of a Kubernetes Pod involves several key stages from creation to termination. Here's a brief overview of these stages, illustrated with commands related to deploying a Pod using the `gcr.io/google-samples/kubernetes-bootcamp:v1` image:
