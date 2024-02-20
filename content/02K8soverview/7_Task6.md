@@ -6,8 +6,6 @@ weight: 5
 ---
 
 
-
-
 #### ClusterIP
 
 Below we created a ClusterIP service for kubernetes-bootcamp deployment. 

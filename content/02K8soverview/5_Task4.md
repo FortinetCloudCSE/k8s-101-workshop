@@ -104,32 +104,3 @@ data:
 There are several types of built in Secrets [!https://kubernetes.io/docs/concepts/configuration/secret/#secret-types] in Kubernetes. Opaque is a secret which is an arbitrary user defined data. 
 
 
-## Creating a pod with Configmap and Secret:
-
-```
-cat << EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx-pod-with-configmap-secret
-spec:
-  containers:
-  - name: nginx-container
-    image: nginx:latest
-    ports:
-    - containerPort: 80
-    volumeMounts:
-    - name: nginx-config-volume
-      mountPath: /etc/nginx/html
-    - name: nginx-secret-volume
-      mountPath: /etc/nginx/secret
-      readOnly: true
-  volumes:
-  - name: nginx-config-volume
-    configMap:
-      name: nginx-index-html
-  - name: nginx-secret-volume
-    secret:
-      secretName: nginx-secret
-```
-
