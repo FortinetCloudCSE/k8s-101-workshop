@@ -90,6 +90,11 @@ use `kubectl get pod` to check the pod now become 10.
 kubectl get pod
 ```
 
+scale down deployment from 10 replicas to 1 just need 
+```bash
+kubectl scale deployment kubernetes-bootcamp --replicas=1
+```
+
 ### What is POD
 
 A Pod in Kubernetes is like a single instance of an application. It can hold closely related containers that work together. All containers in a Pod share the same IP address and ports, and they are always placed together on the same server (Node) in the cluster. This setup means they can easily communicate with each other.  Pods provide the environment in which containers run and offer a way to logically group containers together.
@@ -144,7 +149,7 @@ So, in short, a Node is the workhorse of a Kubernetes cluster, providing the nec
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_nodes.svg)
 
 
-we can use `kubeclt get node -o wide` to check the node status in cluster.
+we can use `kubectl get node -o wide` to check the node status in cluster.
 
 ```bash
 ubuntu@ubuntu22:~$ kubectl get node -o wide
@@ -152,6 +157,30 @@ NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP  
 ubuntu22    Ready    control-plane   55m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 worker001   Ready    <none>          54m   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 ```
+
+Nodes in Kubernetes can be made unschedulable using the kubectl cordon <nodename> command, which is particularly useful when preparing a node for maintenance. When a node is cordoned, the kube-scheduler will no longer schedule new pods onto it, although existing pods on the node are not affected.
+
+By default, Kubernetes master nodes are tainted to prevent workloads from being scheduled on them. This is a security and resource management measure designed to keep master nodes dedicated to managing the cluster. However, there might be scenarios, such as in a single-node cluster or for development purposes, where you might need to schedule pods on the master node.
+
+To enable pod scheduling on the master node, the taint that blocks pod scheduling must be removed. This can be achieved with the kubectl taint command:
+
+
+```bash
+kubectl taint nodes ubuntu22 node-role.kubernetes.io/control-plane-
+```
+This command removes the control-plane taint from the node named ubuntu22, thus allowing it to schedule pods like any other node in the cluster. This action is especially relevant for Kubernetes versions 1.17 and later, where the control plane components are marked with node-role.kubernetes.io/control-plane, in addition to, or instead of, node-role.kubernetes.io/master.
+
+To verify that the taint has been successfully removed, you can inspect the taints on the master node: 
+```bash
+ubuntu@ubuntu22:~$ kubectl describe node ubuntu22 | grep Taints
+Taints:             <none>
+```
+If the taint has been removed successfully, you will see Taints: <none> in the output.
+
+To reapply the taint and make the master node unschedulable by the kube-scheduler again, use `kubectl taint nodes ubuntu22 node-role.kubernetes.io/control-plane:NoSchedule`  This command adds the NoSchedule taint back to the node ubuntu22, preventing new pods from being scheduled on it, while not affecting already running pods. This step is useful for reverting the master node back to a dedicated control plane node after maintenance or development activities are complete.
+
+
+
 
 ### What is ReplicaSet 
 
