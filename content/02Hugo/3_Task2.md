@@ -5,25 +5,30 @@ chapter: false
 weight: 2
 ---
 
-### Objective: Learn the basic building blocks of Kubernetes.
+### Objective
+Learn the basic building blocks of Kubernetes.
 
-Description: 
+## Description
 
 Dive into the foundational concepts of Kubernetes, including Pods, ReplicaSets, Deployments, Services, and Namespaces. Understand the lifecycle of a Pod and how Kubernetes manages application deployment and scaling.
 
+### Let’s Start with Deploying an Application on Your Cluster
 
-Let's start with deploy an application on your cluster 
+Once you have a running Kubernetes cluster, you can deploy your containerized applications on top of it. To do this, you create a Kubernetes Deployment.
 
-Once you have a running Kubernetes cluster, you can deploy your containerized applications on top of it. To do so, you create a Kubernetes **Deployment**.
+A **Deployment** instructs Kubernetes on how to create and update instances of your application. After creating a Deployment, the Kubernetes control plane schedules the application instances included in that Deployment to run on individual nodes in the cluster.
 
-The **Deployment** instructs Kubernetes how to create and update instances of your application. Once you've created a **Deployment**, the Kubernetes control plane schedules the application instances included in that Deployment to run on individual Nodes in the cluster.
+Once the application instances are created, a Kubernetes Deployment controller continuously monitors those instances. If the node hosting an instance goes down or is deleted, the Deployment controller replaces the instance with an instance on another node in the cluster. This mechanism provides self-healing to address machine failure or maintenance.
 
-Once the application instances are created, a Kubernetes Deployment controller continuously monitors those instances. If the Node hosting an instance goes down or is deleted, the Deployment controller replaces the instance with an instance on another Node in the cluster. This provides a self-healing mechanism to address machine failure or maintenance.
+We use the kubectl command to create deployments in Kubernetes. kubectl relies on a configuration file found at ~/.kube/config for authentication and communication with the kube-api-server. Running `kubectl config view` displays details about the kube-API server, including its address, name, and the client's key and certificate.
 
-We use **kubectl** to do deployment. kubectl will use the configure file which under `~/kube/config` to authenticate iteself to interactive with kube-api-server. 
+To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address. It's also important for the kube-API server to recognize your client's IP address as a trusted source by adding it to a whitelist. This setup ensures secure communication between your client machine and the Kubernetes cluster's control plane.
+
+We have configured the master node's Ubuntu VM to also serve as a client node for accessing the Kubernetes cluster. Therefore, once you SSH into the master node VM, you can directly use kubectl for cluster management and operations.
 
 
-### kubectl basics
+- **kubectl** 
+
 The common format of a kubectl command is: **kubectl action resource**
 
 This performs the specified action (like create, describe or delete) on the specified resource (like node or deployment). You can use --help after the subcommand to get additional info about possible parameters (for example: kubectl get nodes --help).
@@ -37,32 +42,40 @@ To view the nodes in the cluster, run the `kubectl get nodes` command.
 You see the available nodes. Later, Kubernetes will choose where to deploy our application based on Node available resources.
 
 
-### Deploy an app
+### Deploying an Application with a Deployment
 
-Let’s deploy our first app on Kubernetes with the kubectl create deployment command. We need to provide the deployment name and app image location (include the full repository url for images hosted outside Docker Hub).
+Deploy your first application on Kubernetes using the `kubectl create deployment` command. This requires specifying the deployment name and the location of the application image (including the full repository URL for images not hosted on Docker Hub).
 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+
 ```
 
-`Great! You just deployed your first application by creating a deployment. This performed a few things for you:
+Congratulations! You've just deployed your first application by creating a deployment. This process automates several steps:
 
-searched for a suitable node where an instance of the application could be run (we have only 1 available node)
-scheduled the application to run on that Node
-configured the cluster to reschedule the instance on a new Node when needed
-To list your deployments use the `kubectl get deployments kubernetes-bootcamp` command
+Identifies a suitable node where the application instance can be run (assuming there's only one available node in this scenario).
+Schedules the application to run on that chosen node.
+Ensures the cluster is configured to reschedule the instance to a new node if necessary.
 
-We see that there is 1 deployment running a single instance of your app. The instance is running inside a container on your node.
+To view your deployments, use the kubectl get deployments command:
+```bash
+kubectl get deployment -l app=kubernetes-bootcamp
+```
+
+We see that there is 1 deployment running a single instance of your app. The instance is running inside a POD which include container on your node.
 
 ```
 $ kubectl get deployment -l app=kubernetes-bootcamp
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           20m
 ```
-**kubernetes-bootcamp** is the name of deployment for your application
-**READY 1/1**  mean  there is one **POD** targeted by the deployment, and it is ready
+In this output:
 
-the **POD** is the group of your containers which share common storage and network. 
+**kubernetes-bootcamp** is the name of the deployment managing your application.
+**READY 1/1** indicates that there is one pod targeted by the deployment, and it is ready.
+
+A **Pod** in Kubernetes is a group of one or more containers that share the same network and storage. These containers are deployed together on the same host machine.
+
 
 ### What is Deployment
 
@@ -79,7 +92,7 @@ kubectl get pod
 
 ### What is POD
 
-A Pod models an application-specific "logical host" and can contain different application containers which are relatively tightly coupled. The containers in a Pod share an IP Address and port space, are always co-located and co-scheduled, and run in a shared context on the same Node. POD is the smallest unit in Kubernetes, not the container. 
+A Pod in Kubernetes is like a single instance of an application. It can hold closely related containers that work together. All containers in a Pod share the same IP address and ports, and they are always placed together on the same server (Node) in the cluster. This setup means they can easily communicate with each other.  Pods provide the environment in which containers run and offer a way to logically group containers together.
 
 We can use `kubectl get pod` to list the pod, use `-l` to select which pod to list.
 **app=kubernetes-bootcamp** is the label assigned to pod during creating.
@@ -116,15 +129,17 @@ all the containers within a single Pod in Kubernetes follow  "shared fate" princ
 
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_pods.svg)
 
+### Node
 
- ### Node
+ A Node in Kubernetes is where a Pod gets to run. Think of a Node as a worker machine that could be either a virtual machine or a physical one, depending on how the cluster is set up. These Nodes are overseen by the cluster's control plane, which ensures everything runs smoothly.
 
- A Pod always runs on a Node. A Node is a worker machine in Kubernetes and may be either a virtual or a physical machine, depending on the cluster. Each Node is managed by the control plane. A Node can have multiple pods, and the Kubernetes control plane automatically handles scheduling the pods across the Nodes in the cluster. The control plane's automatic scheduling takes into account the available resources on each Node.
+Each Node can host multiple Pods. It's up to the control plane to smartly schedule these Pods across the Nodes, making sure that each Node's resources (like CPU and memory) are used efficiently.
 
-Every Kubernetes Node runs at least:
+There are a couple of key components you'll find running on every Kubernetes Node:
 
-Kubelet, a process responsible for communication between the Kubernetes control plane and the Node; it manages the Pods and the containers running on a machine.
-A container runtime (like Docker or CRI-O) responsible for pulling the container image from a registry, unpacking the container, and running the application.
+Kubelet: This is the main guy talking to both the Node it's on and the control plane. It looks after the Pods and containers on the Node, making sure they're running as they should.
+Container Runtime: This is what actually runs your containers. It pulls the container images from where they're stored, unpacks them, and gets your application up and running. Docker and CRI-O are examples of container runtimes used in Kubernetes environments.
+So, in short, a Node is the workhorse of a Kubernetes cluster, providing the necessary environment for your applications (in containers) to run. The control plane keeps an eye on the resources and health of each Node to ensure the cluster operates efficiently.
 
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_nodes.svg)
 
@@ -151,32 +166,6 @@ kubectl get rs kubernetes-bootcamp
 kubectl describe rs kubernetes-bootcamp
 ```
 from the output , we can found a line that saying "Controlled By:  Deployment/kubernetes-bootcamp" 
-
-### What is Service
-
-A Kubernetes Service is a way to expose an application running on a set of Pods as a network service. It abstracts the details of the pod's IP addresses from consumers, providing a single point of access for a set of pods, typically to ensure that network traffic can be directed to them even as they are created or destroyed. This is crucial for maintaining consistent access to the functionalities these pods provide. 
-
-Services primarily operate at the transport layer (Layer 4 of the OSI model), dealing with IP addresses and ports. They provide a way to access pods within the cluster and, in the case of NodePort and LoadBalancer, expose them externally
-
-use `kubectl get svc` to check service 
-```bash
-kubectl get svc
-```
-
-
-Major Types of Kubernetes Services:
-ClusterIP: The default type, it exposes the Service on an internal IP in the cluster, making the Service only reachable within the cluster.
-
-<TODO> explore the default kubernetes and dns service
-
-NodePort: Exposes the Service on the same port of each selected node in the cluster using NAT. It makes the Service accessible from outside the cluster by <NodeIP>:<NodePort>.
-
-<TODO> 
-
-LoadBalancer: Exposes the Service externally using a cloud provider’s load balancer. It assigns a fixed, external IP address to the Service.
-
-<TODO>
-
 
 ### What is namespace
 
@@ -213,6 +202,135 @@ kubectl get pod -n=development
 ```
 use `kubectl delete namespace production` and `kubectl delete namespace development` will delete both namespace and everything in that namespace.
 
+
+### What is Service
+
+A Kubernetes Service is a way to expose an application running on a set of Pods as a network service. It abstracts the details of the pod's IP addresses from consumers, providing a single point of access for a set of pods, typically to ensure that network traffic can be directed to them even as they are created or destroyed. This is crucial for maintaining consistent access to the functionalities these pods provide. 
+
+Services primarily operate at the transport layer (Layer 4 of the OSI model), dealing with IP addresses and ports. They provide a way to access pods within the cluster and, in the case of NodePort and LoadBalancer, expose them externally.
+
+
+
+Major Types of Kubernetes Services:
+ClusterIP: This is the default service type that exposes the service on an internal IP within the cluster, making the service reachable only from within the cluster.
+
+To check the services in your Kubernetes cluster, you can use the following command:
+
+use `kubectl get svc` to check service 
+```bash
+kubectl get svc
+```
+With a default Kubernetes installation, you should see something similar to the following:
+```bash
+ubuntu@ubuntu22:~$ k get svc --show-labels
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   LABELS
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   49m   component=apiserver,provider=kubernetes
+```
+
+This output shows the built-in kubernetes service, which serves as the internal endpoint for the Kubernetes API service. The ClusterIP 10.96.0.1 assigned to services like the Kubernetes API server (kubernetes service) is a virtual IP (VIP) and does not correspond to a physical network interface. It is part of Kubernetes' service discovery and networking mechanism, which relies on kube-proxy (running on each node) and the cluster's network configuration to route traffic to the appropriate endpoints.
+
+The ClusterIP is only accessible from within the cluster, which means it cannot be directly accessed from the master node using kubectl. To interact with it, one must use another pod within the same cluster.
+
+Below, we launch a pod (container) using the curl command to access the HTTPS port on 10.96.0.1. Receiving a 403 Forbidden response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
+
+
+
+```bash
+ubuntu@ubuntu22:~$ kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1
+```
+
+Expected output:
+```bash
+HTTP/1.1 403 Forbidden
+```
+"403" is because curl need to supply a certificate to authenticate itself which we did not supply, however, above is enough to show you the 10.96.0.1 is reachable. 
+
+kube-proxy manages traffic from within the cluster to the actual Kubernetes API endpoint using iptables rules, such as:
+
+```bash
+sudo iptables-save  | grep 10.96.0.1/32
+-A KUBE-SERVICES -d 10.96.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -j KUBE-SVC-NPX46M4PTMTKRN6Y
+-A KUBE-SVC-NPX46M4PTMTKRN6Y ! -s 10.244.0.0/16 -d 10.96.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -j KUBE-MARK-MASQ
+
+```
+To check the endpoint for the Kubernetes API service, use: 
+This command reveals the underlying endpoint that the kubernetes service directs traffic to:
+
+```bash
+use `ubuntu@ubuntu22:~$ k get ep 
+NAME         ENDPOINTS       AGE
+kubernetes   10.0.0.4:6443   56m`
+```
+
+
+
+### Exploring the Kubernetes Default ClusterIP type Service: kube-dns
+
+Kubernetes includes several built-in services essential for its operation  , with `kube-dns` being a key component. The `kube-dns` service is responsible for DNS resolution within the Kubernetes cluster, allowing pods to resolve the IP addresses of other services and external domains.
+
+#### Major Types of Kubernetes Services:
+
+- **ClusterIP**: The default service type that exposes the service on an internal IP within the cluster. This type is used for `kube-dns`, making it accessible only from within the cluster.
+
+To check the services in your Kubernetes cluster, including `kube-dns`, use the following command:
+
+```bash
+kubectl get svc --namespace=kube-system
+```
+You should see kube-dns listed among the services, typically with a ClusterIP type, indicating it's internally accessible within the cluster.
+
+Verifying DNS Resolution with kube-dns
+To verify that kube-dns is correctly resolving domain names within the cluster, you can perform a DNS lookup from a pod. Here’s how to launch a temporary pod for testing DNS resolution using the busybox image:
+```bash
+kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  kubernetes.default.svc.cluster.local
+```
+
+
+and 
+```bash
+kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  www.google.com
+```
+
+This command does the following:
+
+Launches a temporary pod named dns-test using the busybox image.
+Executes the nslookup command to resolve the domain name kubernetes.default.svc.cluster.local, which should be the internal DNS name for the Kubernetes API server.
+Automatically removes the pod after the command execution (--rm flag).
+
+Expected Output
+If kube-dns is functioning correctly, you should see output similar to the following, indicating the IP address that kubernetes.default resolves to:
+
+```bash
+Server:         10.96.0.10
+Address:        10.96.0.10:53
+
+
+Name:   kubernetes.default.svc.cluster.local
+Address: 10.96.0.1
+
+and
+Server:         10.96.0.10
+Address:        10.96.0.10:53
+
+Non-authoritative answer:
+Name:   www.google.com
+Address: 142.250.189.164
+
+Non-authoritative answer:
+Name:   www.google.com
+Address: 2607:f8b0:4005:802::2004
+
+
+```
+
+The kube-dns service is vital for internal name resolution in Kubernetes, enabling pods to communicate with each other and access various cluster services using DNS names. Verifying DNS resolution functionality with kube-dns is straightforward with a temporary pod and can help diagnose connectivity issues within the cluster.
+
+
+NodePort: Exposes the Service on the same port of each selected node in the cluster using NAT. It makes the Service accessible from outside the cluster by <NodeIP>:<NodePort>. 
+
+LoadBalancer: Exposes the Service externally using a cloud provider’s load balancer. It assigns a fixed, external IP address to the Service.
+
+
 ### POD life-cycle 
 
 The life cycle of a Kubernetes Pod involves several key stages from creation to termination. Here's a brief overview of these stages, illustrated with commands related to deploying a Pod using the `gcr.io/google-samples/kubernetes-bootcamp:v1` image:
@@ -247,8 +365,119 @@ Through these stages, Kubernetes manages the application's lifecycle, ensuring t
 we can use `kubectl get pod` and `kbuectl describe pod` to check the detail state for a POD.
 
 
+### kube-API
+
+Kubernetes is fundamentally built around APIs that adhere to the OpenAPI specification, defining resources and their operations. Based on API input, Kubernetes creates objects and stores them in the etcd database. Let's explore using the Kubernetes API to create a Pod, utilizing the kubectl api-resources and kubectl explain commands for guidance. 
+
+- Finding the API Resource for Pods
 
 
+First, identify the API resource needed to create a Pod. You can list all API resources with `kubectl api-resources``:
+
+This command filters the list of API resources to show only those related to Pods. The output will look something like this:
+
+```bash
+ubuntu@ubuntu22:~$ kubectl  api-resources | head  -n 1
+NAME 
+NAME                              SHORTNAMES                                      APIVERSION                             NAMESPACED   KIND
+ubuntu@ubuntu22:~$ kubectl  api-resources | grep pods
+pods                              po                                              v1                                     true         Pod
+pods                                                                              metrics.k8s.io/v1beta1                 true         PodMetrics
+```
+
+From the output, we see that the "KIND" for Pods is "Pod", and the API version is v1.
+
+
+- Understanding Pod Specifications
+
+Next, use kubectl explain to understand how to structure a YAML definition for a Pod specification. Execute the following commands to explore the Pod resource specifications:
+
+kubectl explain Pod
+kubectl explain Pod.apiVersion
+kubectl explain Pod.kind
+kubectl explain Pod.metadata
+
+- Crafting a Minimal YAML Definition for a Pod 
+
+Now, we can construct a minimal YAML file to create a Pod. The essential elements include the Pod's name and the container image:
+
+
+```bash
+cat << EOF | sudo tee minimalyamlforpod.yaml 
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: test-pod 
+spec:
+  containers: 
+    - name: nginx
+      image: nginx
+EOF
+```
+To understand the format for containers, use kubectl explain pod.spec.containers. This field accepts a list, indicating that a Pod can contain multiple containers. Further exploration with kubectl explain pod.spec.containers.image reveals that the image field expects a string.
+
+- Creating the Pod
+
+With the YAML file ready, create the Pod using:
+```bash
+kubectl create -f minimalyamlforpod.yaml
+```
+
+Verifying Pod Creation
+
+To see the details of the created Pod, including any default values Kubernetes applied during creation, use:
+```bash
+kubectl get pod test-pod -o yaml
+```
+
+This command outputs the complete configuration of the Pod, test-pod, showing all properties set by Kubernetes, many of which use default values that you can customize in the Pod YAML definition.
+
+
+
+
+
+### Challenge
+
+- Task 1 
+
+Try to use curl command instead `kubectl` to get namespace for cluster. you have to give client key and certificate to authenticate to kube-API server.
+
+Answer
+
+```bash
+sudo snap install yq
+cat ~/.kube/config | yq .users[0].user.client-certificate-data | base64 -d > k8sadmin.crt
+cat ~/.kube/config | yq .users[0].user.client-key-data | base64 -d > k8sadmin.key
+
+SERVER="10.0.0.4"
+curl --key k8sadmin.key --cert k8sadmin.crt https://$SERVER:6443/api/v1/pods --insecure -s -w "\n" |
+  jq -r '.items[] | "\(.metadata.namespace)\t\(.metadata.name)\t\(.status.containerStatuses[0].ready)\t\(.status.phase)\t\(.status.containerStatuses[0].restartCount)\t\(.spec.containers|length)"' |
+  column -t -s $'\t'
+
+```
+
+- Task 2
+ 
+Use `kubectl` to find minial API specifction for create a namespace. 
+
+Answer 
+
+```bash
+
+```
+
+- Task 3 
+
+Use `kubectl` to find the specifcation for imagePullPolicy which is need for create a POD. answer which kubectl cli and answer what is the imagePullPolicy avaiable to choose. 
+Answer 
+
+```bash
+kubectl explain Pod.spec.containers.imagePullPolicy
+```
+Answer 
+```bash
+Always, Never, IfNotPresent
+```
 
 
 
