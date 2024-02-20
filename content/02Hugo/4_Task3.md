@@ -5,13 +5,15 @@ chapter: false
 weight: 3
 ---
 
-Objective: Understand how to create and manage Deployments.
-Description: Focus on Deployments as a method for deploying applications. Learn about creating Deployments, scaling them, and updating applications with zero downtime. Lab exercises include deploying a multi-replica application and performing rolling updates.
+Objective: Master the Creation and Management of Deployments
 
+Description: This module zeroes in on Deployments as the primary mechanism for deploying applications on Kubernetes. You will delve into the creation of Deployments, learn how to scale them effectively, and update applications with zero downtime. Through hands-on lab exercises, you will experience deploying a multi-replica application and conducting rolling updates to ensure seamless application transitions.
 
-### Deploy a application with deployment 
-Let's use yaml  version for `kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1`. kubernets support use yaml or json to do the deployment, which give more flexiblity than use `kubectl` cli. and also for version control.
+### Deploying an Application with a Deployment
 
+We've previously seen how to use kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 to create a deployment directly from the command line. However, Kubernetes also supports deploying applications using YAML or JSON manifests. This approach provides greater flexibility than using the kubectl CLI alone and facilitates version control of your deployment configurations.
+
+By defining deployments in YAML or JSON files, you can specify detailed configurations, manage them through source control systems, and apply changes systematically. This method enhances the maintainability and reproducibility of your deployments within a Kubernetes environment.
 
 
 ```bash
@@ -36,8 +38,16 @@ spec:
 EOF
 kubectl create -f kubernetes-bootcamp.yaml
 ```
+- replicas: 1: Specifies that only one replica of the pod should be running.
+- selector: Defines how the Deployment finds which Pods to manage using matchLabels.
+- template: Describes the Pod template used by the Deployment to create new Pods.
+- metadata.labels: Sets the label app: kubernetes-bootcamp on the Pod, matching the selector in the Deployment spec.
+- spec.containers: Lists the containers to run in the Pod.
+- image: gcr.io/google-samples/kubernetes-bootcamp:v1: Specifies the container image to use.
 
-After deploying the kubernetes-bootcamp application, scaling the deployment to increase the number of replicas from 1 to 10 can ensure that your application can handle increased load or provide higher availability. Kubernetes offers several methods to scale a deployment, each with its own benefits and use cases.
+## Scale your deployment 
+
+After deploying the Kubernetes Bootcamp application, you might find the need to scale your deployment to accommodate an increased load or enhance availability. Kubernetes allows you to scale a deployment, increasing the number of replicas from 1 to 10, for instance. This ensures your application can handle a higher load. There are several methods to scale a deployment, each offering unique benefits.
 
 ### Using kubectl scale
 Benefits:
@@ -48,23 +58,46 @@ Simple: Easy to remember and use for ad-hoc scaling operations.
 
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
-kubectl rollout status deployment kubernetes-bootcamp
+
+```
+You can monitor the scaling process and the deployment's progress using `kubectl rollout status deployment kubernetes-bootcamp`:
+
+To view the updated deployment and the status of the pods, use:
+
+```bash
 kubectl get deployment kubernetes-bootcamp
 kubectl get pod -l app=kubernetes-bootcamp
 ```
-we shall see 10 POD will be created to meet the requirment from Deployment.
+Expected Outcome
+After scaling, you should observe that the number of pods has increased to meet the deployment's requirements:
+
+Before scaling:
+
+
 
 ```bash
 ubuntu@ubuntu22:~$ kubectl get deployment
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           63m
+```
+Scaling the deployment: 
+```bash
 ubuntu@ubuntu22:~$ kubectl scale deployment kubernetes-bootcamp --replicas=10
 deployment.apps/kubernetes-bootcamp scaled
+```
+Checking the rollout status:
+```bash
 ubuntu@ubuntu22:~$ kubectl rollout status deployment kubernetes-bootcamp
 deployment "kubernetes-bootcamp" successfully rolled out
+```
+Verifying the deployment after scaling:
+```bash
 ubuntu@ubuntu22:~$ kubectl get deployment kubernetes-bootcamp
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          64m
+```
+Listing the pods:
+```bash
 ubuntu@ubuntu22:~$ kubectl get pod -l app=kubernetes-bootcamp
 NAME                                  READY   STATUS    RESTARTS   AGE
 kubernetes-bootcamp-bcbb7fc75-5fjhc   1/1     Running   0          44s
@@ -78,16 +111,46 @@ kubernetes-bootcamp-bcbb7fc75-nh9sn   1/1     Running   0          44s
 kubernetes-bootcamp-bcbb7fc75-q7sqc   1/1     Running   0          44s
 kubernetes-bootcamp-bcbb7fc75-t4tkm   1/1     Running   0          44s
 ```
-Editing the Deployment YAML File
+This output confirms the deployment now runs 10 replicas of the Kubernetes Bootcamp application, demonstrating successful scaling.
+
+### kubectl edit followed by kubectl apply
+
+
+This approach involves manually editing the resource definition in a text editor (invoked by kubectl edit), where you can change any part of the resource. After saving and closing the editor, Kubernetes applies the changes. This method requires no separate kubectl apply, as kubectl edit directly applies the changes once the file is saved and closed.
 
 Command:
-First, edit the deployment YAML file to change the replicas value, then apply the changes:
+First, edit the deployment YAML file then manually  change the replicas value, then apply the changes:
 ```bash
 kubectl edit deployment kubernetes-bootcamp
 
 ```
 
-Or, if you have a local YAML file:
+Use Case: Ideal for ad-hoc modifications where you might need to see the full context of the resource or make multiple edits.  
+
+### Kubectl patch
+
+kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a pod or changing the number of replicas in a deployment.
+
+Automation Friendly: It's ideal for scripts and automation because you can specify the exact change in a single command line.
+
+reset replicas =1 
+```bash
+kubectl scale deployment kubernetes-bootcamp --replicas=1
+```
+then use `kubectl patch` to change replicas 
+
+```bash
+kubectl patch deployment kubernetes-bootcamp --type='json' -p='[{"op": "replace", "path": "/spec/replicas", "value":10}]'
+
+```
+
+### Directly update yaml file with  kubectl apply
+
+if the intended resource to update is in yaml file, we can directly edit the yaml file with any editor, then  use `kubectl apply` to update.
+
+The kubectl apply -f command is more flexible and is recommended for managing applications in production. It updates resources with the changes defined in the YAML file but retains any modifications that are not specified in the file.It's particularly suited for scenarios where you might want to maintain manual adjustments or unspecified settings. 
+
+edit replicas=1 in yaml file first, then 
 ```bash
 # Update the replicas in the YAML file, then:
 kubectl apply -f kubernetes-bootcamp.yaml
@@ -99,12 +162,44 @@ Benefits:
 Version Controlled: Can be version-controlled if using a local YAML file, allowing for tracking of changes and rollbacks.
 Reviewable: Changes can be reviewed by team members before applying if part of a GitOps workflow.
 
+### Directly update yaml file with  kubectl replace 
 
-Using kubectl autoscale
-Command:
+The kubectl replace -f command replaces a resource with the new state defined in the YAML file. If the resource doesn't exist, the command fails. This command requires that the resource be defined completely in the file being applied because it replaces the existing configuration with the new one provided.
+
+Deletion and Recreation: Under the hood, replace effectively deletes and then recreates the resource, which can lead to downtime for stateful applications or services. This method does not preserve unspecified fields or previous modifications made outside the YAML file.
+
+Usage: Use kubectl replace -f when you want to overwrite the resource entirely, and you are certain that the YAML file represents the complete and desired state of the resource.
+
+edit replicas=1 in yaml file first, then 
 ```bash
-kubectl autoscale deployment kubernetes-bootcamp --min=1 --max=10 --cpu-percent=80
+# Update the replicas in the YAML file, then:
+kubectl replace -f kubernetes-bootcamp.yaml
 ```
+
+Risk of Downtime: For some resources, using kubectl replace can cause downtime since it may delete and recreate the resource, depending on the type and changes made. It's important to use this command with caution, especially for critical resources in production environments.
+
+
+
+
+Summary 
+
+- kubectl scale: Quickly scales the number of replicas for a deployment, ideal for immediate, ad-hoc adjustments.
+
+- kubectl edit: Offers an interactive way to scale by manually editing the deployment's YAML definition in a text editor, providing a chance to review and adjust other configurations simultaneously.
+
+- kubectl patch: Efficiently updates the replicas count with a single command, suitable for scripts and automation without altering the rest of the deployment's configuration.
+
+- kubectl replace -f: Replaces the entire deployment with a new configuration from a YAML file, used when you have a prepared configuration that includes the desired replicas count.
+
+- kubectl apply -f: Applies changes from a YAML file to the deployment, allowing for version-controlled and incremental updates, including scaling operations.
+
+Let's explore how to automatically scale your deployment based on resource usage.
+
+
+### Using kubectl autoscale
+
+When kubernetes has **Resouce Metrics API** installed,  We can using the kubectl autoscale command `kubectl autoscale deployment` to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
+
 
 using the kubectl autoscale command to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
 
@@ -133,16 +228,73 @@ Use Cases:
 Ideal for applications with variable loads, where manual scaling is not practical.
 Great for maintaining performance during unexpected surges in traffic.
 
+#### Create a deployment  with more constrain 
 
-Using Horizontal Pod Autoscaler (HPA)
-
-Command:
-First, create an HPA resource targeting your deployment:
+In this deployment , we add some resource restriction like memory and cpu for a POD.
+when POD reach the CPU or memory limit, if HPA configured, new POD will be created according HPA policy.
+- create deployment with CPU and Memory contrain
 
 ```bash
-kubectl create hpa kubernetes-bootcamp-hpa --target=deployment/kubernetes-bootcamp --min-replicas=1 --max-replicas=10 --cpu-percent=80
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"  # Minimum memory requested to start the container
+            cpu: "10m"     # 100 millicpu (0.1 CPU) requested to start the container
+          limits:
+            memory: "128Mi" # Maximum memory limit for the container
+            cpu: "40m"     # 200 millicpu (0.2 CPU) maximum limit for the container
+EOF
 
+kubectl rollout status deployment nginx-deployment
+
+cat << EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx-deployment
+  namespace: default
+spec:
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  sessionAffinity: None
+  type: ClusterIP
+EOF
 ```
+
+#### Use autoscale  (HPA) to scale your application
+
+- use kubectl command to create hpa 
+
 Benefits:
 
 Resource Efficiency: Dynamically allocates resources based on real-time metrics, improving resource utilization.
@@ -152,17 +304,33 @@ Use Cases:
 Best suited for production environments where application demand is unpredictable.
 Useful for cost optimization by scaling down during low-traffic periods.
 
-Conclusion
-Choosing the right scaling method depends on your specific needs, such as whether you need to quickly adjust resources, maintain performance under varying loads, or integrate scaling into a CI/CD pipeline. Manual methods like kubectl scale or editing the deployment are straightforward for immediate needs, while kubectl autoscale and HPA provide more dynamic, automated scaling based on actual usage, making them better suited for production environments with fluctuating workloads.
+Command:
+
+```bash
+kubectl autoscale deployment nginx-deployment --name=nginx-deployment-hpa --min=1 --max=10 --cpu-percent=50
+
+
+
+```
+
+After run above command, use `kubectl get hpa nginx-deployment` to check deployment 
+````bash
+kubectl get hpa nginx-deployment
+````
+
+Expect to see
+
+```bash
+ubuntu@ubuntu22:~$ k get hpa nginx-deployment
+NAME                  REFERENCE                        TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+nginx-deployment   Deployment/nginx-deployment   <unknown>/50%   1         10        1          2m1s
+```
 
 
 
 
+- use yaml file create hpa
 
-####  create HPA for scale application  with Yaml
-
-
-create HPA for nginx deployment, allow increase replicas upon container CPU utlization over the threshold
 
 ```
 cat << EOF | kubectl apply -f -
@@ -193,6 +361,56 @@ For a deeper understanding, consider using the following command to conduct furt
 
 use `kubectl get deployment nginx-deployment` to check the change of deployment. 
 use `kubectl get hpa` and `kubectl describe hpa` to check the new size of replicas.
+
+ 
+
+
+#### send http traffic to application 
+
+since the nginx-deployment service is cluster-ip type service which can only be accessed from cluster internal, so we need to create a POD which can send http traffic to nginx-deployment service.
+
+- create deployment for generate http traffic, in this deployment, we will use wget to similuate the real traffic towards ngnix-deployment cluster-ip service which has service name `http://nginx-deployment.default.svc.cluster.local`.
+
+```bash
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinite-calls
+  labels:
+    app: infinite-calls
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infinite-calls
+  template:
+    metadata:
+      name: infinite-calls
+      labels:
+        app: infinite-calls
+    spec:
+      containers:
+      - name: infinite-calls
+        image: busybox
+        command:
+        - /bin/sh
+        - -c
+        - "while true; do wget -q -O- http://nginx-deployment.default.svc.cluster.local; sleep 1; done"
+```
+
+- check the creation of busybox deployment 
+
+```bash
+kubectl get deployment infinite-calls
+```
+check the log from infinite-calls pods.
+```bash
+kubectl logs -f po/infinite-calls-9d45c57b7-h5qjd
+```
+you will see the response from nginx web server container.
+
+use `ctr-c` to exist `kubectl logs -f` command.
+
 
 after a while, when the traffic to nginx pod decreased, check hpa and deployment again for the size of replicas.
 use `kubectl top pod` and `kubectl top node` to check the resource usage status
@@ -261,6 +479,10 @@ Events:
   Normal   SuccessfulRescale             60s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
   ```
  
+
+Summary 
+
+Choosing the right scaling method depends on your specific needs, such as whether you need to quickly adjust resources, maintain performance under varying loads, or integrate scaling into a CI/CD pipeline. Manual methods like kubectl scale or editing the deployment are straightforward for immediate needs, while kubectl autoscale and HPA provide more dynamic, automated scaling based on actual usage, making them better suited for production environments with fluctuating workloads.
 
 
 ### Upgrade the deployment
