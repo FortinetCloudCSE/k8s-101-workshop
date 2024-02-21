@@ -11,7 +11,7 @@ archetype: home
 
 Kubernetes is an open-source container orchestration platform that automates the deployment, scaling, and management of containerized applications. Originally developed by Google and now maintained by the Cloud Native Computing Foundation (CNCF), Kubernetes has become the de facto standard for managing containerized workloads in production environments.
 
-![image1](../images/Container_Evolution.svg)
+![image1](../images/container.png)
 
 ## Workshop Objectives
 

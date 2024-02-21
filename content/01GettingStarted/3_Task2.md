@@ -31,7 +31,7 @@ terraform init
 5. Run `terraform apply  -var='username=userXX' --auto-approve`
 
     Your username can be found in the login email.  
-    Say your Azure account login is se30@ftntxxxxx.onmicrosoft.com, your username is **se30** 
+    Say your Azure account login is se31@ftntxxxxx.onmicrosoft.com, your username is **se31** 
 
 ```sh
 terraform apply  -var='username=UserXX' --auto-approve
