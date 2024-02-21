@@ -35,7 +35,7 @@ weight: 2
   * Use existing File Share  - type **cloudshellshare**
 * Click "Attach Storage"
 
-    ![cloudshell8](../images/cloudshell-08.jpg)
+    ![cloudshell8](../images/cloudshell-08.png)
 
 * You should now have access to Azure Cloud Shell console
 
