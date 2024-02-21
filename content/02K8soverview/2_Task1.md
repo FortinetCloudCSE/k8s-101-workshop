@@ -1,6 +1,6 @@
 ---
 title: "Task 1 - Install kubernetes"
-menuTitle: "Installation"
+menuTitle: "Task 1:Installation"
 weight: 1
 ---
 

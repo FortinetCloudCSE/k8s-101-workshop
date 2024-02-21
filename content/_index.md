@@ -1,26 +1,35 @@
 ---
 title: "Kubernetes TECWorkshop"
-menuTitle: "TECWorkshop Template"
+menuTitle: "TECWorkshop"
 weight: 1
 archetype: home
 ---
 
-### Welcome!
+### Welcome to K8s 101 workshop
+
+## About Kubernetes
+
+Kubernetes is an open-source container orchestration platform that automates the deployment, scaling, and management of containerized applications. Originally developed by Google and now maintained by the Cloud Native Computing Foundation (CNCF), Kubernetes has become the de facto standard for managing containerized workloads in production environments.
+
+![image1](../images/Container_Evolution.svg)
+
+## Workshop Objectives
+
+In this workshop, you will:
+
+- Build a kubernetes cluster
+- Gain a fundamental understanding of Kubernetes concepts.
+- Learn how to deploy, manage, and scale applications using Kubernetes.
+- Explore key Kubernetes resources such as Pods, Deployments, Services, and more.
+- Gain hands-on experience with practical examples.
 
 
-This site will explain how to use the [Hugo Web Framework]("https://gohugo.io/") & the ["reLearn" Theme]("https://mcshelby.github.io/hugo-theme-relearn/index.html") to effectively organize & deliver Fortinet TEC Workshops & Product demos in a consistent, simple, and visually appealing format.
+## Who Should Attend?
 
-The beauty of this framework lies in its simplicity.  Within approx 30 mins, anybody can have a site up and running.  Content is created via Markdown files, and the workshop guide layout is simply a directory structure.
+This workshop is suitable for:
 
-Follow along on this simple tutorial to get up and running with a Hugo formatted site for your TEC Workshop/training/demo content today!
+- Network Engineers: Network engineers interested in understanding how Kubernetes impacts network infrastructure and how to integrate Kubernetes clusters seamlessly into existing network environments.
 
-### Learning Objectives
-- Setup UserRepo on your system & Build container with Hugo & CentralRepo
-- Learn to work in Hugo to create your content to display proper information flow for your TEC Workshop/demo/training
-- Publish your Hugo site to GitHub pages via a CI/CD model 
- 
-### Hugo and Fortinet TECWorkshops - Visually
-- The purpose of this workflow is to simplify creation of Fortinet TECWorkshop guides while providing an example CI/CD development environment with maximum re-usability 
-- Here's a visual representation of our process which will be fully explained in each chapter
+- DevOps Engineers: DevOps engineers looking to collaborate with network teams and optimize network configurations for Kubernetes deployments will gain valuable insights into network architecture and configuration.
 
-{{< FTNThugoFlow >}}
+- System Administrators: System administrators responsible for network infrastructure and interested in deploying and managing Kubernetes clusters will learn how to configure network settings and ensure connectivity within Kubernetes environments.
