@@ -1,5 +1,5 @@
 ---
-title: "Ch 1 Getting Started with Repos, Containers, and Hugo"
+title: "Ch 1 Brief introduction of K8S"
 menuTitle: "Ch 1: Setup"
 weight: 10
 ---
