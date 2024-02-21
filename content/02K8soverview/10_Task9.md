@@ -294,8 +294,60 @@ ubuntu@ubuntu22:~$ k get pod -l app=client -n client -o yaml | grep sidecar
       - sidecar
 ```
 
+- Enable mTLS 
 
-- Verify Traffic Flow Through the Envoy Proxy
+this show how to use Istio to automatically encrypt traffic between two services (frontend and backend) within the client namespace, using Istio's mutual TLS (mTLS) capabilities. This ensures that the communication is secure and authenticated in both directions.
+
+```bash
+cat << EOF | sudo tee > client_peer_tls.yaml
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: client
+spec:
+  mtls:
+    mode: STRICT
+EOF
+
+kubectl apply -f client_peer_tls.yaml
+```
+
+- create httpbin service in client namespace
+
+the httpbin support return http header, we can use this to check the "X-Forwarded-Client-Cert" field in header.
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.5/samples/httpbin/httpbin.yaml -n client 
+
+```
+- Verify Traffic Between frontend and httpbin
+
+
+```bash
+
+podname=$(kubectl get pod -n client -l app=httpbin -o jsonpath={.items..metadata.name}
+kubectl exec -it po/$podname -n client -- curl http://httpbin.client.svc.cluster.local:8000/headers
+
+```
+```bash
+The "X-Forwarded-Client-Cert" is the indication that traffic is encrypted by mTLS.
+{
+  "headers": {
+    "Accept": "*/*", 
+    "Host": "httpbin.client.svc.cluster.local:8000", 
+    "User-Agent": "curl/8.6.0", 
+    "X-B3-Parentspanid": "a333da69eeb71b8a", 
+    "X-B3-Sampled": "0", 
+    "X-B3-Spanid": "a72fed568e00c0dc", 
+    "X-B3-Traceid": "0fb433e1abb5a37ba333da69eeb71b8a", 
+    "X-Envoy-Attempt-Count": "1", 
+    "X-Forwarded-Client-Cert": "By=spiffe://cluster.local/ns/client/sa/httpbin;Hash=cd72c6a2fc780df9feda914bf7ea0ffb4e8766101225952bff12ae692c3793af;Subject=\"\";URI=spiffe://cluster.local/ns/client/sa/default"
+  }
+}
+```
+
+- Verify Traffic Between frontend POD to backend service 
 
 Verify the setup by checking the logs of the client pod to see responses from the backend service:
 
@@ -356,7 +408,7 @@ Forward the Kiali dashboard port to make it accessible:
 kiali by default only created clusterIP type service on TCP port 20001, to expose this service to internet, we can use NodePort service for Kiali.
 
 ```bash
-kubectl expose deployment kiali  --type NodePort --name kialinodeport --node-port=31602  -n istio-system
+kubectl expose deployment kiali  --type NodePort --name kialinodeport -n istio-system
 ```
 check the nodeport service 
 ```bash
