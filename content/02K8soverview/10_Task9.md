@@ -5,35 +5,66 @@ chapter: false
 weight: 5
 ---
 
-### Preparation
+### Understanding How Service Mesh Works
+
+Istio enhances Kubernetes applications by injecting an Envoy proxy as a sidecar container into each pod that's marked for Istio injection. This process is facilitated by Kubernetes' Mutating Admission Webhook, which automatically modifies pod creation requests to include the Envoy sidecar. This setup ensures that all inbound and outbound traffic from the application pods is managed through the Envoy proxy.
+
+By integrating these sidecar containers within the client namespace for both backend and frontend components, Istio leverages the Envoy sidecar to provide sophisticated traffic management, heightened security, and comprehensive observability features. The control plane component, known as istiod, unifies functionalities of previously separate components (like Pilot, Citadel, and Galley) into a single binary. It plays a crucial role in mesh configuration, proxy configuration distribution, service discovery, and enforcing authentication and authorization policies.
+
+The Istio service mesh employs an istio-ingressgateway, which is essentially an Envoy proxy that operates as a load balancer. This gateway serves as the entry point for external traffic into the mesh, applying Istio's routing rules and policies before traffic reaches the application services.
+
+Istio also utilizes iptables rules to redirect traffic from the client applications to the Envoy proxy. This ensures that even intra-mesh communication benefits from Istio's traffic management and security mechanisms.
+
+### Preparation for Istio/Envoy Installation
+Prior to deploying Istio/Envoy, it's essential to verify the availability of an external IP for the load balancer. Istio's architecture includes an ingress gateway that necessitates an external IP address to function correctly. Ensuring this requirement is met is a critical step in the preparation phase for a successful Istio installation.
+
 
 Before installing Istio/Envoy, check if there is a free external IP available for a load balancer, as Istio will install an ingress gateway that requires a load balancer with an external IP.
 
-If a `kong-proxy` load balancer exists with an external IP, delete it, as we have only one external IP available for use.
+
+```bash
+kubectl get svc -A -o json | jq '.items[] | select(.spec.type == "LoadBalancer") | {name: .metadata.name, namespace: .metadata.namespace,status: .status}'
+```
+Below you will find a loadBalancer kong-proxy with external IP 10.0.0.4 exist. 
+
+```bash
+kubectl get svc -A -o json | jq '.items[] | select(.spec.type == "LoadBalancer") | {name: .metadata.name, namespace: .metadata.namespace,status: .status}'
+{
+  "name": "kong-proxy",
+  "namespace": "kong",
+  "status": {
+    "loadBalancer": {
+      "ingress": [
+        {
+          "ip": "10.0.0.4"
+        }
+      ]
+    }
+  }
+}
+``` 
+
+delete it to release external ip for istio to use 
 
 ```bash
 kubectl delete svc kong-proxy -n kong
+```
 
-```
-Also, ensure CoreDNS is using an IP from Calico. Otherwise:
-
-```
-kubectl rollout restart deployment kube-dns -n kube-system
-kubectl rollout status deployment kube-dns -n kube-system
-```
 ### install istio-envoy
 
-Download and Extract Istio
+- Download and Extract Istio
 ```
-curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.20.3 sh -
+curl -L --retry 3 --retry-delay 5  https://istio.io/downloadIstio | ISTIO_VERSION=1.20.3 sh -
 cd istio-1.20.3
 ```
+- add path to istioctl 
+
 The istioctl command-line tool is in the bin directory; you might want to add it to your path for ease of use:
 ```
 export PATH=$PWD/bin:$PATH
 ```
 
-Install Istio Using istioctl
+- Install Istio Using istioctl
 
 Istio offers different configuration profiles for installation. For a standard installation (which is suitable for most use cases), you can use the default profile:
 ```bash
@@ -41,12 +72,36 @@ istioctl install --set profile=default -y
 ```
 This command uses istioctl to install Istio with the default profile.  
 
-### Enable Automatic Sidecar Injection
-
-Enable automatic sidecar injection for your namespace:
+expected to see 
 
 ```bash
-kubectl label namespace client istio-injection=enabled
+ubuntu@ubuntu22:~/istio-1.20.3$ istioctl install --set profile=default -y
+✔ Istio core installed                                                                                             
+✔ Istiod installed                                                                                                 
+✔ Ingress gateways installed                                                                                       
+✔ Installation complete                                                                               Made this installation the default for injection and validation.
+```
+### Verify The Installation
+
+A new LoadBalacner with name istio-ingressgateway shall be installed with external-ip.
+
+```bash
+kubectl get svc istio-ingressgateway -n istio-system
+NAME                   TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)                                      AGE
+istio-ingressgateway   LoadBalancer   10.110.27.52   10.0.0.4      15021:30311/TCP,80:32317/TCP,443:31503/TCP   106s
+```
+istio-ingressgateway is istio dataplane proxy which is envoy. 
+
+```bash
+ubuntu@ubuntu22:~$ k get pod -n istio-system -l app=istio-ingressgateway -o yaml | grep image: | uniq
+      image: docker.io/istio/proxyv2:1.20.3
+```
+istiod is the control plane component called pilot. 
+
+```bash
+
+ubuntu@ubuntu22:~$ k get pod -n istio-system -l app=istiod -o yaml | grep image: | uniq
+      image: docker.io/istio/pilot:1.20.3
 
 ```
 ### Verify the Installation
@@ -58,21 +113,31 @@ And verify that the corresponding Istio control plane pods are all in a RUNNING 
 kubectl get pods -n istio-system
 ```
 
-### Demo
+### Enable Automatic Sidecar Injection
 
-Ensure Automatic Sidecar Injection is Enabled
+
+Enable automatic sidecar injection for your namespace with below 
+
 ```bash
+kubectl create namespace client
+kubectl get namespace client
 kubectl label namespace client istio-injection=enabled
 ```
+this will allow istio insert sidecar container for pod that labeled with **istio-injection=enabled**  
 
-Create a Backend Service
-
-Deploy a simple HTTP echo service as the backend:
+### Demo
 
 
-### deploy backend service 
+- Create demo application  in client namespace
+
+We deploy both frontend svc and backend svc in client namespace. the traffic from frontend will reach backend svc via istio envoy proxy. 
+
+- Deploy a simple HTTP echo service as the backend:
+
+
 ```bash
-cat << EOF | backend.yaml
+cd $HOME
+cat << EOF | sudo tee > client_app_backend.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -109,13 +174,14 @@ spec:
         ports:
         - containerPort: 5678
 EOF
-kubectl apply -f backend.yaml
+kubectl apply -f client_app_backend.yaml
 
 ```
-deploy frontend application
+- Deploy frontend application in client namespace.
 
 ```bash
-cat <<EOF | client.yaml
+cd $HOME
+cat <<EOF | sudo tee > client_app_frontend.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -142,68 +208,126 @@ spec:
             curl echo-service.client.svc.cluster.local;
           done
 EOF
-```
-kubectl apply -f client.yaml
 
-Verify Traffic Flow Through the Envoy Proxy
+kubectl apply -f client_app_frontend.yaml
+```
+- Check deployment of client application 
+```bash
+kubectl get all -n client
+```
+you are expected to see both frontend pod and backend pod (echo) will has two container running . one of the container is the injected sidecar container.
+
+```bash
+ubuntu@ubuntu22:~$ kubectl get all -n client
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/client-deployment-965cf5696-lgj8n   2/2     Running   0          32s
+pod/echo-deployment-ddd46554c-lpqh6     2/2     Running   0          4m11s
+
+NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/echo-service   ClusterIP   10.100.72.165   <none>        80/TCP    4m11s
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/client-deployment   1/1     1            1           32s
+deployment.apps/echo-deployment     1/1     1            1           4m11s
+
+NAME                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/client-deployment-965cf5696   1         1         1       32s
+replicaset.apps/echo-deployment-ddd46554c     1         1         1       4m11s
+```
+- Verify Traffic Flow Through the Envoy Proxy
+
 Verify the setup by checking the logs of the client pod to see responses from the backend service:
 
 Check the Logs of the Client Pod
-
 
 ```bash
 kubectl logs -n client -l app=client -c client
 ```
 
-### install kiali
+you are expected to see that backend echo "Hello from backend service" indicate that service-mesh is working 
+
+```bash
+ubuntu@ubuntu22:~$ kubectl logs -n client -l app=client -c client
+   0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0Hello from backend service
+100    27  100    27    0     0   1321      0 --:--:-- --:--:-- --:--:--  1350
+ubuntu@ubuntu22:~$ 
+``` 
+
+### Service-Mesh obvserbility 
+We can install a ISTIO added on **kiali** to check the Web GUI based dashboard 
+
+- install kiali
 Install Kiali for observability:
 
 ```bash
+ISTIO_HOME="$HOME/istio-1.20.3"
 kubectl apply -f ${ISTIO_HOME}/samples/addons/kiali.yaml
+kubectl apply -f ${ISTIO_HOME}/samples/addons/prometheus.yaml
+
 ```
-### expose kiali dashboard
+
+- check kiali deployment
+
+```bash
+kubectl rollout status deployment kiali -n istio-system
+kubectl get deployment -n istio-system -l app=kiali
+kubectl get deployment -n istio-system -l app=prometheus
+kubectl get svc -n istio-system -l app=kiali
+
+```
+you expected to see 
+```bash
+deployment "kiali" successfully rolled out
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+kiali   1/1     1            1           7m7s
+kubectl get deployment -n istio-system -l app=prometheus
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+prometheus   1/1     1            1           4m21s
+NAME    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)              AGE
+kiali   ClusterIP   10.102.25.174   <none>        20001/TCP,9090/TCP   4m40s
+```
+
+- expose kiali dashboard
 
 Forward the Kiali dashboard port to make it accessible:
 
+kiali by default only created clusterIP type service on TCP port 20001, to expose this service to internet, we can use NodePort service for Kiali.
+
+```bash
+kubectl expose deployment kiali  --type NodePort --name kialinodeport --node-port=31602  -n istio-system
+```
+check the nodeport service 
+```bash
+kubectl  get svc -l app=kiali -n istio-system
+```
+you shall see a NodePort Svc similar as below with TCP port on 31602.
+
+```bash
+ubuntu@ubuntu22:~$ k get svc -l app=kiali -n istio-system
+NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                          AGE
+kiali           ClusterIP   10.102.25.174   <none>        20001/TCP,9090/TCP               9m26s
+kialinodeport   NodePort    10.110.24.115   <none>        20001:31602/TCP,9090:30481/TCP   30s
+``` 
+
+**optional** As an alternative to creating a NodePort service for Kiali, you can temporarily expose the service using kubectl port-forward combined with socat. This method is useful for quick, temporary access without configuring a permanent service type in Kubernetes.  
+
+No matter use NodePort or `kubectl port-forward` with `socat`, if you're using Azure, remember to open TCP port 31602 (or any other port you pickup ) to allow incoming traffic. This step ensures external access to the Kiali UI through the configured port. 
 
 ```bash
 kubectl port-forward svc/kiali 20001:20001 -n istio-system &
-socat TCP-LISTEN:30001,reuseaddr,fork TCP:127.0.0.1:20001
+socat TCP-LISTEN:31602,reuseaddr,fork TCP:127.0.0.1:20001
 ```
+
+
 
 Verify access: 
 ```bash
 
-curl http://k8strainingmaster001.westus.cloudapp.azure.com:30001
+curl http://k8strainingmaster001.westus.cloudapp.azure.com:31602
 <a href="/kiali/">Found</a>.
 ```
 
 
-### How service mesh works in general
 
-Istio injects a sidecar container (Envoy proxy) into each client application pod labeled for Istio injection. This is achieved using Kubernetes' Mutating Admission Webhook, which intercepts pod creation requests to include the Envoy sidecar containers automatically.
-
-below find each pod in client namespace has two container  with one is injected as sidecar container.
-
-```bash
-ubuntu@ubuntu22:~/istio-1.20.3$ k get pod -n client
-NAME                                READY   STATUS    RESTARTS   AGE
-client-deployment-965cf5696-jvfsq   2/2     Running   0          71m
-echo-deployment-ddd46554c-bqpzw     2/2     Running   0          48m
-```
-
-This setup allows all inbound and outbound traffic from the client application to be proxied through the Envoy sidecar, enabling advanced traffic management, security, and observability features provided by Istio.
-
-Istio uses the istio-ingressgateway service as a LoadBalancer for the service mesh, directing external traffic into the mesh.
-
-
-`kubectl get svc istio-ingressgateway -n istio-system` 
-
-```bash
-ubuntu@ubuntu22:~/istio-1.20.3$ k get svc istio-ingressgateway -n istio-system
-NAME                   TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                                      AGE
-istio-ingressgateway   LoadBalancer   10.107.233.181   10.0.0.4      15021:30938/TCP,80:30244/TCP,443:32419/TCP   90m
-```
-Istio use iptables for steer traffic from client application to be proxyed by envoy proxy instead directly go to backend.
 
 
