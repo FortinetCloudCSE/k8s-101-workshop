@@ -76,31 +76,32 @@ The choice of Kubernetes installation method depends on the specific needs of th
 ### nodes provided to user: 
 
 
-* Multiple Ubuntu 22.04 version Linux VM 
+In this lab, we provide multiple Ubuntu 22.04 Linux VMs can be configured either as master nodes or worker nodes. Each user is granted sudo privileges on both types of servers. To ensure smooth operation of Kubernetes, each server is equipped with at least 2 CPUs, 4GB of RAM, and network connectivity between them. All VMs are deployed on Azure cloud within the same VNET, facilitating seamless communication. 
 
-1 or mutiple VM for master node
-1 or multiple VM for workder node 
+Accessing the VMs:
+To access the master or worker nodes, utilize the following SSH commands:
 
-* A user with sudo privileges on both servers.
-* Each server should have at least 2 CPUs, 4GB of RAM, and network connectivity between them. use below command to login 
-
-In this lab, all VM are deployed on azure cloud, where they share one VNET.
-
-once deployed, use below command to ssh into master or worker node.
-
+For the master node:
 ```bash
 ssh ubuntu@k8strainingmaster001.westus.cloudapp.azure.com
-ssh ubuntu@k8strainingworker001.westus.cloudapp.azure.com
-
 ```
-In this chapter, we want how user how easy to use kubernetes to dynamicly scale your application  , so here offer two options to use kubeadm to install master node, simple way and step by step approach. with simple way, just copy and paste run script, with step by step appraoch, you can check step and understand what check step's purposes.
+For the worker node:
+```bash
+ssh ubuntu@k8strainingworker001.westus.cloudapp.azure.com
+```
 
-### simple way of install master node
+This chapter aims to demonstrate the ease of dynamically scaling your applications using Kubernetes. We offer two approaches to install Kubernetes on the master node using kubeadm: a simple method for quick setup and a step-by-step approach for those who prefer to understand each phase of the setup process.
 
-with simple way, login into all master node to copy/paste  run below script into bash terminal to execute. 
+
+### Simple Way to Install Master Node:
+
+For a straightforward setup, log into each master node and execute the following script in your bash terminal. This method is designed for users who prefer a quick and easy installation without delving into the details of each step.
 
 
 **ssh into all master noder** then paste below command to install it
+
+This approach provides a hassle-free method to get your Kubernetes cluster up and running swiftly. For users interested in a deeper understanding of the installation process, the step-by-step approach is recommended, allowing you to familiarize yourself with the purpose and function of each installation step.
+
 ```
 #!/bin/bash -xe
 
@@ -218,10 +219,14 @@ chmod +x /home/ubuntu/workloadtojoin.sh
 cat /home/ubuntu/workloadtojoin.sh
 
 cd $HOME
-sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/latest/download/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
+#sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/latest/download/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
+sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/download/v3.25.0/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
+
 sudo chmod +x /usr/local/bin/calicoctl
 curl --insecure --retry 3 --retry-connrefused -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/tigera-operator.yaml
 kubectl --kubeconfig /home/ubuntu/.kube/config create -f tigera-operator.yaml
+kubectl get namespace tigera-operator
+kubectl rollout status deployment tigera-operator -n tigera-operator
 curl --insecure --retry 3 --retry-connrefused -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/custom-resources.yaml
 sed -i -e "s?blockSize: 26?blockSize: 24?g" custom-resources.yaml
 sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
@@ -229,7 +234,15 @@ sed -i -e "s?192.168.0.0/16?10.244.0.0/16?g" custom-resources.yaml
 sed -i '/calicoNetwork:/a\    containerIPForwarding: Enabled ' custom-resources.yaml
 sed -i '/calicoNetwork:/a\    bgp: Disabled ' custom-resources.yaml
 kubectl --kubeconfig /home/ubuntu/.kube/config create namespace calico-system
+sleep 1
+kubectl  get namespace calico-system
 kubectl --kubeconfig /home/ubuntu/.kube/config apply  -f custom-resources.yaml
+sleep 5 
+
+kubectl rollout status deployment calico-kube-controllers -n calico-system
+kubectl rollout status ds calico-node -n calico-system
+
+kubectl get tigerastatus
 
 kubectl rollout restart deployment coredns -n kube-system
 kubectl rollout status deployment coredns -n kube-system 
@@ -458,9 +471,13 @@ cat /home/ubuntu/workloadtojoin.sh
 
 #### Install Calico CNI 
 
-the bridge cni does not support cross node networking, so replace default bridge with calico. calico will use VXLAN to expand network across multiple nodes.
+The default bridge CNI in Kubernetes does not support cross-node networking. To enable this capability, we recommend replacing the default bridge with Calico. Calico uses VXLAN technology to facilitate network expansion across multiple nodes, providing enhanced networking features.
 
-calico CNI provide extra network feature which has it's own API definition  as an extension to standard kubenetes API. tigera-operator.yaml and custom-resources.yaml facilitate a streamlined and customizable installation of Calico in a Kubernetes cluster. The Tigera Operator automates the management of Calico's lifecycle, while the custom-resources.yaml file allows administrators to specify the configuration of Calico to meet the cluster's specific networking and security needs. Below configuration enabled ipforwarding for **container** this is usually is not required unless container is a layer 3 router which include multiple IP interface. bgp is disabled as we are using VXLAN instead directly exchange POD ip across nodes. 
+Calico CNI extends standard Kubernetes API with its own API definitions, allowing for advanced network configurations. The installation and management of Calico are streamlined through the use of tigera-operator.yaml and custom-resources.yaml. The Tigera Operator automates Calico's lifecycle management, while custom-resources.yaml enables administrators to tailor Calico's configuration to the specific needs of their Kubernetes cluster.
+
+The configuration below includes enabling IP forwarding for containers. Typically, this setting is not necessary unless the container acts as a Layer 3 router, involving multiple IP interfaces. In this setup, BGP is disabled because we utilize VXLAN for networking, which does not require direct exchange of POD IPs across nodes.
+
+This approach ensures that Calico provides robust and flexible networking capabilities for Kubernetes clusters, supporting a wide range of deployment scenarios, including those requiring cross-node networking and advanced network routing features.
 
 ```bash
 cd $HOME
@@ -494,8 +511,15 @@ kubectl rollout status deployment coredns -n kube-system
 
 ### install worker node
 
-**ssh into worker node** to paste below script to install components on every worker node.  
-Worker node require install kubelet and cri-o to manager container life-cycle. also require kube-proxy to setup iptables for service to container.  Since the command of install worker node is already covered in the part of "install master node" . so here only provide a "simple way" to install worker node. just copy/paste below into  worker node to execute.
+To configure the worker nodes in your Kubernetes cluster, you need to install specific components that manage the container lifecycle and networking. Each worker node requires the installation of kubelet and cri-o for container management, as well as kube-proxy to set up iptables rules for service-to-container communication.
+
+Since the commands for installing these components on the worker nodes overlap with those covered in the "Install Master Node" section, this guide will focus on providing a streamlined, "simple way" to set up each worker node. This method allows for a quick and efficient installation by copying and pasting the script below directly into the terminal of each worker node.
+
+Access Your Worker Node:
+```bash
+ssh ubuntu@k8strainingworker001.westus.cloudapp.azure.com
+```
+and Execute the Installation Script by Copy and paste the following script into the terminal of the worker node to start the installation process:
 
 ```
 #!/bin/bash -xe
@@ -587,40 +611,59 @@ cd $HOME
 trap - ERR
 ```
 
-### Join worker node to cluster
+### Joining a Worker Node to the Cluster
 
+Now that we have everything set up, it's time to join the worker node to the cluster. This process involves using a token for joining, as well as the hash of the master node's CA certificate for authentication purposes. This ensures the worker node is joining the intended Kubernetes cluster.
 
-Now, we're set to join a worker node to the cluster. To do this, each worker node will require a token for joining, as well as the hash of the master node's CA certificate for authentication purposes, ensuring it's joining the intended cluster.
-Access the Master Node: Start by SSH-ing into the master node using the following command:
+Access the Master Node
+Start by SSH-ing into the master node with the following command:
 ```bash
 ssh ubuntu@k8strainingmaster001.westus.cloudapp.azure.com
 ```
-Retrieve the Join Command: Once logged into the master node, use the cat command to display the join token and CA certificate hash. This command will be in the workloadtojoin.sh file:
+
+Retrieve the Join Command
+Once logged into the master node, use the following command to display the join token and CA certificate hash. This information is stored in the workloadtojoin.sh file:
 ```bash
 cat /home/ubuntu/workloadtojoin.sh
 ```
 
 Copy the content displayed by the cat command.
 
-Exit the Master Node: After copying the necessary join command, exit the master node session.
+Exit the Master Node
+After copying the necessary join command, exit the master node session.
 
-SSH into the Worker Node: Next, access your worker node by SSH:
+SSH into the Worker Node
+Next, access your worker node via SSH:
+
 ```bash
 ssh ubuntu@k8strainingworker001.westus.cloudapp.azure.com
 ```
-Join the Cluster: On the worker node, paste the previously copied join command to connect the worker node to the Kubernetes cluster. Make sure to replace <paste your token here> and <paste your hash here> with the actual token and hash values you copied. It's important to execute this command with sudo to ensure it has the necessary permissions:
+
+Join the Cluster
+On the worker node, paste the previously copied join command to connect the worker node to the Kubernetes cluster. Replace <your master node ip>, Replace <paste your token here> and <paste your hash here> with the actual token and hash values you copied earlier. This command requires sudo to ensure it has the necessary permissions:
 ```bash
-sudo kubeadm join 10.0.0.4:6443 --token <paste your token here> --discovery-token-ca-cert-hash <paste your hash here>
+sudo kubeadm join <master node ip>:6443 --token <paste your token here> --discovery-token-ca-cert-hash <paste your hash here>
 ```
-Note: If there's a need to reset the Kubernetes setup on the worker node before joining, you can use sudo kubeadm reset -f to do so. However, this step is typically only necessary if you're reconfiguring or troubleshooting the node.
 
-By following these steps, you can successfully join your worker node to the Kubernetes cluster, you can join multiple worker node to expanding its capacity for running workloads.
+Note: If there's a need to reset the Kubernetes setup on the worker node before joining, you can use `sudo kubeadm reset -f`. This step is generally only necessary if you're reconfiguring or troubleshooting the node.
 
+Following these steps will successfully join your worker node to the Kubernetes cluster. You can repeat the process for multiple worker nodes to expand the cluster's capacity for running workloads.
 
+After Successfully Joining Worker Nodes to the Cluster
+Once you have successfully joined the worker nodes to the cluster, return to the master node to continue the setup or deployment process. Use the SSH command provided earlier to access the master node and proceed with your Kubernetes configuration or application deployment.
 
-after sucessfully join worker node to cluster. paste copy and paste below cli command to continue on **master** node
 
 ### Deploy Demo Application And Enable Auto Scalling (HPA)
+
+ After successfully joining the worker nodes to the cluster, the next step is to deploy a demo application and enable auto-scaling using Horizontal Pod Autoscaler (HPA). This process involves executing a script on the master node that sets up the demo application and configures HPA to automatically scale the number of pods based on certain metrics, such as CPU usage.
+
+Continue on the Master Node
+To proceed, return to the master node by pasting and executing the following CLI command:
+```bash
+ssh ubuntu@k8strainingmaster001.westus.cloudapp.azure.com
+```
+Once logged in, run the deployment script by copying and pasting below script into the terminal for deploying your demo application and setting up HPA:
+
 
 ```bash
 
@@ -819,13 +862,23 @@ kubectl get pod
 trap - ERR
 
 ```
-it will took a while to run the script, few minutes later, user expected to see two deployment with two nginx pod is up and running.
+
+Please note that executing the script may take a few minutes. Once completed, you can expect to see two deployments with two Nginx pods up and running, demonstrating the application deployment and ready for test the auto-scaling capabilities of your Kubernetes cluster.
+
+
 
 ### Verify the deployment is sucessful 
 
-`curl -k https://ubuntu22/default` shall return response from nginx server
+To confirm that the deployment of your Nginx service has been successfully completed, you can test the response from the Nginx server using the curl command:
 
-now the installation and nginx service deployment completed sucessfully. we shall see the application deployment is up and running with 2 POD (which run container).
+```bash
+curl -k https://ubuntu22/default
+```
+This command should return a response from the Nginx server, indicating that the service is active and capable of handling requests.
+
+Upon successful installation and deployment of the Nginx service, you should observe that the application deployment is operational with 2 pods running the Nginx container. You can verify this by retrieving the list of running pods using kubectl:
+
+
 ```bash
 
 ubuntu@ubuntu22:~$ kubectl get pod
@@ -833,23 +886,29 @@ NAME                                READY   STATUS    RESTARTS   AGE
 nginx-deployment-55c7f467f8-dxmqt   1/1     Running   0          1m
 nginx-deployment-55c7f467f8-kkr8r   1/1     Running   0          1m
 ```
-we are ready to send benchmark traffic to nginx service and see how kubernetes can scale out more nginx pod to serve the request.
 
+With the Nginx service deployed and verified, we are now prepared to initiate benchmark traffic towards the Nginx service. This step will demonstrate Kubernetes' ability to dynamically scale out additional Nginx pods to accommodate the incoming request load.
 
+### Stress Test the Nginx Server with Hey
 
-### use hey to stress nginx 
+To evaluate the scalability and responsiveness of the Nginx web server under heavy load, we'll utilize the hey tool. This utility is designed to generate a high volume of requests to stress test the server, allowing us to observe how Kubernetes dynamically scales the application to meet demand.
 
-use *hey* to stress the nginx webserver , then monitor the pod creation
 ```bash
 
 hey -n 10000 -c 1000 https://ubuntu22/default
 ```
+This command instructs hey to send a total of 10,000 requests (-n 10000) with a concurrency level of 1,000 (-c 1000) to the Nginx server.
 
-### monitor the application scalling 
 
-After executing this command, you can monitor the gradual creation of new Pods over the next few minutes, which are triggered by traffic from the hey command. Use the `watch kubectl get pods` command to observe this process in real-time. As traffic from hey diminishes, you'll notice that these Pods are eventually removed, reflecting the system's response to decreasing demand.
+### Monitor Application Scaling
+
+After initiating the stress test with hey, you can monitor the deployment as Kubernetes automatically scales out by adding new Pods to handle the increased load. Use the watch command alongside kubectl get pods to observe the scaling process in real time:
+
 ```bash
 watch kubectl get pods
+```
+expect to see pod increasing as a response to the increased load.
+```bash
 NAME                                READY   STATUS    RESTARTS   AGE
 nginx-deployment-55c7f467f8-d7bx9   1/1     Running   0          20s
 nginx-deployment-55c7f467f8-dx7ql   1/1     Running   0          20s
@@ -861,16 +920,25 @@ nginx-deployment-55c7f467f8-kkr8r   1/1     Running   0          5m39s
 nginx-deployment-55c7f467f8-r6ndt   1/1     Running   0          35s
 nginx-deployment-55c7f467f8-xr2l7   1/1     Running   0          5s
 ```
-then pod removed automatically
+As hey continues to send traffic to the Nginx service, you will see the number of Pods gradually increase, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
+
+Once the traffic generated by hey starts to decrease and eventually ceases, watch as Kubernetes smartly scales down the application by terminating the extra Pods that were previously spawned. This behavior illustrates the system's efficient management of resources, scaling down to match the reduced demand.
+
+
+
 ```
 NAME                                READY   STATUS    RESTARTS   AGE
 nginx-deployment-55c7f467f8-dxmqt   1/1     Running   0          10m
 nginx-deployment-55c7f467f8-hdbcc   1/1     Running   0          5m40s
 nginx-deployment-55c7f467f8-kkr8r   1/1     Running   0          10m
 ```
+By executing this stress test and monitoring the application scaling, you gain insight into the powerful capabilities of Kubernetes in managing application workloads dynamically, ensuring optimal resource utilization and responsive application performance.
+
 ### Wrap up
 
-now you shall see how kuberntes  how easy to scale your service dynamicly without human intervention. let's delete the resource we created and ready to dig into the detail how it works.
+By now, you should have observed how Kubernetes can dynamically scale your services without any manual intervention, showcasing the platform's powerful capabilities for managing application demand and resources.
+
+Let's proceed by cleaning up and deleting the resources we've created, preparing our environment for further exploration into the intricacies of how Kubernetes operates.
 
 ```bash
 kubectl delete ingress nginx
@@ -879,8 +947,13 @@ kubectl delete deployment nginx-deployment
 
 ```
 
-### start-over
-if you want start-over anything and remove kubernetes completely. do below on all master node and worker node.  if you are statisfy your k8s and want go to next taks. you can skip this.
+### Starting Over
+If you wish to start over and completely remove Kubernetes from all master and worker nodes, execute the following command on each node. This step is ideal if you're seeking a clean slate for experimenting further or if any part of the setup did not go as planned:
+
 ```bash
 sudo kubeadm reset -f 
 ```
+
+Note: This action will reset your Kubernetes cluster, removing all configurations, deployments, and associated data. It's a critical step, so proceed with caution.
+
+On the other hand, if you are satisfied with your current Kubernetes setup and ready to move on to the next task, you can skip this step. This flexibility allows you to either delve deeper into Kubernetes functionalities or reset your environment for additional testing and learning opportunities.

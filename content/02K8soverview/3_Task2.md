@@ -81,16 +81,22 @@ A **Pod** in Kubernetes is a group of one or more containers that share the same
 
 We have just used deployment to deploy the application , so what is Deployment ?
 A Deployment in Kubernetes is like a manager for your apps running in containers, a Deployment in Kubernetes manages a set of replicas of your application, ensuring they are running and updating them in a controlled way. It makes managing and scaling your applications easier, handling the details of how many instances should run and how updates to those instances are rolled out.  for example, we can use kubectl to scale your POD from 1 to 10 to server more users.
+
+- scale the deployment
+
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
 ```
+- check new deployment
+
 use `kubectl get pod` to check the pod now become 10.
 
 ```bash
 kubectl get pod
 ```
 
-scale down deployment from 10 replicas to 1 just need 
+- scale down deployment
+
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=1
 ```
@@ -107,7 +113,7 @@ kubectl get pod -l app=kubernetes-bootcamp -o wide
 ```
 we shall got output 
 ```bash
-ubuntu@ubuntu22:~$ k get pod -o wide -l app=kubernetes-bootcamp
+ubuntu@ubuntu22:~$ kubectl get pod -o wide -l app=kubernetes-bootcamp
 NAME                                  READY   STATUS    RESTARTS   AGE   IP              NODE         
 kubernetes-bootcamp-bcbb7fc75-5r649   1/1     Running   0          73s   10.244.222.16   worker001    
 
@@ -134,6 +140,66 @@ all the containers within a single Pod in Kubernetes follow  "shared fate" princ
 
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_pods.svg)
 
+
+You can try a few useful command for operating a pod 
+- get the pod name only
+To retrieve just the name(s) of the pod(s) with a specific label (app=kubernetes-bootcamp), use the following command: 
+
+```bash
+kubectl get pods -l app=kubernetes-bootcamp -o=jsonpath='{.items[*].metadata.name}'
+```
+
+- shell into the pod 
+To access the shell of the default container in a pod labeled with app=kubernetes-bootcamp, first capture the pod name in a variable, then use kubectl exec:
+
+```bash
+PODNAME=$(kubectl get pods -l app=kubernetes-bootcamp -o=jsonpath='{.items[*].metadata.name}')
+kubectl exec -it po/$PODNAME -- bash
+```
+Note: This command assumes that your selection returns a single pod name or you are only interested in the first pod. Use exit to leave the container shell.
+
+you will be drop into POD's default container shell, use `exit` to exit the container.
+
+- check log for a pod
+To view the logs from the container in real-time:
+
+```bash
+PODNAME=$(kubectl get pods -l app=kubernetes-bootcamp -o=jsonpath='{.items[*].metadata.name}')
+kubectl logs -f po/$PODNAME
+```
+You will see logs output from the container. Press Ctrl-C to exit the log stream.
+```
+Kubernetes Bootcamp App Started At: 2024-02-21T05:41:33.993Z | Running On:  kubernetes-bootcamp-5485cc6795-cdwz7 
+```
+
+
+- deleteDelete Pod and Observe IP Address Change
+First, check the current pod's IP address:
+
+```bash
+kubectl get pod -l app=kubernetes-bootcamp -o wide
+``` 
+then delete pod 
+```bash
+PODNAME=$(kubectl get pods -l app=kubernetes-bootcamp -o=jsonpath='{.items[*].metadata.name}')
+kubectl delete po/$PODNAME
+```
+You will see an output similar to:
+```
+pod "kubernetes-bootcamp-5485cc6795-cdwz7" deleted
+```
+After deletion, check the pods again. You will find a new pod has been automatically recreated with a new IP address. This behavior is due to the Kubernetes Controller Manager ensuring the actual state matches the desired state specified by the deployment's replicas. A new pod is generated to maintain the desired number of replicas.
+
+```bash
+kubectl get pod -l app=kubernetes-bootcamp -o wide
+```
+
+The IP address assigned to a pod is ephemeral and often change upon pod deletion and recreation.
+
+These commands provide a basic but powerful set of tools for interacting with pods in a Kubernetes environment, from accessing shells and viewing logs to managing pod lifecycles.
+
+
+
 ### Node
 
  A Node in Kubernetes is where a Pod gets to run. Think of a Node as a worker machine that could be either a virtual machine or a physical one, depending on how the cluster is set up. These Nodes are overseen by the cluster's control plane, which ensures everything runs smoothly.
@@ -152,13 +218,43 @@ So, in short, a Node is the workhorse of a Kubernetes cluster, providing the nec
 we can use `kubectl get node -o wide` to check the node status in cluster.
 
 ```bash
-ubuntu@ubuntu22:~$ kubectl get node -o wide
+kubectl get node -o wide
+```
+```
+kubectl get node -o wide
 NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
 ubuntu22    Ready    control-plane   55m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 worker001   Ready    <none>          54m   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 ```
 
-Nodes in Kubernetes can be made unschedulable using the kubectl cordon <nodename> command, which is particularly useful when preparing a node for maintenance. When a node is cordoned, the kube-scheduler will no longer schedule new pods onto it, although existing pods on the node are not affected.
+Nodes in Kubernetes can be made unschedulable using the `kubectl cordon <nodename>` command, which is particularly useful when preparing a node for maintenance. When a node is cordoned, the kube-scheduler will no longer schedule new pods onto it, although existing pods on the node are not affected.
+```bash
+kubectl cordon worker001
+```
+you will expect to see output
+```
+ubuntu@ubuntu22:~$ kubectl get node
+NAME        STATUS                     ROLES           AGE   VERSION
+ubuntu22    Ready                      control-plane   15m   v1.26.1
+worker001   Ready,SchedulingDisabled   <none>          13m   v1.26.1
+```
+use `kubectl uncordon` to put worker node back to work. 
+```bash
+kubectl uncordon worker001
+```
+
+check node again 
+```bash
+kubectl get node
+```
+you will expect to see output
+```
+ubuntu@ubuntu22:~$ kubectl get node
+NAME        STATUS   ROLES           AGE   VERSION
+ubuntu22    Ready    control-plane   19m   v1.26.1
+worker001   Ready    <none>          17m   v1.26.1
+```
+
 
 By default, Kubernetes master nodes are tainted to prevent workloads from being scheduled on them. This is a security and resource management measure designed to keep master nodes dedicated to managing the cluster. However, there might be scenarios, such as in a single-node cluster or for development purposes, where you might need to schedule pods on the master node.
 
@@ -177,25 +273,76 @@ Taints:             <none>
 ```
 If the taint has been removed successfully, you will see Taints: <none> in the output.
 
-To reapply the taint and make the master node unschedulable by the kube-scheduler again, use `kubectl taint nodes ubuntu22 node-role.kubernetes.io/control-plane:NoSchedule`  This command adds the NoSchedule taint back to the node ubuntu22, preventing new pods from being scheduled on it, while not affecting already running pods. This step is useful for reverting the master node back to a dedicated control plane node after maintenance or development activities are complete.
+
+
+To reapply the taint and make the master node unschedulable by the kube-scheduler again, use 
+```bash
+kubectl taint nodes ubuntu22 node-role.kubernetes.io/control-plane:NoSchedule
+```
+
+This command adds the NoSchedule taint back to the node ubuntu22, preventing new pods from being scheduled on it, while not affecting already running pods. This step is useful for reverting the master node back to a dedicated control plane node after maintenance or development activities are complete.
+
+check node again with `kubectl get node --show-labels` and `kubectl describe node ubuntu22 | grep Taints` 
+shall see worker node removed from  "NoSchedule" , and Taints shall be "None".
+
+```bash
+ubuntu@ubuntu22:~$ kubectl get node --show-labels
+NAME        STATUS   ROLES           AGE   VERSION   LABELS
+ubuntu22    Ready    control-plane   22m   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=ubuntu22,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=
+worker001   Ready    <none>          20m   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=worker001,kubernetes.io/os=linux
+
+ubuntu@ubuntu22:~$ kubectl describe node ubuntu22 | grep Taints
+Taints:             <none>
+```
 
 
 
 
 ### What is ReplicaSet 
 
-A ReplicaSet is a Kubernetes resource that ensures a specified number of replicas of a pod are running at any given time. It is one of the key controllers used for pod replication and management, offering both scalability and fault tolerance for applications. The primary purpose of a ReplicaSet is to maintain a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods.
+A **ReplicaSet** is a Kubernetes resource that ensures a specified number of replicas of a pod are running at any given time. It is one of the key controllers used for pod replication and management, offering both scalability and fault tolerance for applications. The primary purpose of a ReplicaSet is to maintain a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods.
 
 **Deployment** is a higher-level resource in Kubernetes that actually manages ReplicaSets and provides declarative updates to applications. 
 
 use below command to check the ReplicaSet (rs) that created when using Deployment to scale the application.
 
 ```bash
-kubectl get rs kubernetes-bootcamp
+kubectl get rs -l app=kubernetes-bootcamp
 kubectl describe rs kubernetes-bootcamp
 ```
 from the output , we can found a line that saying "Controlled By:  Deployment/kubernetes-bootcamp" 
-
+```bash
+ubuntu@ubuntu22:~$ kubectl get rs -l app=kubernetes-bootcamp
+kubectl describe rs kubernetes-bootcamp
+NAME                             DESIRED   CURRENT   READY   AGE
+kubernetes-bootcamp-5485cc6795   1         1         1       18m
+Name:           kubernetes-bootcamp-5485cc6795
+Namespace:      default
+Selector:       app=kubernetes-bootcamp,pod-template-hash=5485cc6795
+Labels:         app=kubernetes-bootcamp
+                pod-template-hash=5485cc6795
+Annotations:    deployment.kubernetes.io/desired-replicas: 1
+                deployment.kubernetes.io/max-replicas: 2
+                deployment.kubernetes.io/revision: 1
+Controlled By:  Deployment/kubernetes-bootcamp
+Replicas:       1 current / 1 desired
+Pods Status:    1 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=kubernetes-bootcamp
+           pod-template-hash=5485cc6795
+  Containers:
+   kubernetes-bootcamp:
+    Image:        gcr.io/google-samples/kubernetes-bootcamp:v1
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Events:
+  Type    Reason            Age   From                   Message
+  ----    ------            ----  ----                   -------
+  Normal  SuccessfulCreate  18m   replicaset-controller  Created pod: kubernetes-bootcamp-5485cc6795-cdwz7
+  ```
 ### What is namespace
 
 A namespace in Kubernetes is like a folder that helps you organize and separate your cluster's resources (like applications, services, and pods) into distinct groups. It's useful for managing different projects, environments (such as development, staging, and production), or teams within the same Kubernetes cluster. Namespaces help avoid conflicts between names and make it easier to apply policies, limits, and permissions on a per-group basis
@@ -247,11 +394,11 @@ To check the services in your Kubernetes cluster, you can use the following comm
 
 use `kubectl get svc` to check service 
 ```bash
-kubectl get svc
+kubectl get svc --show-labels
 ```
 With a default Kubernetes installation, you should see something similar to the following:
 ```bash
-ubuntu@ubuntu22:~$ k get svc --show-labels
+ubuntu@ubuntu22:~$ kubectl get svc --show-labels
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   LABELS
 kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   49m   component=apiserver,provider=kubernetes
 ```
@@ -265,17 +412,22 @@ Below, we launch a pod (container) using the curl command to access the HTTPS po
 
 
 ```bash
-ubuntu@ubuntu22:~$ kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1
+kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1
 ```
 
 Expected output:
 ```bash
+kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1
 HTTP/1.1 403 Forbidden
 ```
 "403" is because curl need to supply a certificate to authenticate itself which we did not supply, however, above is enough to show you the 10.96.0.1 is reachable. 
 
 kube-proxy manages traffic from within the cluster to the actual Kubernetes API endpoint using iptables rules, such as:
 
+```bash
+sudo iptables-save  | grep 10.96.0.1/32
+```
+expect to see 
 ```bash
 sudo iptables-save  | grep 10.96.0.1/32
 -A KUBE-SERVICES -d 10.96.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -j KUBE-SVC-NPX46M4PTMTKRN6Y
@@ -286,7 +438,11 @@ To check the endpoint for the Kubernetes API service, use:
 This command reveals the underlying endpoint that the kubernetes service directs traffic to:
 
 ```bash
-use `ubuntu@ubuntu22:~$ k get ep 
+kubectl get ep
+```
+expected to see 
+```bash
+kubectl get ep 
 NAME         ENDPOINTS       AGE
 kubernetes   10.0.0.4:6443   56m`
 ```
@@ -297,15 +453,13 @@ kubernetes   10.0.0.4:6443   56m`
 
 Kubernetes includes several built-in services essential for its operation  , with `kube-dns` being a key component. The `kube-dns` service is responsible for DNS resolution within the Kubernetes cluster, allowing pods to resolve the IP addresses of other services and external domains.
 
-#### Major Types of Kubernetes Services:
 
-- **ClusterIP**: The default service type that exposes the service on an internal IP within the cluster. This type is used for `kube-dns`, making it accessible only from within the cluster.
-
-To check the services in your Kubernetes cluster, including `kube-dns`, use the following command:
+To check the kube-dns services in your Kubernetes cluster namespace kube-system , use 
 
 ```bash
-kubectl get svc --namespace=kube-system
+kubectl get svc --namespace=kube-system -l k8s-app=kube-dns
 ```
+
 You should see kube-dns listed among the services, typically with a ClusterIP type, indicating it's internally accessible within the cluster.
 
 Verifying DNS Resolution with kube-dns
@@ -361,14 +515,32 @@ LoadBalancer: Exposes the Service externally using a cloud provider’s load bal
 
 
 ### Use Label
+We actually already used label in previous few command, labels in Kubernetes are key/value pairs attached to objects, such as Pods, Services, and Deployments. They serve to organize, select, and group objects in ways meaningful to users, allowing the mapping of organizational structures onto system objects in a loosely coupled fashion without necessitating clients to store these mappings.
 
-Labels in Kubernetes are key/value pairs attached to objects, such as Pods, Services, and Deployments. They serve to organize, select, and group objects in ways meaningful to users, allowing the mapping of organizational structures onto system objects in a loosely coupled fashion without necessitating clients to store these mappings.
-
-Labels can be utilized to filter resources when using kubectl commands. For example, executing `kubectl get pods -l app=kubernetes-bootcamp` retrieves all Pods labeled with app=kubernetes-bootcamp.
+Labels can be utilized to filter resources when using kubectl commands. For example, executing 
+```bash
+kubectl get pods -l app=kubernetes-bootcamp
+```
+will retrieves all Pods labeled with app=kubernetes-bootcamp.
 
 Many kubectl commands include the option `--show-labels`` to display the labels attached to objects. This can be used with various resource types, such as nodes, pods, services, and deployments, through commands like `kubectl get nodes --show-labels``, `kubectl get pods --show-labels``, `kubectl get svc --show-labels``, and `kubectl get deployments --show-labels``.
 
-Labels can be added to an object using the `kubectl label`` command. For instance, executing `kubectl label deployment nginx stage=development`` will add the key:value pair stage=development to the deployment named nginx.
+Labels can be added to an object using the `kubectl label`` command. For instance, executing 
+```bash
+kubectl label deployment kubernetes-bootcamp stage=development
+```
+will add the key:value pair stage=development to the deployment named kubernetes-bootcamp.
+
+use 
+```bash
+kubectl get deployment --show-labels
+``` 
+to check new added label
+```bash
+kubectl get deployment --show-labels
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE   LABELS
+kubernetes-bootcamp   1/1     1            1           39m   app=kubernetes-bootcamp,stage=development
+```
 
 
 
@@ -404,25 +576,31 @@ The Pod's entry remains in the system for a period after termination, allowing y
 
 Through these stages, Kubernetes manages the application's lifecycle, ensuring that the desired state specified by the deployment configurations is maintained. Monitoring the Pod's lifecycle helps in managing and troubleshooting applications running on Kubernetes.
 
-we can use `kubectl get pod` and `kbuectl describe pod` to check the detail state for a POD.
+we can use `kubectl get pod -l app=kubernetes-bootcamp` and `kuectl describe pod -l app=kubernetes-bootcamp` to check the detail state for a POD.
 
 
-### kube-API
+### Kubernetes API-resources 
 
-Kubernetes is fundamentally built around APIs that adhere to the OpenAPI specification, defining resources and their operations. Based on API input, Kubernetes creates objects and stores them in the etcd database. Let's explore using the Kubernetes API to create a Pod, utilizing the kubectl api-resources and kubectl explain commands for guidance. 
+Kubernetes is fundamentally built around APIs that adhere to the OpenAPI specification, defining **resources** and their operations. Based on API input, Kubernetes creates **objects** and stores them in the etcd database. Let's explore using the Kubernetes API to create a Pod, utilizing the kubectl api-resources and kubectl explain commands for guidance. 
 
 - Finding the API Resource for Pods
 
 
 First, identify the API resource needed to create a Pod. You can list all API resources with `kubectl api-resources``:
 
-This command filters the list of API resources to show only those related to Pods. The output will look something like this:
+This command filters the list of API resources to show only those related to Pods. The output will look similar like this:
 
 ```bash
-ubuntu@ubuntu22:~$ kubectl  api-resources | head  -n 1
+kubectl  api-resources | head  -n 1
+kubectl  api-resources | grep pods
+```
+expect to see output 
+
+```bash
+ kubectl  api-resources | head  -n 1
 NAME 
 NAME                              SHORTNAMES                                      APIVERSION                             NAMESPACED   KIND
-ubuntu@ubuntu22:~$ kubectl  api-resources | grep pods
+kubectl  api-resources | grep pods
 pods                              po                                              v1                                     true         Pod
 pods                                                                              metrics.k8s.io/v1beta1                 true         PodMetrics
 ```
@@ -432,12 +610,24 @@ From the output, we see that the "KIND" for Pods is "Pod", and the API version i
 
 - Understanding Pod Specifications
 
-Next, use kubectl explain to understand how to structure a YAML definition for a Pod specification. Execute the following commands to explore the Pod resource specifications:
+Next, use `kubectl explain` to understand how to structure a YAML definition for a Pod specification. Execute the following commands to explore the Pod resource specifications:
 
+```bash
 kubectl explain Pod
+```
+and
+```
 kubectl explain Pod.apiVersion
+```
+and 
+```
 kubectl explain Pod.kind
+```
+and
+```
 kubectl explain Pod.metadata
+```
+
 
 - Crafting a Minimal YAML Definition for a Pod 
 
@@ -456,7 +646,7 @@ spec:
       image: nginx
 EOF
 ```
-To understand the format for containers, use kubectl explain pod.spec.containers. This field accepts a list, indicating that a Pod can contain multiple containers. Further exploration with kubectl explain pod.spec.containers.image reveals that the image field expects a string.
+
 
 - Creating the Pod
 
@@ -474,6 +664,10 @@ kubectl get pod test-pod -o yaml
 
 This command outputs the complete configuration of the Pod, test-pod, showing all properties set by Kubernetes, many of which use default values that you can customize in the Pod YAML definition.
 
+use  `kubectl delete pod test-pod` to delete pod or use yaml file below 
+```bash
+kubectl  delete -f minimalyamlforpod.yaml 
+```
 
 
 
