@@ -257,7 +257,11 @@ trap - ERR
 this is only for experienced user who interested to explore the detail of use kubeadm to install master node.
 
 
-SSH into each master node.
+SSH into master node.
+
+```bash
+ssh ubuntu@k8strainingmaster001.westus.cloudapp.azure.com
+```
 
 #### Install required tool  
 
@@ -481,7 +485,8 @@ This approach ensures that Calico provides robust and flexible networking capabi
 
 ```bash
 cd $HOME
-sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/latest/download/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
+#sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/latest/download/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
+sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/download/v3.25.0/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
 sudo chmod +x /usr/local/bin/calicoctl
 curl --insecure --retry 3 --retry-connrefused -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/tigera-operator.yaml
 kubectl --kubeconfig /home/ubuntu/.kube/config create -f tigera-operator.yaml
@@ -496,11 +501,14 @@ kubectl --kubeconfig /home/ubuntu/.kube/config create namespace calico-system
 sleep 1
 kubectl  get namespace calico-system
 kubectl --kubeconfig /home/ubuntu/.kube/config apply  -f custom-resources.yaml
+sleep 5
 kubectl rollout status deployment calico-kube-controllers -n calico-system
 kubectl rollout status ds calico-node -n calico-system
+
 ```
 
-use `sudo calicoctl node status` to check calico status, until it show calico process is running 
+use `sudo calicoctl node status` to check calico node status, until it show calico process is running 
+use `kubectl get tigerastatus` to check calico status via calico extended api
 
 after install calico. restart coredns is required
 ```
@@ -648,6 +656,19 @@ sudo kubeadm join <master node ip>:6443 --token <paste your token here> --discov
 Note: If there's a need to reset the Kubernetes setup on the worker node before joining, you can use `sudo kubeadm reset -f`. This step is generally only necessary if you're reconfiguring or troubleshooting the node.
 
 Following these steps will successfully join your worker node to the Kubernetes cluster. You can repeat the process for multiple worker nodes to expand the cluster's capacity for running workloads.
+
+use below to check cluster node
+ ```bash
+kubectl get node -o wide
+```
+you are expected to see both master node (ubuntu 22) and worker node (worker001) shall in Ready status. 
+
+```bash
+kubectl get node -o wide
+NAME        STATUS   ROLES           AGE    VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+ubuntu22    Ready    control-plane   5m9s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
+worker001   Ready    <none>          112s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
+```
 
 After Successfully Joining Worker Nodes to the Cluster
 Once you have successfully joined the worker nodes to the cluster, return to the master node to continue the setup or deployment process. Use the SSH command provided earlier to access the master node and proceed with your Kubernetes configuration or application deployment.
@@ -880,8 +901,11 @@ Upon successful installation and deployment of the Nginx service, you should obs
 
 
 ```bash
-
-ubuntu@ubuntu22:~$ kubectl get pod
+kubectl get pod
+```
+shall see two pod is running. 
+```bash
+kubectl get pod
 NAME                                READY   STATUS    RESTARTS   AGE
 nginx-deployment-55c7f467f8-dxmqt   1/1     Running   0          1m
 nginx-deployment-55c7f467f8-kkr8r   1/1     Running   0          1m
@@ -902,7 +926,7 @@ This command instructs hey to send a total of 10,000 requests (-n 10000) with a 
 
 ### Monitor Application Scaling
 
-After initiating the stress test with hey, you can monitor the deployment as Kubernetes automatically scales out by adding new Pods to handle the increased load. Use the watch command alongside kubectl get pods to observe the scaling process in real time:
+After initiating the stress test with **hey**, you can monitor the deployment as Kubernetes automatically scales out by adding new Pods to handle the increased load. Use the watch command alongside kubectl get pods to observe the scaling process in real time:
 
 ```bash
 watch kubectl get pods

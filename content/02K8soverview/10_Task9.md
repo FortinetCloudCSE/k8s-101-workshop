@@ -365,8 +365,22 @@ Verify access:
 ```bash
 
 curl http://k8strainingmaster001.westus.cloudapp.azure.com:31602
+
+```
+
+this expect to get response 
+```bash
 <a href="/kiali/">Found</a>.
 ```
+then use your web browser to access `http://k8strainingmaster001.westus.cloudapp.azure.com:31602` 
+
+
+you are expected to see web page like this
+
+
+
+
+![kiali frontpage](https://istio.io/latest/docs/tasks/observability/kiali/kiali-overview.png)
 
 
 
