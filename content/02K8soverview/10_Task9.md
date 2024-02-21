@@ -7,13 +7,13 @@ weight: 5
 
 ### Understanding How Service Mesh Works
 
-Istio enhances Kubernetes applications by injecting an Envoy proxy as a sidecar container into each pod that's marked for Istio injection. This process is facilitated by Kubernetes' Mutating Admission Webhook, which automatically modifies pod creation requests to include the Envoy sidecar. This setup ensures that all inbound and outbound traffic from the application pods is managed through the Envoy proxy.
+Istio enhances Kubernetes applications by injecting an Envoy proxy as a **sidecar container** into each pod that's marked for Istio injection. This process is facilitated by Kubernetes' Mutating Admission Webhook, which automatically modifies pod creation requests to include the **Envoy** sidecar. This setup ensures that all inbound and outbound traffic from the application pods is managed through the Envoy proxy.
 
-By integrating these sidecar containers within the client namespace for both backend and frontend components, Istio leverages the Envoy sidecar to provide sophisticated traffic management, heightened security, and comprehensive observability features. The control plane component, known as istiod, unifies functionalities of previously separate components (like Pilot, Citadel, and Galley) into a single binary. It plays a crucial role in mesh configuration, proxy configuration distribution, service discovery, and enforcing authentication and authorization policies.
+By integrating these sidecar containers within the client namespace for both backend and frontend components, Istio leverages the Envoy sidecar to provide sophisticated traffic management, heightened security, and comprehensive observability features. The control plane component, known as **istiod**, unifies functionalities of previously separate components (like **Pilot**, **Citadel**, and **Galley**) into a single binary. It plays a crucial role in mesh configuration, proxy configuration distribution, service discovery, and enforcing authentication and authorization policies.
 
 The Istio service mesh employs an istio-ingressgateway, which is essentially an Envoy proxy that operates as a load balancer. This gateway serves as the entry point for external traffic into the mesh, applying Istio's routing rules and policies before traffic reaches the application services.
 
-Istio also utilizes iptables rules to redirect traffic from the client applications to the Envoy proxy. This ensures that even intra-mesh communication benefits from Istio's traffic management and security mechanisms.
+Istio also utilizes **init-container** to setup iptables rules to redirect traffic from the client applications to the Envoy proxy. This ensures that even intra-mesh communication benefits from Istio's traffic management and security mechanisms.
 
 ### Preparation for Istio/Envoy Installation
 Prior to deploying Istio/Envoy, it's essential to verify the availability of an external IP for the load balancer. Istio's architecture includes an ingress gateway that necessitates an external IP address to function correctly. Ensuring this requirement is met is a critical step in the preparation phase for a successful Istio installation.
@@ -234,6 +234,46 @@ NAME                                          DESIRED   CURRENT   READY   AGE
 replicaset.apps/client-deployment-965cf5696   1         1         1       32s
 replicaset.apps/echo-deployment-ddd46554c     1         1         1       4m11s
 ```
+
+- Check the container injected into application in client namespace
+
+Istio injected two container into pod in client namespace. one is 
+init container with name "istio-init" and other one is sidecar container "istio-proxy" doing actual proxy for traffic. 
+the init container "istio-init" setup necessary iptables rules to intercept and redirect inbound and outbound traffic to and from the application containers to the Envoy proxy sidecar container. This process ensures that all traffic can be managed, monitored, and manipulated by Istio's service mesh functionalities, such as traffic control, security policies, and observability features.
+
+```bash
+
+ubuntu@ubuntu22:~$ k get pod -l app=client -n client -o yaml | grep initContainers: -A 20
+    initContainers:
+    - args:
+      - istio-iptables
+      - -p
+      - "15001"
+      - -z
+      - "15006"
+      - -u
+      - "1337"
+      - -m
+      - REDIRECT
+      - -i
+      - '*'
+      - -x
+      - ""
+      - -b
+      - '*'
+      - -d
+      - 15090,15021,15020
+      - --log_output_level=default:info
+      image: docker.io/istio/proxyv2:1.20.3
+```
+and 
+```bash
+ubuntu@ubuntu22:~$ k get pod -l app=client -n client -o yaml | grep sidecar 
+      sidecar.istio.io/status: '{"initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["workload-socket","credential-socket","workload-certs","istio-envoy","istio-data","istio-podinfo","istio-token","istiod-ca-cert"],"imagePullSecrets":null,"revision":"default"}'
+      - sidecar
+```
+
+
 - Verify Traffic Flow Through the Envoy Proxy
 
 Verify the setup by checking the logs of the client pod to see responses from the backend service:
@@ -255,6 +295,7 @@ ubuntu@ubuntu22:~$
 
 ### Service-Mesh obvserbility 
 We can install a ISTIO added on **kiali** to check the Web GUI based dashboard 
+together with **prometheus**, kiali show you a comprehensive traffic graph 
 
 - install kiali
 Install Kiali for observability:
