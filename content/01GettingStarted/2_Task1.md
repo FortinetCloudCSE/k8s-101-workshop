@@ -30,7 +30,7 @@ weight: 2
 
     ![cloudshell7](../images/cloudshell-07.jpg)
 * Select
-  * Use existing Resource Group  - it ***should*** auto populate with USERXX-workshop-sdwan (USERXX is your Username)
+  * Use existing Resource Group  - it ***should*** auto populate with USERXX-k8s101-workshop (USERXX is your Username)
   * Use existing Storage account - it ***should*** auto populate with USERXX########## (########## is a random string)
   * Use existing File Share  - type **cloudshellshare**
 * Click "Attach Storage"
