@@ -22,7 +22,7 @@ resource "azurerm_public_ip" "linuxpip" {
   location            = data.azurerm_resource_group.resourcegroup.location
   resource_group_name = data.azurerm_resource_group.resourcegroup.name
   allocation_method   = "Static"
-  domain_name_label   = "linuxvm-${count.index}"
+  domain_name_label   = "${var.username}-linuxvm-${count.index}"
 }
 
 resource "azurerm_network_interface" "nic" {
