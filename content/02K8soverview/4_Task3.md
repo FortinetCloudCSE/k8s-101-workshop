@@ -784,3 +784,10 @@ expected outcome showing v=1
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-gvw6l | v=1
 pod "curlpod" deleted
 ```
+
+clean up
+
+```bash
+kubectl delete svc kubernetes-bootcamp
+kubectl delete deployment kubernetes-bootcamp
+```
