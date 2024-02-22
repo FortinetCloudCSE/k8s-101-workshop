@@ -376,6 +376,132 @@ after deploy ingress rule. now you shall able to access nginx via `curl http://u
 
 use `kubectl get ingress nginx` and `kubectl describe ingress nginx` to check the ingress rule
 
+### create another svc 
+```bash
+cat << EOF | tee kubernetes-bootcamp.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetes-bootcamp
+spec:
+  replicas: 1 # Default value for replicas when not specified
+  selector:
+    matchLabels:
+      app: kubernetes-bootcamp
+  template:
+    metadata:
+      labels:
+        app: kubernetes-bootcamp
+    spec:
+      containers:
+      - name: kubernetes-bootcamp
+        image: gcr.io/google-samples/kubernetes-bootcamp:v1
+EOF
+kubectl create -f kubernetes-bootcamp.yaml
 
-<TODO>
-HTTP redirect etc.,
+cat << EOF | tee kubernetes-bootcamp-clusterip.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kubernetes-bootcamp
+  name: kubernetes-bootcamp-deployment
+  namespace: default
+spec:
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: kubernetes-bootcamp
+  sessionAffinity: None
+  type: ClusterIP
+EOF
+
+kubectl create -f kubernetes-bootcamp-clusterip.yaml
+```
+
+update the ingress rule to
+```bash
+cat <<EOF  | kubectl apply -f - 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    konghq.com/strip-path: 'true'
+    cert-manager.io/cluster-issuer: selfsigned-issuer-test
+spec:
+  tls:
+  - hosts:
+    - ubuntu22 
+  ingressClassName: kong
+  rules:
+  - host: ubuntu22
+    http:
+      paths:
+      - path: /default
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nginx-deployment
+            port:
+              number: 80
+  - host: ubuntu22
+    http:
+      paths:
+      - path: /bootcamp
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: kubernetes-bootcamp-deployment
+            port:
+              number: 80
+EOF
+```
+
+
+Verify ingress rule with 
+```bash
+curl http://ubuntu22/bootcamp
+curl http://ubuntu22/default
+```
+or 
+```bash
+curl -k http://ubuntu22/bootcamp
+curl -k http://ubuntu22/default
+```
+Expected result
+
+```
+ubuntu@ubuntu22:~$ curl http://ubuntu22/bootcamp
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-2p4kq | v=1
+ubuntu@ubuntu22:~$ curl http://ubuntu22/default
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+ubuntu@ubuntu22:~$ 
+```

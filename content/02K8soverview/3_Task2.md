@@ -100,10 +100,32 @@ kubectl get pod
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=1
 ```
+### ServiceAccount 
+
+A ServiceAccounts are primarily designed for use by processes running in pods is like an identity for processes running in a pod, allowing them to interact with the Kubernetes API securely. When you create a pod, Kubernetes can automatically give it access to a ServiceAccount, so your applications can ask Kubernetes about other parts of the system without needing a separate login. It's a way for your apps to ask Kubernetes "Who am I?" and "What am I allowed to do?"
+
+
+
+
+check the default service account for a POD
+
+```bash
+podName=$(kubectl get pod -l app=nginx  -o=jsonpath='{.items[*].metadata.name}')
+kubectl describe pod $podName | grep 'Service Account' | uniq
+```
+Expected output:
+
+```
+
+Service Account:  default
+```
+
+Kubernetes adheres to the principle of least privilege, meaning the default ServiceAccount is assigned minimal permissions necessary for a pod's basic operations. Should your pod require additional permissions, you must create a new ServiceAccount with the requisite permissions and associate it with your pod. use `kubectl create rolebinding` to bind pre-defined role or custom role to serviceAccount.
+
 
 ### What is POD
 
-A Pod in Kubernetes is like a single instance of an application. It can hold closely related containers that work together. All containers in a Pod share the same IP address and ports, and they are always placed together on the same server (Node) in the cluster. This setup means they can easily communicate with each other.  Pods provide the environment in which containers run and offer a way to logically group containers together.
+A Pod in Kubernetes is like a single instance of an application. It can hold closely related containers that work together. All containers in a Pod share the same IP address and ports, and they are always placed together on the same server (Node) in the cluster. This setup means they can easily communicate with each other.  Pods provide the environment in which containers run and offer a way to logically group containers together. 
 
 We can use `kubectl get pod` to list the pod, use `-l` to select which pod to list.
 **app=kubernetes-bootcamp** is the label assigned to pod during creating.
