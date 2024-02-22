@@ -58,7 +58,6 @@ Simple: Easy to remember and use for ad-hoc scaling operations.
 
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
-
 ```
 You can monitor the scaling process and the deployment's progress using `kubectl rollout status deployment kubernetes-bootcamp`:
 
@@ -75,30 +74,30 @@ Before scaling:
 
 
 
-```bash
-ubuntu@ubuntu22:~$ kubectl get deployment
+```
+$ kubectl get deployment
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           63m
 ```
 Scaling the deployment: 
-```bash
-ubuntu@ubuntu22:~$ kubectl scale deployment kubernetes-bootcamp --replicas=10
+```
+$ kubectl scale deployment kubernetes-bootcamp --replicas=10
 deployment.apps/kubernetes-bootcamp scaled
 ```
 Checking the rollout status:
-```bash
-ubuntu@ubuntu22:~$ kubectl rollout status deployment kubernetes-bootcamp
+```
+$ kubectl rollout status deployment kubernetes-bootcamp
 deployment "kubernetes-bootcamp" successfully rolled out
 ```
 Verifying the deployment after scaling:
-```bash
-ubuntu@ubuntu22:~$ kubectl get deployment kubernetes-bootcamp
+```
+$ kubectl get deployment kubernetes-bootcamp
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          64m
 ```
 Listing the pods:
-```bash
-ubuntu@ubuntu22:~$ kubectl get pod -l app=kubernetes-bootcamp
+```
+$ kubectl get pod -l app=kubernetes-bootcamp
 NAME                                  READY   STATUS    RESTARTS   AGE
 kubernetes-bootcamp-bcbb7fc75-5fjhc   1/1     Running   0          44s
 kubernetes-bootcamp-bcbb7fc75-5kjd7   1/1     Running   0          44s
@@ -113,54 +112,108 @@ kubernetes-bootcamp-bcbb7fc75-t4tkm   1/1     Running   0          44s
 ```
 This output confirms the deployment now runs 10 replicas of the Kubernetes Bootcamp application, demonstrating successful scaling.
 
-### kubectl edit followed by kubectl apply
+delete the deployment 
+```bash
+kubectl delete deployment kubernetes-bootcamp 
+```
+### use kubectl apply 
 
+if the intended resource to update is in yaml file, we can directly edit the yaml file with any editor, then  use `kubectl apply` to update.
+
+The kubectl apply -f command is more flexible and is recommended for managing applications in production. It updates resources with the changes defined in the YAML file but retains any modifications that are not specified in the file.It's particularly suited for scenarios where you might want to maintain manual adjustments or unspecified settings. 
+
+
+First let's create kubernetes-bootcamp deployment yaml file with below 
+```bash
+cat << EOF | tee kubernetes-bootcamp.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetes-bootcamp
+spec:
+  replicas: 1 # Default value for replicas when not specified
+  selector:
+    matchLabels:
+      app: kubernetes-bootcamp
+  template:
+    metadata:
+      labels:
+        app: kubernetes-bootcamp
+    spec:
+      containers:
+      - name: kubernetes-bootcamp
+        image: gcr.io/google-samples/kubernetes-bootcamp:v1
+EOF
+kubectl create -f kubernetes-bootcamp.yaml
+```
+expected Outcome
+```
+ubuntu@ubuntu22:~$ k get deployment
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   1/1     1            1           3s
+```
+then , use editor like vim to change the replicas=1 in the yaml file to replicas=10.
+
+you can also use `sed` to change it 
+
+```bash
+sed -i 's/replicas: 1/replicas: 10/' kubernetes-bootcamp.yaml
+
+```
+ then apply the changes with
+
+ ```bash
+ kubectl apply -f kubernetes-bootcamp.yaml
+ ```
+expected outcome
+```
+kubectl get deployment kubernetes-bootcamp
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   10/10   10           10          99s
+```
+clean up
+```bash
+kubectl delete -f kubernetes-bootcamp.yaml
+```
+Benefits:
+
+Version Controlled: Can be version-controlled if using a local YAML file, allowing for tracking of changes and rollbacks.
+Reviewable: Changes can be reviewed by team members before applying if part of a GitOps workflow.
+
+
+### use kubectl edit 
 
 This approach involves manually editing the resource definition in a text editor (invoked by kubectl edit), where you can change any part of the resource. After saving and closing the editor, Kubernetes applies the changes. This method requires no separate kubectl apply, as kubectl edit directly applies the changes once the file is saved and closed.
 
-Command:
-First, edit the deployment YAML file then manually  change the replicas value, then apply the changes:
 ```bash
 kubectl edit deployment kubernetes-bootcamp
-
 ```
-
 Use Case: Ideal for ad-hoc modifications where you might need to see the full context of the resource or make multiple edits.  
 
-### Kubectl patch
+### Kubectl patch 
 
 kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a pod or changing the number of replicas in a deployment.
 
 Automation Friendly: It's ideal for scripts and automation because you can specify the exact change in a single command line.
 
-reset replicas =1 
+
 ```bash
-kubectl scale deployment kubernetes-bootcamp --replicas=1
+kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=1
 ```
+use `kubectl get deployment  kubernetes-bootcamp` to check
+expected result 
+```
+kubectl get deployment kubernetes-bootcamp
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   1/1     1            1           33s
+```
+
 then use `kubectl patch` to change replicas 
 
 ```bash
 kubectl patch deployment kubernetes-bootcamp --type='json' -p='[{"op": "replace", "path": "/spec/replicas", "value":10}]'
 
 ```
-
-### Directly update yaml file with  kubectl apply
-
-if the intended resource to update is in yaml file, we can directly edit the yaml file with any editor, then  use `kubectl apply` to update.
-
-The kubectl apply -f command is more flexible and is recommended for managing applications in production. It updates resources with the changes defined in the YAML file but retains any modifications that are not specified in the file.It's particularly suited for scenarios where you might want to maintain manual adjustments or unspecified settings. 
-
-edit replicas=1 in yaml file first, then 
-```bash
-# Update the replicas in the YAML file, then:
-kubectl apply -f kubernetes-bootcamp.yaml
-
-```
-
-Benefits:
-
-Version Controlled: Can be version-controlled if using a local YAML file, allowing for tracking of changes and rollbacks.
-Reviewable: Changes can be reviewed by team members before applying if part of a GitOps workflow.
 
 ### Directly update yaml file with  kubectl replace 
 
@@ -170,10 +223,43 @@ Deletion and Recreation: Under the hood, replace effectively deletes and then re
 
 Usage: Use kubectl replace -f when you want to overwrite the resource entirely, and you are certain that the YAML file represents the complete and desired state of the resource.
 
-edit replicas=1 in yaml file first, then 
+create deployment with replicas=1
+
+```bash
+cat << EOF | tee kubernetes-bootcamp.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetes-bootcamp
+spec:
+  replicas: 1 # Default value for replicas when not specified
+  selector:
+    matchLabels:
+      app: kubernetes-bootcamp
+  template:
+    metadata:
+      labels:
+        app: kubernetes-bootcamp
+    spec:
+      containers:
+      - name: kubernetes-bootcamp
+        image: gcr.io/google-samples/kubernetes-bootcamp:v1
+EOF
+kubectl create -f kubernetes-bootcamp.yaml
+```
+then modify **replicas: 1** to **replicas: 10** in kubernetes-bootcamp.yaml
+```bash
+sed -i 's/replicas: 1/replicas: 10/' kubernetes-bootcamp.yaml
+```
 ```bash
 # Update the replicas in the YAML file, then:
 kubectl replace -f kubernetes-bootcamp.yaml
+```
+Expected output 
+```
+kubeclt get deployment
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   1/1     1            1           7m8s
 ```
 
 Risk of Downtime: For some resources, using kubectl replace can cause downtime since it may delete and recreate the resource, depending on the type and changes made. It's important to use this command with caution, especially for critical resources in production environments.
@@ -195,6 +281,10 @@ Summary
 
 Let's explore how to automatically scale your deployment based on resource usage.
 
+clean up
+```bash
+kubectl delete deployment kubernetes-bootcamp
+```
 
 ### Using kubectl autoscale
 
@@ -293,6 +383,8 @@ EOF
 
 #### Use autoscale  (HPA) to scale your application
 
+We can use `kubectl autoscale` command or use create a hpa yaml file then follow a `kubectl apply -f` to create hpa.
+
 - use kubectl command to create hpa 
 
 Benefits:
@@ -308,36 +400,21 @@ Command:
 
 ```bash
 kubectl autoscale deployment nginx-deployment --name=nginx-deployment-hpa --min=1 --max=10 --cpu-percent=50
-
-
-
 ```
-
-After run above command, use `kubectl get hpa nginx-deployment` to check deployment 
-````bash
-kubectl get hpa nginx-deployment
-````
-
-Expect to see
-
-```bash
-ubuntu@ubuntu22:~$ k get hpa nginx-deployment
-NAME                  REFERENCE                        TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
-nginx-deployment   Deployment/nginx-deployment   <unknown>/50%   1         10        1          2m1s
+expected Outcome
+```
+horizontalpodautoscaler.autoscaling/nginx-deployment-hpa autoscaled
 ```
 
 
-
-
-- use yaml file create hpa
-
+- **or** use yaml file to create hpa
 
 ```
-cat << EOF | kubectl apply -f -
+cat << EOF | tee > nginx-deployment-hpa.yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: nginx-hpa
+  name: nginx-deployment-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -353,25 +430,41 @@ spec:
         type: Utilization
         averageUtilization: 50
 EOF
+kubectl apply -f nginx-deployment-hpa.yaml
 ```
-after that. use `kubectl get hpa` and `kubectl describe hpa` to check the status 
 
+
+
+- Check Result 
+
+use `kubectl get hpa nginx-deployment` to check deployment 
+````bash
+kubectl get hpa nginx-deployment-hpa
+````
+
+Expected Outcome
+
+```
+NAME                   REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+nginx-deployment-hpa   Deployment/nginx-deployment   0%/50%    2         10        2          23s
+```
 
 For a deeper understanding, consider using the following command to conduct further observations" 
 
 use `kubectl get deployment nginx-deployment` to check the change of deployment. 
-use `kubectl get hpa` and `kubectl describe hpa` to check the new size of replicas.
+use `kubectl get hpa` and `kubectl describe hpa` to check the  size of replicas.
 
  
 
 
-#### send http traffic to application 
+### Send http traffic to application 
 
 since the nginx-deployment service is cluster-ip type service which can only be accessed from cluster internal, so we need to create a POD which can send http traffic to nginx-deployment service.
 
 - create deployment for generate http traffic, in this deployment, we will use wget to similuate the real traffic towards ngnix-deployment cluster-ip service which has service name `http://nginx-deployment.default.svc.cluster.local`.
 
 ```bash
+cat <<EOF | kubectl apply -f - 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -379,7 +472,7 @@ metadata:
   labels:
     app: infinite-calls
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: infinite-calls
@@ -395,7 +488,8 @@ spec:
         command:
         - /bin/sh
         - -c
-        - "while true; do wget -q -O- http://nginx-deployment.default.svc.cluster.local; sleep 1; done"
+        - "while true; do wget -q -O- http://nginx-deployment.default.svc.cluster.local; done"
+EOF
 ```
 
 - check the creation of busybox deployment 
@@ -405,61 +499,105 @@ kubectl get deployment infinite-calls
 ```
 check the log from infinite-calls pods.
 ```bash
-kubectl logs -f po/infinite-calls-9d45c57b7-h5qjd
+podName=$(kubectl get pod -l app=infinite-calls -o=jsonpath='{.items[*].metadata.name}')
+kubectl logs po/$podName
 ```
 you will see the response from nginx web server container.
 
-use `ctr-c` to exist `kubectl logs -f` command.
 
 
-after a while, when the traffic to nginx pod decreased, check hpa and deployment again for the size of replicas.
+
 use `kubectl top pod` and `kubectl top node` to check the resource usage status
 user expected to see the number of pod increased 
 
  
 you shall see that expected pod now increased automatically without use attention.
 ```bash
-ubuntu@ubuntu22:~$ kubectl get pod
-NAME                                READY   STATUS    RESTARTS   AGE
-nginx-deployment-55c7f467f8-8j2wg   1/1     Running   0          65s
-nginx-deployment-55c7f467f8-gl8tf   1/1     Running   0          9m54s
-nginx-deployment-55c7f467f8-jqzmt   1/1     Running   0          50s
-nginx-deployment-55c7f467f8-kcrs8   1/1     Running   0          65s
-nginx-deployment-55c7f467f8-l446l   1/1     Running   0          9m54s
-nginx-deployment-55c7f467f8-n4crk   1/1     Running   0          35s
-nginx-deployment-55c7f467f8-qtbd4   1/1     Running   0          50s
-nginx-deployment-55c7f467f8-qv2wq   1/1     Running   0          50s
-nginx-deployment-55c7f467f8-tg7ts   1/1     Running   0          50s
-volume-test                         1/1     Running   0          11m
+kubectl get pod -l app=nginx
 ```
-use `kubectl get hpa` shall tell you that hpa is action  which increased the replicas from 2 to 9. 
+expected outcome
+```
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-55c7f467f8-f2qbp   1/1     Running   0          19m
+nginx-deployment-55c7f467f8-hxs79   1/1     Running   0          2m2s
+nginx-deployment-55c7f467f8-jx2k9   1/1     Running   0          19m
+nginx-deployment-55c7f467f8-r7vdv   1/1     Running   0          3m2s
+nginx-deployment-55c7f467f8-w6r8l   1/1     Running   0          3m17s
+```
+use `kubectl get hpa` shall tell you that hpa is action  which increased the replicas from 2 to other numbers. 
 ```bash
-ubuntu@ubuntu22:~$ kubectl get hpa
+kubectl get hpa
+```
+expected outcome 
+```
 NAME        REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-nginx-hpa   Deployment/nginx-deployment   0%/50%    2         10        9          10m
+nginx-deployment-hpa   Deployment/nginx-deployment   50%/50%   2         10        5          11m
+```
+
+check hpa detail
+
+```bash
+kubectl describe hpa
+```
+expected outcome
+
+```
+Name:                     nginx-deployment-hpa
+Namespace:                default
+Labels:                   <none>
+Annotations:              autoscaling.alpha.kubernetes.io/conditions:
+                            [{"type":"AbleToScale","status":"True","lastTransitionTime":"2024-02-22T07:57:16Z","reason":"ReadyForNewScale","message":"recommended size...
+                          autoscaling.alpha.kubernetes.io/current-metrics:
+                            [{"type":"Resource","resource":{"name":"cpu","currentAverageUtilization":48,"currentAverageValue":"4m"}}]
+CreationTimestamp:        Thu, 22 Feb 2024 07:57:01 +0000
+Reference:                Deployment/nginx-deployment
+Target CPU utilization:   50%
+Current CPU utilization:  48%
+Min replicas:             2
+Max replicas:             10
+Deployment pods:          5 current / 5 desired
+Events:
+  Type    Reason             Age    From                       Message
+  ----    ------             ----   ----                       -------
+  Normal  SuccessfulRescale  4m28s  horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  4m13s  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  3m13s  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+```
+
+
+- delete infinite-calls to stop generate the traffic
+
+```bash
+kubectl delete deployment infinite-calls
 ```
 
 after few minutes later, due to no more traffic is hitting the nginx server. hpa will scale in the number of pod to save resource. 
 
 ```bash
-ubuntu@ubuntu22:~$ kubectl get hpa
+kubectl get hpa
+```
+expected output
+```
 NAME        REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-nginx-hpa   Deployment/nginx-deployment   0%/50%    2         10        2          14m
+nginx-deployment-hpa   Deployment/nginx-deployment   0%/50%   2         10        5          12m
 
 ```
 
 use `kubectl describe hpa` will tell you the reason why hpa scale in the number of pod.
 
 ```bash
-buntu@ubuntu22:~$ kubectl describe hpa
-Name:                     nginx-hpa
+kubectl describe hpa
+```
+expected outcome
+```
+Name:                     nginx-deployment-hpa
 Namespace:                default
 Labels:                   <none>
 Annotations:              autoscaling.alpha.kubernetes.io/conditions:
-                            [{"type":"AbleToScale","status":"True","lastTransitionTime":"2024-02-19T01:12:36Z","reason":"ReadyForNewScale","message":"recommended size...
+                            [{"type":"AbleToScale","status":"True","lastTransitionTime":"2024-02-22T07:57:16Z","reason":"ReadyForNewScale","message":"recommended size...
                           autoscaling.alpha.kubernetes.io/current-metrics:
                             [{"type":"Resource","resource":{"name":"cpu","currentAverageUtilization":0,"currentAverageValue":"0"}}]
-CreationTimestamp:        Mon, 19 Feb 2024 01:12:21 +0000
+CreationTimestamp:        Thu, 22 Feb 2024 07:57:01 +0000
 Reference:                Deployment/nginx-deployment
 Target CPU utilization:   50%
 Current CPU utilization:  0%
@@ -467,18 +605,21 @@ Min replicas:             2
 Max replicas:             10
 Deployment pods:          2 current / 2 desired
 Events:
-  Type     Reason                        Age    From                       Message
-  ----     ------                        ----   ----                       -------
-  Warning  FailedGetResourceMetric       15m    horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for any ready pods
-  Warning  FailedComputeMetricsReplicas  15m    horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for any ready pods
-  Normal   SuccessfulRescale             7m1s   horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
-  Normal   SuccessfulRescale             6m46s  horizontal-pod-autoscaler  New size: 8; reason:
-  Normal   SuccessfulRescale             6m31s  horizontal-pod-autoscaler  New size: 9; reason:
-  Normal   SuccessfulRescale             2m     horizontal-pod-autoscaler  New size: 8; reason: All metrics below target
-  Normal   SuccessfulRescale             90s    horizontal-pod-autoscaler  New size: 7; reason: All metrics below target
-  Normal   SuccessfulRescale             60s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
-  ```
- 
+  Type    Reason             Age    From                       Message
+  ----    ------             ----   ----                       -------
+  Normal  SuccessfulRescale  13m    horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  13m    horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  12m    horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  7m55s  horizontal-pod-autoscaler  New size: 8; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  54s    horizontal-pod-autoscaler  New size: 5; reason: All metrics below target
+  Normal  SuccessfulRescale  39s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+```
+clean up
+
+```bash
+kubectl delete hpa nginx-deployment-hpa
+kubectl delete deployment nginx-deployment
+```
 
 Summary 
 
@@ -533,21 +674,113 @@ If a Deployment is exposed publicly, the Service will load-balance the traffic o
 In the following interactive tutorial, we'll update our application to a new version, and also perform a rollback.
 
 How to Perform:
-```bash
 
+- create deployment 
+create deployment with image set to kubernetes-bootcamp:v1
+
+```bash
+kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=4
+kubectl expose deployment kubernetes-bootcamp --target-port=8080 --port=80
+
+```
+expected output from `kubectl get deployment`
+```
+kubectl get deployment
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   4/4   4           4          23s
+```
+
+check the service use curlpod
+```bash
+kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl  http://kubernetes-bootcamp.default.svc.cluster.local
+```
+
+expected outcome showing v=1
+```
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-4m7p9 | v=1
+pod "curlpod" deleted
+```
+
+- upgrade deployment with image set to kubernetes-bootcamp:v2
+
+```bash
 kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
 kubectl rollout status deployment/kubernetes-bootcamp
 ```
-you will see
-
-```bash
-ubuntu@ubuntu22:~$ kubectl rollout status deployment/kubernetes-bootcamp
-Waiting for deployment "kubernetes-bootcamp" rollout to finish: 5 out of 10 new replicas have been updated...
-deployment "kubernetes-bootcamp" successfully rolled out
-
+expected outcome
 ```
-to rollback to old version just 
+$ kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
+kubectl rollout status deployment/kubernetes-bootcamp
+deployment.apps/kubernetes-bootcamp image updated
+Waiting for deployment spec update to be observed...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 old replicas are pending termination...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+deployment "kubernetes-bootcamp" successfully rolled out
+```
+
+you can find above that create new replicas first then delete old replicas so avoid service disruption.
+
+check the service use curlpod
+```bash
+kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl  http://kubernetes-bootcamp.default.svc.cluster.local
+```
+
+expected outcome showing v=2
+```
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-7c6644499c-lsxm9 | v=2
+```
+
+
+- rollback to old version 
+
+to rollback to orignal version, use 
+
 ```bash
 kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v1 
 kubectl rollout status deployment/kubernetes-bootcamp
+```
+
+expected outcome
+
+```
+$ kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v1 
+kubectl rollout status deployment/kubernetes-bootcamp
+deployment.apps/kubernetes-bootcamp image updated
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 0 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 0 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+deployment "kubernetes-bootcamp" successfully rolled out
+```
+
+check the service use curlpod
+```bash
+kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl  http://kubernetes-bootcamp.default.svc.cluster.local
+```
+
+expected outcome showing v=1
+```
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-gvw6l | v=1
+pod "curlpod" deleted
 ```
