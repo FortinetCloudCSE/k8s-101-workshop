@@ -7,7 +7,7 @@ weight: 5
 ### What is Service Mesh and Why
 
 Service mesh solutions like Istio are used to manage complex service-to-service communication within microservices architectures efficiently and securely. They provide a dedicated infrastructure layer built right into the application runtime environment that abstracts and controls inter-service communication, making it easier to implement critical features without altering the application code. Among the numerous use cases and benefits, the most important ones include:
-
+{{% expand title="Click for Detail..." %}}
 1. Traffic Management
 Service meshes offer sophisticated traffic routing rules, load balancing, and control mechanisms that enable A/B testing, canary releases, and blue-green deployments. This allows developers to gradually roll out changes in a controlled manner, directing traffic between different versions of a service based on weights, HTTP headers, or other criteria.
 
@@ -25,20 +25,21 @@ Service meshes allow operators to implement and enforce policies across all comm
 
 Conclusion
 The most important use case of a service mesh like Istio is to provide a comprehensive solution that addresses critical operational challenges of microservices architectures, including traffic management, security, observability, resilience, and policy enforcement. By abstracting these functionalities into the infrastructure layer, Istio allows developers and operators to focus on building and maintaining their applications rather than managing the complexities of service-to-service communication.
-
+{{% /expand %}}
 ### Understanding How Service Mesh Works
 
 Istio enhances Kubernetes applications by injecting an Envoy proxy as a **sidecar container** into each pod that's marked for Istio injection. This process is facilitated by Kubernetes' Mutating Admission Webhook, which automatically modifies pod creation requests to include the **Envoy** sidecar. This setup ensures that all inbound and outbound traffic from the application pods is managed through the Envoy proxy.
-
+{{% expand title="Click for Detail..." %}}
 By integrating these sidecar containers within the client namespace for both backend and frontend components, Istio leverages the Envoy sidecar to provide sophisticated traffic management, heightened security, and comprehensive observability features. The control plane component, known as **istiod**, unifies functionalities of previously separate components (like **Pilot**, **Citadel**, and **Galley**) into a single binary. It plays a crucial role in mesh configuration, proxy configuration distribution, service discovery, and enforcing authentication and authorization policies.
 
 The Istio service mesh employs an istio-ingressgateway, which is essentially an Envoy proxy that operates as a load balancer. This gateway serves as the entry point for external traffic into the mesh, applying Istio's routing rules and policies before traffic reaches the application services.
 
 Istio also utilizes **init-container** to setup iptables rules to redirect traffic from the client applications to the Envoy proxy. This ensures that even intra-mesh communication benefits from Istio's traffic management and security mechanisms.
-
+{{% /expand %}}
 ### Preparation for Istio/Envoy Installation
-Prior to deploying Istio/Envoy, it's essential to verify the availability of an external IP for the load balancer. Istio's architecture includes an ingress gateway that necessitates an external IP address to function correctly. Ensuring this requirement is met is a critical step in the preparation phase for a successful Istio installation.
 
+Prior to deploying Istio/Envoy, it's essential to verify the availability of an external IP for the load balancer. Istio's architecture includes an ingress gateway that necessitates an external IP address to function correctly. Ensuring this requirement is met is a critical step in the preparation phase for a successful Istio installation.
+{{% expand title="Click for Detail..." %}}
 
 Before installing Istio/Envoy, check if there is a free external IP available for a load balancer, as Istio will install an ingress gateway that requires a load balancer with an external IP.
 
@@ -70,9 +71,10 @@ delete it to release external ip for istio to use
 ```bash
 kubectl delete svc kong-proxy -n kong
 ```
-
+{{% /expand %}}
 ### install istio-envoy
 
+{{% expand title="Click for Detail..." %}}
 - Download and Extract Istio
 ```
 curl -L --retry 3 --retry-delay 5  https://istio.io/downloadIstio | ISTIO_VERSION=1.20.3 sh -
@@ -102,8 +104,10 @@ ubuntu@ubuntu22:~/istio-1.20.3$ istioctl install --set profile=default -y
 ✔ Ingress gateways installed                                                                                       
 ✔ Installation complete                                                                               Made this installation the default for injection and validation.
 ```
-### Verify The Installation
+{{% /expand %}}
 
+### Verify The Installation
+{{% expand title="Click for Detail..." %}}
 A new LoadBalacner with name istio-ingressgateway shall be installed with external-ip.
 
 ```bash
@@ -125,7 +129,10 @@ ubuntu@ubuntu22:~$ k get pod -n istio-system -l app=istiod -o yaml | grep image:
       image: docker.io/istio/pilot:1.20.3
 
 ```
-### Verify the Installation
+
+
+
+
 Check that the Istio control plane services and pods are up and running:
 
 And verify that the corresponding Istio control plane pods are all in a RUNNING state:
@@ -133,9 +140,9 @@ And verify that the corresponding Istio control plane pods are all in a RUNNING 
 ```
 kubectl get pods -n istio-system
 ```
-
+{{% /expand %}}
 ### Enable Automatic Sidecar Injection
-
+{{% expand title="Click for Detail..." %}}
 
 Enable automatic sidecar injection for your namespace with below 
 
@@ -145,10 +152,10 @@ kubectl get namespace client
 kubectl label namespace client istio-injection=enabled
 ```
 this will allow istio insert sidecar container for pod that labeled with **istio-injection=enabled**  
-
+{{% /expand %}}
 ### Demo
 
-
+{{% expand title="Click for Detail..." %}}
 - Create demo application  in client namespace
 
 We deploy both frontend svc and backend svc in client namespace. the traffic from frontend will reach backend svc via istio envoy proxy. 
@@ -365,8 +372,11 @@ ubuntu@ubuntu22:~$ kubectl logs -n client -l app=client -c client
 100    27  100    27    0     0   1321      0 --:--:-- --:--:-- --:--:--  1350
 ubuntu@ubuntu22:~$ 
 ``` 
+{{% /expand %}}
 
-### Service-Mesh obvserbility 
+### Service-Mesh obvserbility
+
+{{% expand title="Click for Detail..." %}}
 We can install a ISTIO added on **kiali** to check the Web GUI based dashboard 
 together with **prometheus**, kiali show you a comprehensive traffic graph 
 
@@ -455,7 +465,7 @@ you are expected to see web page like this
 
 ![kiali frontpage](https://istio.io/latest/docs/tasks/observability/kiali/kiali-overview.png)
 
-
+{{% /expand %}}
 
 
 
