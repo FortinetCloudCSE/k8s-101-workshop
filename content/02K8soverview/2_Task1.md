@@ -315,7 +315,7 @@ echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg]
 
 2. **Add the GPG key**
 
-```
+```bash
 mkdir -p /usr/share/keyrings
 sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp
 sudo mv -f /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-archive-keyring.gpg
@@ -329,13 +329,13 @@ sudo mv -f /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp /usr/s
 CRI-O is an open-source container runtime specifically designed for Kubernetes. It implements the Kubernetes Container Runtime Interface (CRI), allowing Kubernetes to use any OCI (Open Container Initiative)-compliant runtime as the container runtime for running pods. all Docker image are OCI-compliant. 
 CRI-O-Runc is a CLI tool for spawning and running containers according to the OCI specification. 
 
-```
+```bash
 sudo apt-get update
 sudo apt-get install cri-o cri-o-runc -y
 ```
 4. **Start and enable CRI-O**
 
-```
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable crio
 sudo systemctl start crio
