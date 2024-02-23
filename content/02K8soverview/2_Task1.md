@@ -36,11 +36,12 @@ Best For: Organizations looking for an enterprise Kubernetes management platform
 
 ## Use kubeadm to install kubernetes 
 
-### nodes provided to user: 
+### use azure shell as client
 
-In this lab, we provide two Ubuntu 22.04 Linux VMs that can be configured either as master nodes or worker nodes. Each user is granted sudo privileges on both types of servers. To ensure smooth operation of Kubernetes, each server is equipped with at least 2 CPUs, 4GB of RAM, and network connectivity between them. All VMs are deployed on Azure cloud within the same VNET, facilitating seamless communication. 
+before proceed, make sure you have already completed the deployment using terrafrom in azure shell. below all operation are performed on same **azure cloud shell** where you deploy your terraform script. 
 
-#### generate ssh-key for master and worker node
+
+### generate ssh-key for master and worker node
 ```bash
 rm -f /home/$(whoami)/.ssh/known_hosts
 
@@ -57,7 +58,7 @@ echo $vmpassword
 - generate ssh-key 
 
 ```bash
-ssh-keygen -q -N "" -f ~/.ssh/id_rsa -y
+ssh-keygen -q -N "" -f ~/.ssh/id_rsa 
 ```
 
 - copy ssh-key to master node, enter password  when prompted.
