@@ -1,7 +1,6 @@
 ---
 title: "Chapter2 - Review"
 menuTitle: "Chapter2 - Review"
-chapter: false
 weight: 4
 ---
 

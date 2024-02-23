@@ -1,7 +1,6 @@
 ---
 title: "Task 2- Deployments, Scaling , Upgrade Applications"
 menuTitle: "Task 2: Deployments, Scaling, Upgrade Applications"
-chapter: false
 weight: 2
 ---
 

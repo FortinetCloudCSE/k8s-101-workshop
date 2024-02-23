@@ -1,8 +1,7 @@
 ---
 title: "Task 6  - Networking Policy and Pod Security"
 menuTitle: "security"
-chapter: false
-weight: 7
+weight: 6
 ---
 
 
