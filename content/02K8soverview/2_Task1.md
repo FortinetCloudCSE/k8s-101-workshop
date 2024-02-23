@@ -145,6 +145,7 @@ This chapter aims to demonstrate the ease of dynamically scaling your applicatio
 cd $HOME/k8s-101-workshop/terraform/
 nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
+sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename
 ```
