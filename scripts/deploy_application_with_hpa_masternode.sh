@@ -24,8 +24,8 @@ kubectl delete pvc local-path-pvc
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml" -o components.yaml
 sed -i '/- --metric-resolution/a \ \ \ \ \ \ \ \ - --kubelet-insecure-tls' components.yaml
 
-kubectl apply -f components.yaml
-kubectl rollout status deployment metrics-server -n kube-system
+#kubectl create -f components.yaml
+#kubectl rollout status deployment metrics-server -n kube-system
 
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
 kubectl rollout status deployment controller -n metallb-system
@@ -192,4 +192,6 @@ EOF
 kubectl rollout status deployment nginx-deployment
 kubectl get deployment nginx-deployment
 kubectl get pod 
+kubectl create -f components.yaml
+
 trap - ERR
