@@ -10,7 +10,7 @@ Kubernetes is a powerful platform designed to automate deploying, scaling, and o
 
 {{% notice info %}} 
 A microservice is like a small, specialized team in a company. Each team focuses on a specific task, such as marketing or customer support, and works independently. Similarly, in software, a microservice is a small, self-contained component that handles a specific function of an application, like user authentication or order processing.
-{{/% notice info %}}
+{{% /notice info %}}
 
 ### Scaling from Few Users to Millions
 

@@ -21,14 +21,13 @@ kubectl relies on a configuration file found at ~/.kube/config for authenticatio
 
 {{% notice info %}} 
 To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address. It's also important for the kube-API server to recognize your client's IP address as a trusted source by adding it to a whitelist. This setup ensures secure communication between your client machine and the Kubernetes cluster's control plane.
-{{/% notice info %}} 
+{{% /notice info %}} 
 
-We have configured the master node's Ubuntu VM to also serve as a client node for accessing the Kubernetes cluster. Therefore, once you SSH into the master node VM, you can directly use kubectl for cluster management and operations.
+- We have configured the master node's Ubuntu VM to also serve as a client node for accessing the Kubernetes cluster. Therefore, once you SSH into the master node VM, you can directly use kubectl for cluster management and operations.
 
-- #### basic usage of `kubectl`
+- basic usage of `kubectl`
 
-The common format of a kubectl command is: **kubectl ACTION RESOURCE**
-
+The common format of a kubectl command is: **kubectl _ACTION_ _RESOURCE_**
 
 This performs the specified action (like create, describe or delete) on the specified resource (like node or deployment). You can use --help after the subcommand to get additional info about possible parameters (for example: kubectl get nodes --help).
 
@@ -36,7 +35,7 @@ Check that kubectl is configured to talk to your cluster, by running the `kubect
 
 Check that kubectl is installed and you can see both the client and the server versions.
 
-- #### Most used kubectl commands: 
+- Most used kubectl commands: 
 
 ```bash
 Basic Commands (Beginner):
@@ -65,9 +64,53 @@ you are expected to see a cluster with both master and worker node.Later, Kubern
 
 ### POD
 
-1. What is POD 
+## What is a POD?
 
 A Pod in Kubernetes is like a single instance of an application. It can hold closely related containers that work together. All containers in a Pod share the same IP address and ports, and they are always placed together on the same server (Node) in the cluster. This setup means they can easily communicate with each other.  Pods provide the environment in which containers run and offer a way to logically group containers together. 
+
+1. To create a pod:
+
+- kubectl run: Quick way to create a single pod for ad-hoc tasks or debugging.(Imperative)
+- kubectl create: Creates specific Kubernetes resources with more control. Use kubectl create -f to create from file.(Declarative)
+- kubectl apply: Creates or updates resources based on their configuration files. Use kubectl apply -f to create from file.(Declarative)
+
+2. Run POD with `kubectl run`
+```bash
+kubectl run juiceshop --image=bkimminich/juice-shop
+``` 
+above will create a POD with container juiceshop runing inside it. 
+
+use `kubectl get pod` to check the POD
+```bash
+kubectl get pod
+```
+exepcted result
+```
+kubectl get pod
+NAME        READY   STATUS    RESTARTS   AGE
+juiceshop   1/1     Running   0          7s
+```
+
+3. delete POD with `kubectl delete`. check pod again with `kubectl get pod`
+
+```bash
+kubectl delete pod juiceshop
+```
+
+4. Create POD with `kubectl create -f`
+
+```bash
+cat << EOF | kubectl create -f - 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: juiceshop
+spec:
+  containers:
+  - image: bkimminich/juice-shop
+    name: juiceshop
+EOF
+```
 
 ### Labels
 
@@ -126,13 +169,11 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 Congratulations! You've just deployed your first application by creating a deployment. 
 
 {{% notice info %}} 
-
 This process automates several steps:
 Identifies a suitable node where the application instance can be run (assuming there's only one available node in this scenario).
 Schedules the application to run on that chosen node.
 Ensures the cluster is configured to reschedule the instance to a new node if necessary.
-
-{{/% notice info %}} 
+{{% /notice info %}} 
 
 3. To view your deployments use the kubectl get deployments command:
 

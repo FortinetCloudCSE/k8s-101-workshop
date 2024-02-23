@@ -23,51 +23,8 @@ Pods in a Kubernetes cluster are used in two main ways:
 
 **Pods that run multiple containers:** that need to work together. A Pod can encapsulate an application composed of multiple co-located containers that are tightly coupled and need to share resources. These co-located containers form a single cohesive unit.
 
-1. To create a pod:
 
-- kubectl run: Quick way to create a single pod for ad-hoc tasks or debugging.(Imperative)
-- kubectl create: Creates specific Kubernetes resources with more control. Use kubectl create -f to create from file.(Declarative)
-- kubectl apply: Creates or updates resources based on their configuration files. Use kubectl apply -f to create from file.(Declarative)
-
-2. Run POD with `kubectl run`
-```bash
-kubectl run juiceshop --image=bkimminich/juice-shop
-``` 
-above will create a POD with container juiceshop runing inside it. 
-
-use `kubectl get pod` to check the POD
-```bash
-kubectl get pod
-```
-exepcted result
-```
-kubectl get pod
-NAME        READY   STATUS    RESTARTS   AGE
-juiceshop   1/1     Running   0          7s
-```
-
-3. delete POD with `kubectl delete`. check pod again with `kubectl get pod`
-
-```bash
-kubectl delete pod juiceshop
-```
-
-4. Create POD with `kubectl create -f`
-
-```bash
-cat << EOF | kubectl create -f - 
-apiVersion: v1
-kind: Pod
-metadata:
-  name: juiceshop
-spec:
-  containers:
-  - image: bkimminich/juice-shop
-    name: juiceshop
-EOF
-```
-
-5. Another example of Creating a pod
+. Another example of Creating a pod
 
 ```bash
 cat << EOF | kubectl apply -f -
