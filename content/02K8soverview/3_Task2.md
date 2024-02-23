@@ -168,12 +168,11 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 
 Congratulations! You've just deployed your first application by creating a deployment. 
 
-{{% notice info %}} 
+
 This process automates several steps:
 Identifies a suitable node where the application instance can be run (assuming there's only one available node in this scenario).
 Schedules the application to run on that chosen node.
 Ensures the cluster is configured to reschedule the instance to a new node if necessary.
-{{% /notice info %}} 
 
 3. To view your deployments use the kubectl get deployments command:
 
