@@ -1,7 +1,6 @@
 ---
 title: "Task 2 - Concepts of Kubernetes"
 menuTitle: "Task 2: Concepts of Kubernetes"
-chapter: false
 weight: 2
 ---
 

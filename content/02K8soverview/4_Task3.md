@@ -1,7 +1,6 @@
 ---
 title: "Task 3 - Node and Service"
 menuTitle: "Task 3: Node and Service"
-chapter: false
 weight: 3
 ---
 

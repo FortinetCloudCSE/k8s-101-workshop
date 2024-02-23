@@ -1,7 +1,6 @@
 ---
 title: "Task 1 - Configuration"
 menuTitle: "configuration"
-chapter: false
 weight: 1
 ---
 

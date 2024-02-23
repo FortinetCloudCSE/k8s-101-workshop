@@ -1,8 +1,7 @@
 ---
 title: "Optional task  - Step by Step Install kubernetes"
 menuTitle: "Appendix: Manual Installation"
-chapter: false
-weight: 20
+weight: 5
 ---
 
 ###  Step by Step approach for install master node

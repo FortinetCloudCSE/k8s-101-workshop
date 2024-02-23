@@ -1,8 +1,7 @@
 ---
 title: "Task 3 - Creating and Managing Pods"
 menuTitle: "Pods"
-chapter: false
-weight: 4
+weight: 3
 ---
 
 In Kubernetes, a Pod is the smallest and most basic deployable unit. It represents a single instance of a running process in your cluster. Pods are the building blocks of Kubernetes applications and encapsulate one or more containers, storage resources, a unique network IP, and options that govern how the containers should run. More info about pods:

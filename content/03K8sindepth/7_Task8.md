@@ -1,8 +1,7 @@
 ---
 title: "Task 7 - Service Mesh"
 menuTitle: "Service Mesh"
-chapter: false
-weight: 8
+weight: 7
 ---
 ### What is Service Mesh and Why
 
