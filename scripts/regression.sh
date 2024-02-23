@@ -12,18 +12,19 @@ terraform output -json | jq -r .linuxvm_password.value
 echo $vmpassword
 
 ssh-keygen -q -N "" -f ~/.ssh/id_rsa -y
-
+sleep 10
 #copy key to master 
 cd $HOME/k8s-101-workshop/terraform/
 nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
+sleep 10
 #copy key to worker 
 cd $HOME/k8s-101-workshop/terraform/
 nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
-
+sleep 10
 
 #start install k8s master
 cd $HOME/k8s-101-workshop/terraform/
