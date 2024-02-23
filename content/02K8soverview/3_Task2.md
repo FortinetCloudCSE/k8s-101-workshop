@@ -25,9 +25,9 @@ To use kubectl from your personal client machine, you need to copy the ~/.kube/c
 
 - We have configured the master node's Ubuntu VM to also serve as a client node for accessing the Kubernetes cluster. Therefore, once you SSH into the master node VM, you can directly use kubectl for cluster management and operations.
 
-- basic usage of `kubectl`
+- **basic usage of** `kubectl`
 
-The common format of a kubectl command is: **kubectl _ACTION_ _RESOURCE_**
+The common format of a kubectl command is: **kubectl _ACTION RESOURCE_**
 
 This performs the specified action (like create, describe or delete) on the specified resource (like node or deployment). You can use --help after the subcommand to get additional info about possible parameters (for example: kubectl get nodes --help).
 
@@ -167,8 +167,6 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 ```
 
 Congratulations! You've just deployed your first application by creating a deployment. 
-
-
 This process automates several steps:
 Identifies a suitable node where the application instance can be run (assuming there's only one available node in this scenario).
 Schedules the application to run on that chosen node.
