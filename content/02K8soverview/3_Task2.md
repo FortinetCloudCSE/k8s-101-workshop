@@ -18,9 +18,9 @@ Once you have a running Kubernetes cluster, you can deploy your containerized ap
 
 kubectl relies on a configuration file found at ~/.kube/config for authentication and communication with the kube-api-server. Running `kubectl config view` displays details about the kube-API server, including its address, name, and the client's key and certificate.
 
-{{% notice info %}} 
+
 To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address. It's also important for the kube-API server to recognize your client's IP address as a trusted source by adding it to a whitelist. This setup ensures secure communication between your client machine and the Kubernetes cluster's control plane.
-{{% /notice info %}} 
+
 
 - We have configured the master node's Ubuntu VM to also serve as a client node for accessing the Kubernetes cluster. Therefore, once you SSH into the master node VM, you can directly use kubectl for cluster management and operations.
 
@@ -165,6 +165,8 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 ```
 
 Congratulations! You've just deployed your first application by creating a deployment. 
+
+
 This process automates several steps:
 Identifies a suitable node where the application instance can be run (assuming there's only one available node in this scenario).
 Schedules the application to run on that chosen node.
