@@ -8,9 +8,7 @@ weight: 30
 
 Kubernetes is a powerful platform designed to automate deploying, scaling, and operating application containers, making it an excellent choice for managing microservices-based applications that need to scale from a few users to millions of internet users while ensuring high availability. Here's how Kubernetes addresses these specific requirements:
 
-{{% notice info %}} 
 A microservice is like a small, specialized team in a company. Each team focuses on a specific task, such as marketing or customer support, and works independently. Similarly, in software, a microservice is a small, self-contained component that handles a specific function of an application, like user authentication or order processing.
-{{% /notice info %}}
 
 ### Scaling from Few Users to Millions
 
