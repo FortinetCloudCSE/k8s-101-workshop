@@ -43,4 +43,10 @@ terraform apply  -var='username=UserXX' --auto-approve
 
 ![lab13](../images/terraformoutput.png)
 
+7. Once Terraform is complete you should see the output. Please copy the output to notepad.
 
+    (will add picture here)
+
+8. To print the node VM's login password, you can run this command ```terraform output -raw linuxvm_password```
+
+    (will add picture here)
