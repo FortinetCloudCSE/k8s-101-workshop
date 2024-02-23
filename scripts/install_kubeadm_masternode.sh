@@ -57,11 +57,11 @@ CRICTL_VERSION="v1.25.0"
 ARCH="amd64"
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-$ARCH.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 
-CNI_PLUGINS_VERSION="v1.1.1"
-ARCH="amd64"
-DEST="/opt/cni/bin"
-sudo mkdir -p "$DEST"
-curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
+#CNI_PLUGINS_VERSION="v1.1.1"
+#ARCH="amd64"
+#DEST="/opt/cni/bin"
+#sudo mkdir -p "$DEST"
+#curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
 
 #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
 RELEASE="v1.26.1"
@@ -113,6 +113,7 @@ kubectl --kubeconfig /home/${username}/.kube/config config set-cluster kubernete
 kubeadm token create --print-join-command > /home/${username}/workloadtojoin.sh
 kubeadm config print join-defaults  > /home/${username}/kubeadm-join.default.yaml
 echo '#sudo kubeadm join --config kubeadm-join.default.yaml' | sudo tee -a  /home/${username}/workloadtojoin.sh
+sed -i 's/^kubeadm join/sudo kubeadm join/g' workloadtojoin.sh
 chmod +x /home/${username}/workloadtojoin.sh
 cat /home/${username}/workloadtojoin.sh
 
