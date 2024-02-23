@@ -52,7 +52,7 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
   resource_group_name   = data.azurerm_resource_group.resourcegroup.name
   location              = data.azurerm_resource_group.resourcegroup.location
   size                  = "Standard_B2s"
-  admin_username        = "adminuser"
+  admin_username        = "ubuntu"
   admin_password        = "AdminPassword1234!"
   disable_password_authentication = false
 
