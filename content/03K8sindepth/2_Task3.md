@@ -1,8 +1,8 @@
 ---
-title: "Task 4 - Deployments, Scaling , Upgrade Applications"
-menuTitle: "Task 4: Deployments, Scaling, Upgrade Applications"
+title: "Task 2- Deployments, Scaling , Upgrade Applications"
+menuTitle: "Task 2: Deployments, Scaling, Upgrade Applications"
 chapter: false
-weight: 3
+weight: 2
 ---
 
 Objective: Master the Creation and Management of Deployments

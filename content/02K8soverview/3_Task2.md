@@ -163,7 +163,6 @@ It requires specifying the deployment name and the location of the application i
 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
-
 ```
 
 Congratulations! You've just deployed your first application by creating a deployment. 
@@ -278,7 +277,6 @@ expected output
 $kubectl get pod -o wide -l app=kubernetes-bootcamp
 NAME                                  READY   STATUS    RESTARTS   AGE   IP              NODE         
 kubernetes-bootcamp-bcbb7fc75-5r649   1/1     Running   0          73s   10.244.222.16   worker001    
-
 ```
 
 Above output is from the kubectl get pod -o wide -l app=kubernetes-bootcamp command, which requests Kubernetes to list pods with additional information (wide output) that match the label app=kubernetes-bootcamp. Here's a breakdown of the output:

@@ -235,8 +235,6 @@ Note: This action will reset your Kubernetes cluster, removing all configuration
 On the other hand, if you are satisfied with your current Kubernetes setup and ready to move on to the next task, you can skip this step. This flexibility allows you to either delve deeper into Kubernetes functionalities or reset your environment for additional testing and learning opportunities.
 
 
-
-
 Summary
 
 This chapter aims to demonstrate the ease of dynamically scaling your applications using Kubernetes.  
