@@ -8,7 +8,9 @@ weight: 20
 
 Kubernetes is a powerful platform designed to automate deploying, scaling, and operating application containers, making it an excellent choice for managing microservices-based applications that need to scale from a few users to millions of internet users while ensuring high availability. Here's how Kubernetes addresses these specific requirements:
 
-{{% notice info %}} A microservice is like a small, specialized team in a company. Each team focuses on a specific task, such as marketing or customer support, and works independently. Similarly, in software, a microservice is a small, self-contained component that handles a specific function of an application, like user authentication or order processing.
+{{% notice info %}} 
+A microservice is like a small, specialized team in a company. Each team focuses on a specific task, such as marketing or customer support, and works independently. Similarly, in software, a microservice is a small, self-contained component that handles a specific function of an application, like user authentication or order processing.
+{{/% notice info %}}
 
 ### Scaling from Few Users to Millions
 
@@ -33,11 +35,12 @@ In essence, while Docker focuses on the individual container and its lifecycle, 
 
 For applications expected to grow from a few users to millions and require constant availability, Kubernetes provides a robust, scalable platform that can adapt to changing demands, manage deployments and updates seamlessly, and ensure that services are always available to end-users.
 
+
 ##  Kubernetes architecture 
 
 Kubernetes is a powerful platform designed to manage containerized applications across a cluster of machines, providing tools for deploying applications, scaling them as necessary, and managing changes to existing containerized applications. Its architecture is designed to be highly modular, distributing responsibilities across various components that work together to form a robust system. Here’s an overview of the key components within the Kubernetes architecture, using the example of autoscaling a microservice to illustrate their roles:
 
-[Alt text for the image](https://kubernetes.io/images/docs/kubernetes-cluster-architecture.svg)
+[!Alt text for the image](https://kubernetes.io/images/docs/kubernetes-cluster-architecture.svg)
 
 ### Kubernetes Master Components
 - Kubernetes API Server (kube-apiserver): 
@@ -76,7 +79,6 @@ Allow Kubernetes to interface with a wide range of storage systems, making it po
 ## Different Kubernetes distribution
 
 - Self-Managed Kubernetes:
-
 Self-Managed Kubernetes distributions like Minikube, MicroK8s, K3s/K3d, and OpenShift give users full control over their Kubernetes environments, suitable for a range of scenarios from development to enterprise production.
 
 - Cloud-Managed Kubernetes:

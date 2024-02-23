@@ -1,106 +1,48 @@
 ---
-title: "Task 4 - Configuration"
-menuTitle: "configuration"
+title: "Chapter2 - Review"
+menuTitle: "Chapter2 - Review"
 chapter: false
 weight: 4
 ---
 
-### Configuring Applications with ConfigMaps and Secrets
 
-Objective: Master injecting configuration into Pods.
-Description: Learn to externalize application configuration using ConfigMaps and the Downward API. Understand how to pass environment variables, configure application settings, and expose Pod and container metadata to applications. Labs include creating ConfigMaps and using the Downward API to expose Pod information.
+### Challenge
 
-**ConfigMaps:**
+1. Use `kubectl run` to create a POD with juiceshop image and add a label owner=dev 
 
-In Kubernetes, ConfigMaps are a resource object used to store non-sensitive configuration data in key-value pairs that can be consumed by pods or other system components. They provide a way to decouple configuration artifacts from container images, allowing for more flexible and manageable application configurations.
+2. Use `kubectl create deployment` to create a deployment for juiceshop
 
-Here are some reasons why ConfigMaps are used in Kubernetes:
+3. Use create a yaml file for juiceshop deployment and use `kubectl create -f` to create the deployment 
 
-- Separation of Concerns: ConfigMaps allow you to separate configuration data from application code. This separation makes it easier to manage configurations independently of the application's lifecycle, which can be particularly useful in scenarios where multiple instances of the same application are deployed with different configurations.
+4. Use `kubectl` to find the specifcation for imagePullPolicy which is need for create a POD. 
 
-- Dynamic Configuration Updates: ConfigMaps support dynamic updates, meaning that changes to the configuration can be applied to running pods without requiring a restart. This allows for more flexibility and agility in managing application configurations.
+5. which kubectl cli and answer what is the imagePullPolicy avaiable to choose. 
 
-- Environment Agnostic: ConfigMaps are environment-agnostic, meaning that the same configuration can be used across multiple environments (e.g., development, testing, production) without modification. This helps maintain consistency and simplifies the deployment process.
+Answer: 
 
-- Immutable Infrastructure: By externalizing configurations into ConfigMaps, the underlying infrastructure becomes more immutable. This means that changes to configurations do not require modifications to the underlying infrastructure, making deployments more predictable and reliable.
-
-- Centralized Management: ConfigMaps provide a centralized location for managing configuration data. This can be particularly beneficial in large-scale deployments where multiple applications and components require different configurations.
-
-- Integration with Other Resources: ConfigMaps can be easily integrated with other Kubernetes resources such as pods, deployments, and services. This allows you to inject configuration data into your application containers at runtime, making them highly configurable and adaptable to different environments.
-
-Overall, ConfigMaps play a crucial role in Kubernetes by providing a flexible and efficient mechanism for managing configuration data in a containerized environment, contributing to improved application deployment, scalability, and maintainability.
-
-
-**Secrets:**
-
-In Kubernetes, Secrets are another type of resource object used to store sensitive information, such as passwords, OAuth tokens, and SSH keys, in a secure manner. They are similar to ConfigMaps but are specifically designed to handle sensitive data. Here are some key aspects of Secrets in Kubernetes:
-
-- Secure Storage: Secrets are stored securely within the Kubernetes cluster, encrypted at rest by default. This ensures that sensitive information is not exposed or accessible to unauthorized users.
-
-- Base64 Encoding: Secret data is typically stored in Base64 encoded format. While Base64 encoding does not provide encryption, it helps prevent accidental exposure of sensitive data in logs or other places where plaintext might be displayed.
-
-- Multiple Types of Secrets: Kubernetes supports various types of Secrets, including generic secrets, Docker registry credentials, TLS certificates, and service account tokens. Each type of Secret has its specific use case and configuration options.
-
-- Usage in Pods: Secrets can be mounted as volumes or exposed as environment variables within pods. This allows containers running within the pod to access the sensitive information stored in the Secret without exposing it directly in the container specification or source code.
-
-- Access Control: Kubernetes provides role-based access control (RBAC) mechanisms to manage access to Secrets. This ensures that only authorized users or applications can create, read, update, or delete Secrets within the cluster.
-
-- Automatic Injection: In some cases, Kubernetes can automatically inject certain types of Secrets into pods. For example, service account tokens are automatically mounted as a volume in pods running within the Kubernetes cluster, allowing them to authenticate with the Kubernetes API server.
-
-- Immutable Once Created: Unlike ConfigMaps, Secrets are immutable once created. This means that you cannot update the data stored in a Secret directly. Instead, you must delete the existing Secret and create a new one with the updated data.
-
-Overall, Secrets in Kubernetes provide a secure and convenient way to manage sensitive information within a cluster, ensuring that sensitive data is protected from unauthorized access while still being accessible to the applications that need it.
-
-
-## Creating ConfigMaps:
-
+```bash
+kubectl explain Pod.spec.containers.imagePullPolicy
 ```
-cat << EOF | kubectl apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-index-html
-data:
-  index.html: |
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Welcome to NGINX!</title>
-    </head>
-    <body>
-      <h1>Welcome to NGINX!</h1>
-      <p>This is a custom index.html page served by NGINX.</p>
-    </body>
-    </html>
+Answer 
+```bash
+Always, Never, IfNotPresent
 ```
 
-To get configmap, try ```kubectl get configmap```
+6. use curl to get namespace 
 
-## Creating Secret:
+Try to use curl command instead `kubectl` to get namespace for cluster. you have to give client key and certificate to authenticate to kube-API server.
 
-- Firstly, we need encode a secret value to base64. On linux you can use the following commands to encode.
+Answer
 
-- Encode a string to base64:
+```bash
+sudo snap install yq
+cat ~/.kube/config | yq .users[0].user.client-certificate-data | base64 -d > k8sadmin.crt
+cat ~/.kube/config | yq .users[0].user.client-key-data | base64 -d > k8sadmin.key
 
-```echo -n 'your_secret_value' | base64```
-
-for example: 
-
-```echo -n 'ftntadmin' | base64```
-```echo -n 'password123' | base64```
+SERVER="10.0.0.4"
+curl --key k8sadmin.key --cert k8sadmin.crt https://$SERVER:6443/api/v1/pods --insecure -s -w "\n" |
+  jq -r '.items[] | "\(.metadata.namespace)\t\(.metadata.name)\t\(.status.containerStatuses[0].ready)\t\(.status.phase)\t\(.status.containerStatuses[0].restartCount)\t\(.spec.containers|length)"' |
+  column -t -s $'\t'
 
 ```
-cat << EOF | kubectl apply -f -
-apiVersion: v1
-kind: Secret
-metadata:
-  name: nginx-secret
-type: Opaque
-data:
-  username: <base64-encoded-username>
-  password: <base64-encoded-password>
-```
-
-There are several types of built in Secrets [!https://kubernetes.io/docs/concepts/configuration/secret/#secret-types] in Kubernetes. Opaque is a secret which is an arbitrary user defined data. 
-
 

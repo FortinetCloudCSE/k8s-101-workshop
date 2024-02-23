@@ -94,7 +94,7 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/s
 #### Install kubernetes worker node :
 
 
-- ssh into worker node to run kubernetes master installation script 
+- ssh into worker node to run kubernetes worker installation script 
 
 ```bash
 cd $HOME/k8s-101-workshop/terraform/
@@ -117,8 +117,6 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < ./workloadtojoin.sh
 
 ```
 
-
-
 ### Deploy Demo Application And Enable Auto Scalling (HPA)
 
 ```bash
@@ -129,8 +127,6 @@ sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/deploy_applicati
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
 
 ```
-
-
 
 
 ### Verify the deployment is sucessful 
