@@ -113,7 +113,7 @@ kubectl --kubeconfig /home/${username}/.kube/config config set-cluster kubernete
 kubeadm token create --print-join-command > /home/${username}/workloadtojoin.sh
 kubeadm config print join-defaults  > /home/${username}/kubeadm-join.default.yaml
 echo '#sudo kubeadm join --config kubeadm-join.default.yaml' | sudo tee -a  /home/${username}/workloadtojoin.sh
-sed -i 's/^kubeadm join/sudo kubeadm join/g' workloadtojoin.sh
+sed -i 's/^kubeadm join/sudo kubeadm join/g' /home/${username}/workloadtojoin.sh
 chmod +x /home/${username}/workloadtojoin.sh
 cat /home/${username}/workloadtojoin.sh
 
