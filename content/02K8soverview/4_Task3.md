@@ -7,7 +7,7 @@ weight: 3
 
 ### Node
 
- A Node in Kubernetes is where a Pod gets to run. Think of a Node as a worker machine that could be either a virtual machine or a physical one, depending on how the cluster is set up. These Nodes are overseen by the cluster's control plane, which ensures everything runs smoothly.
+A Node in Kubernetes is where a Pod gets to run. Think of a Node as a worker machine that could be either a virtual machine or a physical one, depending on how the cluster is set up. These Nodes are overseen by the cluster's control plane, which ensures everything runs smoothly.
 
 Each Node can host multiple Pods. It's up to the control plane to smartly schedule these Pods across the Nodes, making sure that each Node's resources (like CPU and memory) are used efficiently.
 
@@ -119,7 +119,7 @@ A Kubernetes Service is a way to expose an application running on a set of Pods 
 Services primarily operate at the transport layer (Layer 4 of the OSI model), dealing with IP addresses and ports. They provide a way to access pods within the cluster and, in the case of NodePort and LoadBalancer, expose them externally.
 
 
-1.  Major Types of Kubernetes Services:
+1. Major Types of Kubernetes Services:
 
 **ClusterIP**: This is the default service type that exposes the service on an internal IP within the cluster, making the service reachable only from within the cluster.
 
