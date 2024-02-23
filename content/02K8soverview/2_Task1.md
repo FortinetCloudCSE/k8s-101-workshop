@@ -78,7 +78,7 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
 ```
 
-#### install kubernetes on master node: 
+#### install kubernetes master node: 
 
 - ssh into master node to run kubernetes master installation script 
 
@@ -90,7 +90,7 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
 ```
 
-#### Install kubernetes on worker node :
+#### Install kubernetes worker node :
 
 
 - ssh into worker node to run kubernetes master installation script 
@@ -116,28 +116,7 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < ./workloadtojoin.sh
 
 ```
 
-#### SSH into master node 
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
-``` 
-#### Check the kubernets installation status
-from master node do `kubectl get node -o wide`, shall see both node is in "Ready" statu.
 
-
-```bash
-kubectl get node -o wide
-```
-expected outcome
-```
-NAME          STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
-node-worker   Ready    <none>          4m39s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
-nodemaster    Ready    control-plane   8m30s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
-```
-
-This chapter aims to demonstrate the ease of dynamically scaling your applications using Kubernetes. We offer two approaches to install Kubernetes on the master node using kubeadm: a simple method for quick setup and a step-by-step approach for those who prefer to understand each phase of the setup process.
 
 ### Deploy Demo Application And Enable Auto Scalling (HPA)
 
@@ -147,7 +126,7 @@ nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
 sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename
+
 ```
 
 
@@ -158,27 +137,38 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename
 To confirm that the deployment of your Nginx service has been successfully completed, you can test the response from the Nginx server using the curl command:
 
 ```bash
-curl -k https://$(hostname)/default
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+curl -k https://$nodename/default
 ```
 This command should return a response from the Nginx server, indicating that the service is active and capable of handling requests.
 
-Upon successful installation and deployment of the Nginx service, you should observe that the application deployment is operational with 2 pods running the Nginx container. You can verify this by retrieving the list of running pods using kubectl:
-
-
-```bash
-kubectl get pod
-```
-shall see two pod is running. 
-```bash
-kubectl get pod
-NAME                                READY   STATUS    RESTARTS   AGE
-nginx-deployment-55c7f467f8-dxmqt   1/1     Running   0          1m
-nginx-deployment-55c7f467f8-kkr8r   1/1     Running   0          1m
-```
 
 With the Nginx service deployed and verified, we are now prepared to initiate benchmark traffic towards the Nginx service. This step will demonstrate Kubernetes' ability to dynamically scale out additional Nginx pods to accommodate the incoming request load.
 
-### Stress Test the Nginx Server with Hey
+
+
+### SSH into master node  
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
+``` 
+
+### Check application deployment status
+```bash
+kubectl get pod
+```
+expected outcome 
+``` 
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-55c7f467f8-b5h7z   1/1     Running   0          8m31s
+nginx-deployment-55c7f467f8-bmzvg   1/1     Running   0          8m31s 
+```
+From above, we know that two nginx POD is Running. 
+
+### Stress Test the Nginx Server with Hey on master node
 
 To evaluate the scalability and responsiveness of the Nginx web server under heavy load, we'll utilize the hey tool. This utility is designed to generate a high volume of requests to stress test the server, allowing us to observe how Kubernetes dynamically scales the application to meet demand.
 
@@ -189,7 +179,7 @@ hey -n 10000 -c 1000 https://$(hostname)/default
 This command instructs hey to send a total of 10,000 requests (-n 10000) with a concurrency level of 1,000 (-c 1000) to the Nginx server.
 
 
-### Monitor Application Scaling
+### Monitor Application Scaling on master node
 
 After initiating the stress test with **hey**, you can monitor the deployment as Kubernetes automatically scales out by adding new Pods to handle the increased load. Use the watch command alongside kubectl get pods to observe the scaling process in real time:
 
@@ -201,15 +191,15 @@ expect to see pod increasing as a response to the increased load.
 NAME                                READY   STATUS    RESTARTS   AGE
 nginx-deployment-55c7f467f8-d7bx9   1/1     Running   0          20s
 nginx-deployment-55c7f467f8-dx7ql   1/1     Running   0          20s
-nginx-deployment-55c7f467f8-dxmqt   1/1     Running   0          5m39s
+nginx-deployment-55c7f467f8-b5h7z   1/1     Running   0          5m39s
 nginx-deployment-55c7f467f8-g4754   1/1     Running   0          20s
 nginx-deployment-55c7f467f8-hdbcc   1/1     Running   0          20s
 nginx-deployment-55c7f467f8-kbkw6   1/1     Running   0          35s
-nginx-deployment-55c7f467f8-kkr8r   1/1     Running   0          5m39s
+nginx-deployment-55c7f467f8-bmzvg   1/1     Running   0          5m39s
 nginx-deployment-55c7f467f8-r6ndt   1/1     Running   0          35s
 nginx-deployment-55c7f467f8-xr2l7   1/1     Running   0          5s
 ```
-As hey continues to send traffic to the Nginx service, you will see the number of Pods gradually increase, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
+As **hey** continues to send traffic to the Nginx service, you will see the number of Pods gradually increase, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
 
 Once the traffic generated by hey starts to decrease and eventually ceases, watch as Kubernetes smartly scales down the application by terminating the extra Pods that were previously spawned. This behavior illustrates the system's efficient management of resources, scaling down to match the reduced demand.
 
@@ -246,3 +236,12 @@ sudo kubeadm reset -f
 Note: This action will reset your Kubernetes cluster, removing all configurations, deployments, and associated data. It's a critical step, so proceed with caution.
 
 On the other hand, if you are satisfied with your current Kubernetes setup and ready to move on to the next task, you can skip this step. This flexibility allows you to either delve deeper into Kubernetes functionalities or reset your environment for additional testing and learning opportunities.
+
+
+
+
+Summary
+
+This chapter aims to demonstrate the ease of dynamically scaling your applications using Kubernetes.  
+
+
