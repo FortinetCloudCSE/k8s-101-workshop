@@ -11,25 +11,27 @@ archetype: home
 
 Kubernetes is an open-source container orchestration platform that automates the deployment, scaling, and management of containerized applications. Originally developed by Google and now maintained by the Cloud Native Computing Foundation (CNCF), Kubernetes has become the de facto standard for managing containerized workloads in production environments.
 
-![image1](/content/images/container.png)
+![image1](./images/container.png)
 
 ## Workshop Objectives
 
 In this workshop, you will:
 
-- Build a kubernetes cluster
+- Build a kubernetes cluster by yourself.
 - Gain a fundamental understanding of Kubernetes concepts.
 - Learn how to deploy, manage, and scale applications using Kubernetes.
 - Explore key Kubernetes resources such as Pods, Deployments, Services, and more.
 - Gain hands-on experience with practical examples.
 
 
-## Who Should Attend?
+## Why building a cluster from scratch instead of using Managed Services like AKS,EKS?
 
-This workshop is suitable for:
+- Building a cluster instead of relying on managed services for learning Kubernetes offers beginners hands-on experience, deeper understanding of core concepts, and greater control over configurations. 
 
-- Network Engineers: Network engineers interested in understanding how Kubernetes impacts network infrastructure and how to integrate Kubernetes clusters seamlessly into existing network environments.
+- Building a cluster offers learners deepe understanding of core Kubernetes components such as pods, nodes, and controllers.
 
-- DevOps Engineers: DevOps engineers looking to collaborate with network teams and optimize network configurations for Kubernetes deployments will gain valuable insights into network architecture and configuration.
+- In production environments, many organizations use managed Kubernetes services provided by major cloud providers. 
 
-- System Administrators: System administrators responsible for network infrastructure and interested in deploying and managing Kubernetes clusters will learn how to configure network settings and ensure connectivity within Kubernetes environments.
+- These services, such as Amazon Elastic Kubernetes Service (EKS), Azure Kubernetes Service (AKS), and Google Kubernetes Engine (GKE), offer features like automated updates, scaling, monitoring, and integration with other cloud services.
+
+- However, the choice often depends on factors such as existing cloud provider relationships, specific feature requirements, pricing, and the level of control and customization desired by the organization.
