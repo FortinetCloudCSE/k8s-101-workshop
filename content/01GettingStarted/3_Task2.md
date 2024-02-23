@@ -28,7 +28,7 @@ terraform init
 
 4. Set the Terraform environment variables **(check in dedicated the e-mail send to you by the organizers)**:
     
-5. Run `terraform apply  -var='username=userXX' --auto-approve`
+5. Run `terraform apply  -var='username=userXX' --auto-approve` or `terraform apply -var="username=$(whoami)" --auto-approve` to apply it
 
     Your username can be found in the login email.  
     Say your Azure account login is se31@ftntxxxxx.onmicrosoft.com, your username is **se31** 
