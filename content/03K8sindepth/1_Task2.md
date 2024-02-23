@@ -1,8 +1,8 @@
 ---
-title: "Task 4 - Configuration"
+title: "Task 1 - Configuration"
 menuTitle: "configuration"
 chapter: false
-weight: 4
+weight: 1
 ---
 
 ### Configuring Applications with ConfigMaps and Secrets

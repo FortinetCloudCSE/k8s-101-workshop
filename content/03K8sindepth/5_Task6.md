@@ -1,8 +1,8 @@
 ---
-title: "Task 7 - Stateful Application "
+title: "Task 5 - Stateful Application "
 menuTitle: "Stateful Application"
 chapter: false
-weight: 5
+weight: 6
 ---
 
 #### Create host-local storage class
