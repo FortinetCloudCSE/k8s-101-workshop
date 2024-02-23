@@ -1,7 +1,7 @@
 #!/bin/bash -xe
 
-username=${whoami}
-nodename=${hostname}
+username=$(whoami)
+nodename=$(hostname)
 
 error_handler() {
     echo -e "\e[31mAn error occurred. Exiting...\e[0m" >&2
