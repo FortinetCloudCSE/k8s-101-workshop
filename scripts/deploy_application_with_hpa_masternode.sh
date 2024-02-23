@@ -1,4 +1,6 @@
+
 #!/bin/bash -xe
+fqdn="localhost"
 nodename=$(hostname)
 error_handler() {
     echo -e "\e[31mAn error occurred. Exiting...\e[0m" >&2
@@ -35,6 +37,7 @@ kubectl get all -n metallb-system
 
 cd $HOME
 local_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}') 
+
 cat <<EOF | sudo tee metallbippool.yaml
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -51,6 +54,7 @@ metadata:
   name: example
   namespace: metallb-system
 EOF
+
 kubectl apply -f metallbippool.yaml
 
 kubectl apply -f  https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.10.0/deploy/single/all-in-one-dbless.yaml
@@ -87,6 +91,7 @@ spec:
             memory: "128Mi" # Maximum memory limit for the container
             cpu: "40m"     # 200 millicpu (0.2 CPU) maximum limit for the container
 EOF
+
 kubectl rollout status deployment nginx-deployment
 
 cat << EOF | kubectl apply -f -
@@ -116,6 +121,7 @@ kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/relea
 kubectl rollout status deployment cert-manager -n cert-manager
 kubectl rollout status deployment cert-manager-cainjector -n cert-manager
 kubectl rollout status deployment cert-manager-webhook  -n cert-manager
+
 cat << EOF | kubectl apply -f -
 ---
 apiVersion: cert-manager.io/v1
@@ -139,6 +145,7 @@ spec:
   commonName: kong.example
   dnsNames:
   - ${nodename}
+  - ${fqdn}
 EOF
 
 
@@ -154,9 +161,20 @@ spec:
   tls:
   - hosts:
     - ${nodename} 
+    - ${fqdn}
   ingressClassName: kong
   rules:
   - host: ${nodename}
+    http:
+      paths:
+      - path: /default
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nginx-deployment
+            port:
+              number: 80
+  - host: ${fqdn}
     http:
       paths:
       - path: /default
@@ -189,9 +207,10 @@ spec:
         type: Utilization
         averageUtilization: 50
 EOF
+
 kubectl rollout status deployment nginx-deployment
 kubectl get deployment nginx-deployment
 kubectl get pod 
 kubectl create -f components.yaml
 
-trap - ERR
+trap - ERR#!/bin/bash -xe
