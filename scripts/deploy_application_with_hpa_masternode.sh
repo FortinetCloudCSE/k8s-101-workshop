@@ -1,5 +1,5 @@
 #!/bin/bash -xe
-nodename=${hostname}
+nodename=$(hostname)
 error_handler() {
     echo -e "\e[31mAn error occurred. Exiting...\e[0m" >&2
     tput bel
