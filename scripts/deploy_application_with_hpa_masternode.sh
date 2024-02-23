@@ -213,4 +213,4 @@ kubectl get deployment nginx-deployment
 kubectl get pod 
 kubectl create -f components.yaml
 
-trap - ERR#!/bin/bash -xe
+trap - ERR
