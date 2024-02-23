@@ -136,7 +136,7 @@ kubectl --kubeconfig /home/${username}/.kube/config create namespace calico-syst
 sleep 1
 kubectl  get namespace calico-system
 kubectl --kubeconfig /home/${username}/.kube/config apply  -f custom-resources.yaml
-sleep 5 
+sleep 30 
 
 kubectl rollout status deployment calico-kube-controllers -n calico-system
 kubectl rollout status ds calico-node -n calico-system
