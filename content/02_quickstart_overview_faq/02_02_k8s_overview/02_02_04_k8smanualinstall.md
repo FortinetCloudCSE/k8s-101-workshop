@@ -1,13 +1,14 @@
 ---
-title: "Optional task  - Step by Step Install kubernetes"
+title: "Kubernetes Step by Step Install "
 menuTitle: "Appendix: Manual Installation"
 weight: 5
 ---
 
 ###  Step by Step approach for install master node
 
-this is only for experienced user who interested to explore the detail of use kubeadm to install master node.
-
+{{% notice warning %}}
+This is only for experienced user who interested to explore the detail of use kubeadm to install master node.
+{{% /notice %}}
 
 SSH into master node.
 

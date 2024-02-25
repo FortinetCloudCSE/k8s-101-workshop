@@ -1,5 +1,5 @@
 ---
-title: "Task 7 - Service Mesh"
+title: "K8s Service Mesh"
 menuTitle: "Service Mesh"
 weight: 7
 ---

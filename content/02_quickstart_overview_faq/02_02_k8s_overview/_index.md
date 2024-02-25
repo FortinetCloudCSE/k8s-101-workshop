@@ -1,14 +1,23 @@
 ---
-title: "Ch 3 Kubernetes in depth"
+title: "Kubernetes Overview"
 chapter: false
-menuTitle: "Ch 3: Kubernetes in depth"
-weight: 30
+menuTitle: "Kubernetes Overview"
+weight: 2
 ---
+
 ##  What is Kubernetes, and Why Kubernetes
 
 Kubernetes is a powerful platform designed to automate deploying, scaling, and operating application containers, making it an excellent choice for managing microservices-based applications that need to scale from a few users to millions of internet users while ensuring high availability. Here's how Kubernetes addresses these specific requirements:
 
+{{% notice info %}}
+
 A microservice is like a small, specialized team in a company. Each team focuses on a specific task, such as marketing or customer support, and works independently. Similarly, in software, a microservice is a small, self-contained component that handles a specific function of an application, like user authentication or order processing.
+
+{{% /notice %}}
+
+![](https://i0.wp.com/vitalflux.com/wp-content/uploads/2018/03/microservices-styled-architecture.png?w=513&ssl=1)
+
+![](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks-microservices/images/aks.svg)
 
 ### Scaling from Few Users to Millions
 
@@ -38,7 +47,7 @@ For applications expected to grow from a few users to millions and require const
 
 Kubernetes is a powerful platform designed to manage containerized applications across a cluster of machines, providing tools for deploying applications, scaling them as necessary, and managing changes to existing containerized applications. Its architecture is designed to be highly modular, distributing responsibilities across various components that work together to form a robust system. Here’s an overview of the key components within the Kubernetes architecture, using the example of autoscaling a microservice to illustrate their roles:
 
-[!Alt text for the image](https://kubernetes.io/images/docs/kubernetes-cluster-architecture.svg)
+![](https://kubernetes.io/images/docs/kubernetes-cluster-architecture.svg)
 
 ### Kubernetes Master Components
 - Kubernetes API Server (kube-apiserver): 

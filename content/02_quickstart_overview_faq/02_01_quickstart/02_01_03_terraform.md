@@ -9,7 +9,7 @@ All the components required for Lab are deployed through terraform.
 
 Here is the Architecture diagram for Lab1: 
 
-![lab1diagram](../vbfvjfgj)
+![INSERT lab1diagram HERE](../vbfvjfgj)
 
 Perform the following steps in your Cloudshell console to create your environment.
 
@@ -23,7 +23,7 @@ cd k8s-101-workshop/terraform
 terraform init
 ```
 
-![lab11](../images/terraform1.png)
+![lab11](../../images/terraform1.png)
 
 
 4. Set the Terraform environment variables **(check in dedicated the e-mail send to you by the organizers)**:
@@ -37,11 +37,11 @@ terraform init
 terraform apply  -var='username=UserXX' --auto-approve
 ```
 
-![lab12](../images/terraform2.png)
+![lab12](../../images/terraform2.png)
     
 6. Terraform deployment takes atleast 10-15 min to complete.
 
-![lab13](../images/terraformoutput.png)
+![lab13](../../images/terraformoutput.png)
 
 7. Once Terraform is complete you should see the output. Please copy the output to notepad.
 

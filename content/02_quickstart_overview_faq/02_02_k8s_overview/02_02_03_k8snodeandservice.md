@@ -1,6 +1,6 @@
 ---
-title: "Task 3 - Node and Service"
-menuTitle: "Task 3: Node and Service"
+title: " K8S Node and Service"
+menuTitle: "K8S Node and Service"
 weight: 3
 ---
 

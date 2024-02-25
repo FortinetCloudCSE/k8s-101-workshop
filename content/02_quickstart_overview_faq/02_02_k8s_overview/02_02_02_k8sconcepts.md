@@ -1,6 +1,6 @@
 ---
-title: "Task 2 - Concepts of Kubernetes"
-menuTitle: "Task 2: Concepts of Kubernetes"
+title: "Kubernetes Concepts"
+menuTitle: "Kubernetes Concepts"
 weight: 2
 ---
 
