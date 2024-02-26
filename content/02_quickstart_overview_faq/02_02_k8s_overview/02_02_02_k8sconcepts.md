@@ -3,6 +3,27 @@ title: "Kubernetes Concepts"
 menuTitle: "Kubernetes Concepts"
 weight: 2
 ---
+### Bring up AKS cluster 
+
+let's create a managed AKS cluster with 1 worker node to get some hands on for kubernets basic concepts.
+this step will took around 5 minutes.
+
+```bash
+clustername=$(whoami)
+az aks create \
+    --name ${clustername} \
+    --node-count 1 \
+    --vm-set-type VirtualMachineScaleSets \
+    --network-plugin azure \
+    --service-cidr  10.96.0.0/16 \
+    --dns-service-ip 10.96.0.10 \
+    --nodepool-name worker \
+    --resource-group ${clustername}-k8s101-workshop 
+
+
+az aks get-credentials -g  ${clustername}-k8s101-workshop -n ${clustername} --overwrite-existing
+
+```
 
 There are two main ways to manage Kubernetes objects: 
 
@@ -18,11 +39,11 @@ Once you have a running Kubernetes cluster, you can deploy your containerized ap
 
 kubectl relies on a configuration file found at ~/.kube/config for authentication and communication with the kube-api-server. Running `kubectl config view` displays details about the kube-API server, including its address, name, and the client's key and certificate.
 
+We have created **config** file for **az shell** as well as the master node. 
 
-To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address. It's also important for the kube-API server to recognize your client's IP address as a trusted source by adding it to a whitelist. This setup ensures secure communication between your client machine and the Kubernetes cluster's control plane.
+To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address.  
 
 
-- We have configured the master node's Ubuntu VM to also serve as a client node for accessing the Kubernetes cluster. Therefore, once you SSH into the master node VM, you can directly use kubectl for cluster management and operations.
 
 - **basic usage of** `kubectl`
 
@@ -59,7 +80,7 @@ for example, you can use `kubectl get node` to check cluster node detail
 ```bash
 kubectl get node
 ```
-you are expected to see a cluster with both master and worker node.Later, Kubernetes will choose where to deploy our application based on Node available resources.
+if you are on self-managed k8s, you are expected to see a cluster with both master and worker node.however, if you are on managed k8s like aks, you will only see worker node listed.  Kubernetes will choose where to deploy our application based on woker node available.
 
 ### POD
 
@@ -83,12 +104,14 @@ use `kubectl get pod` to check the POD
 ```bash
 kubectl get pod
 ```
-exepcted result
+exepcted result 
 ```
 kubectl get pod
 NAME        READY   STATUS    RESTARTS   AGE
 juiceshop   1/1     Running   0          7s
 ```
+You might see the **STATUS** of POD is **ContainerCreating** , but eventually, it will become "Running".
+
 
 3. delete POD with `kubectl delete`. check pod again with `kubectl get pod`
 
@@ -98,12 +121,15 @@ kubectl delete pod juiceshop
 
 4. Create POD with `kubectl create -f`
 
+
 ```bash
 cat << EOF | kubectl create -f - 
 apiVersion: v1
 kind: Pod
 metadata:
   name: juiceshop
+  labels:
+    run: juiceshop
 spec:
   containers:
   - image: bkimminich/juice-shop
@@ -179,8 +205,10 @@ kubectl get deployment -l app=kubernetes-bootcamp
 ```
 We see that there is 1 deployment running a single instance of your app. The instance is running inside a POD which include container on your node.
 
+expected outcome
+
 ```
-$ kubectl get deployment -l app=kubernetes-bootcamp
+
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           20m
 ```
@@ -203,11 +231,11 @@ kubectl get rs -l app=kubernetes-bootcamp
 kubectl describe rs kubernetes-bootcamp
 ```
 
-2. from the output , we can find a line saying "Controlled By:  Deployment/kubernetes-bootcamp" 
+2. from the output , we can find a line saying "Controlled By:  Deployment/kubernetes-bootcamp" with cli command 
 
-```bash
-ubuntu@ubuntu22:~$ kubectl get rs -l app=kubernetes-bootcamp
-kubectl describe rs kubernetes-bootcamp
+```
+expected outcome
+```
 NAME                             DESIRED   CURRENT   READY   AGE
 kubernetes-bootcamp-5485cc6795   1         1         1       18m
 Name:           kubernetes-bootcamp-5485cc6795
@@ -342,5 +370,4 @@ use `kubectl delete namespace production` and `kubectl delete namespace developm
 kubectl delete namespace production
 kubectl delete namespace development
 ```
-
 
