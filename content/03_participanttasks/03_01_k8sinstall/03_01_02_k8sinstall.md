@@ -281,7 +281,11 @@ kubectl delete deployment nginx-deployment
 ```
 
 ### Starting Over
-If you wish to start over and completely remove Kubernetes from all master and worker nodes, execute the following command on each node. This step is ideal if you're seeking a clean slate for experimenting further or if any part of the setup did not go as planned:
+{{< notice warning >}} 
+  
+If you wish to start over and completely remove Kubernetes from all master and worker nodes, execute the following command on each node.This step is ideal if you're seeking a clean slate for experimenting further or if any part of the setup did not go as planned:
+ {{< /notice >}} 
+ 
 
 ssh into master worker and worker node.  
 ```bash
@@ -298,7 +302,7 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
 ``` 
 
-then on master worker or worker node , run 
+then on master or worker node , run 
 ```bash
 sudo kubeadm reset -f 
 ```
@@ -306,10 +310,13 @@ sudo kubeadm reset -f
 Note: This action will reset your Kubernetes cluster, removing all configurations, deployments, and associated data. It's a critical step, so proceed with caution.
 
 if you are satisfied with your current Kubernetes setup and ready to move on to the next task, you can skip this step. This flexibility allows you to either delve deeper into Kubernetes functionalities or reset your environment for additional testing and learning opportunities.
+### Starting Over
+
+{{< notice warning >}}  
 
 if you want delete VM completely, use `terraform destroy -var="username=$(whoami)" --auto-approve` , then use `terraform apply -var="username=$(whoami)" --auto-approve` to recreate.  do that on terraform directory. this will give you a fresh environement to begin with again.
 
-
+ {{< /notice >}} 
 
 
 Summary

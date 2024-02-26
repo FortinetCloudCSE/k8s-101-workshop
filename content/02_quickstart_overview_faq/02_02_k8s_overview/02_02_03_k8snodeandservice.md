@@ -24,92 +24,27 @@ we can use `kubectl get node -o wide` to check the node status in cluster.
 ```bash
 kubectl get node -o wide
 ```
+expected outcome:
+on self-managed kubernetes 
 ```
 kubectl get node -o wide
 NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
-ubuntu22    Ready    control-plane   55m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
-worker001   Ready    <none>          54m   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
+nodemaster    Ready    control-plane   55m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
+node-worker   Ready    <none>          54m   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
+```
+on managed kubernetes like aks
+
+```bash
+NAME                             STATUS   ROLES   AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+aks-worker-24706581-vmss000000   Ready    agent   7m32s   v1.27.9   10.224.0.4    <none>        Ubuntu 22.04.3 LTS   5.15.0-1054-azure   containerd://1.7.7-1
 ```
 
 Nodes in Kubernetes can be made unschedulable using the `kubectl cordon <nodename>` command, which is particularly useful when preparing a node for maintenance. When a node is cordoned, the kube-scheduler will no longer schedule new pods onto it, although existing pods on the node are not affected.
-```bash
-kubectl cordon worker001
-```
-you will expect to see output
-```
-ubuntu@ubuntu22:~$ kubectl get node
-NAME        STATUS                     ROLES           AGE   VERSION
-ubuntu22    Ready                      control-plane   15m   v1.26.1
-worker001   Ready,SchedulingDisabled   <none>          13m   v1.26.1
-```
-use `kubectl uncordon` to put worker node back to work. 
-```bash
-kubectl uncordon worker001
-```
-
-check node again 
-```bash
-kubectl get node
-```
-you will expect to see output
-```
-ubuntu@ubuntu22:~$ kubectl get node
-NAME        STATUS   ROLES           AGE   VERSION
-ubuntu22    Ready    control-plane   19m   v1.26.1
-worker001   Ready    <none>          17m   v1.26.1
-```
 
 
-By default, Kubernetes master nodes are tainted to prevent workloads from being scheduled on them. This is a security and resource management measure designed to keep master nodes dedicated to managing the cluster. However, there might be scenarios, such as in a single-node cluster or for development purposes, where you might need to schedule pods on the master node.
-
-To enable pod scheduling on the master node, the taint that blocks pod scheduling must be removed. This can be achieved with the kubectl taint command:
+use `kubectl uncordon <nodename>` to put worker node back to work. 
 
 
-```bash
-kubectl taint nodes ubuntu22 node-role.kubernetes.io/control-plane-
-```
-This command removes the control-plane taint from the node named ubuntu22, thus allowing it to schedule pods like any other node in the cluster. This action is especially relevant for Kubernetes versions 1.17 and later, where the control plane components are marked with node-role.kubernetes.io/control-plane, in addition to, or instead of, node-role.kubernetes.io/master.
-
-To verify that the taint has been successfully removed, you can inspect the taints on the master node: 
-```bash
-kubectl describe node ubuntu22 | grep Taints
-```
-expected result 
-```
-Taints:             <none>
-```
-If the taint has been removed successfully, you will see Taints: <none> in the output.
-
-
-
-To reapply the taint and make the master node unschedulable by the kube-scheduler again, use 
-```bash
-kubectl taint nodes ubuntu22 node-role.kubernetes.io/control-plane:NoSchedule
-```
-
-This command adds the NoSchedule taint back to the node ubuntu22, preventing new pods from being scheduled on it, while not affecting already running pods. This step is useful for reverting the master node back to a dedicated control plane node after maintenance or development activities are complete.
-
-check node again with `kubectl get node --show-labels` and `kubectl describe node ubuntu22 | grep Taints` 
-shall see worker node removed from  "NoSchedule" , and Taints shall be "None".
-
-```bash
-kubectl get node --show-labels
-```
-expected result
-```
-NAME        STATUS   ROLES           AGE   VERSION   LABELS
-ubuntu22    Ready    control-plane   22m   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=ubuntu22,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=
-worker001   Ready    <none>          20m   v1.26.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=worker001,kubernetes.io/os=linux
-```
-and
-```bash
-kubectl describe node ubuntu22 | grep Taints
-```
-expected result 
-
-```
-Taints:             <none>
-```
 
 ### What is Service
 
@@ -138,7 +73,7 @@ This output shows the built-in kubernetes service, which serves as the internal 
 
 The ClusterIP is only accessible from within the cluster, which means it cannot be directly accessed from the master node using kubectl. To interact with it, one must use another pod within the same cluster.
 
-Below, we launch a pod (container) using the curl command to access the HTTPS port on 10.96.0.1. Receiving a 403 Forbidden response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
+Below, we launch a pod using the curl command to access the HTTPS port on 10.96.0.1. Receiving a 403 Forbidden response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
 
 
 ```bash
@@ -147,33 +82,16 @@ kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -
 
 Expected output:
 ```bash
+HTTP/1.1 401 Unauthorized
+```
+or 
+```bash
 HTTP/1.1 403 Forbidden
 ```
-"403" is because curl need to supply a certificate to authenticate itself which we did not supply, however, above is enough to show you the 10.96.0.1 is reachable. 
 
-kube-proxy manages traffic from within the cluster to the actual Kubernetes API endpoint using iptables rules, such as:
+"401" or "403" is because curl need to supply a certificate to authenticate itself which we did not supply, however, above is enough to show you the 10.96.0.1 is reachable. 
 
-```bash
-sudo iptables-save  | grep 10.96.0.1/32
-```
-expected output 
-
-```bash
--A KUBE-SERVICES -d 10.96.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -j KUBE-SVC-NPX46M4PTMTKRN6Y
--A KUBE-SVC-NPX46M4PTMTKRN6Y ! -s 10.244.0.0/16 -d 10.96.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -j KUBE-MARK-MASQ
-
-```
-To check the endpoint for the Kubernetes API service, use: 
-This command reveals the underlying endpoint that the kubernetes service directs traffic to:
-
-```bash
-kubectl get ep
-```
-expected output 
-```bash
-NAME         ENDPOINTS       AGE
-kubernetes   10.0.0.4:6443   56m`
-```
+ 
 
 Exploring the Kubernetes Default ClusterIP type Service: kube-dns
 
@@ -193,8 +111,6 @@ To verify that kube-dns is correctly resolving domain names within the cluster, 
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  kubernetes.default.svc.cluster.local
 ```
-
-
 and 
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  www.google.com
@@ -235,3 +151,26 @@ The kube-dns service is vital for internal name resolution in Kubernetes, enabli
 **NodePort**: Exposes the Service on the same port of each selected node in the cluster using NAT. It makes the Service accessible from outside the cluster by ****NodeIP:NodePort**, the NodePort has fixed range from **30000-32767**
 
 **LoadBalancer**: Exposes the Service externally using a cloud provider’s load balancer. It assigns a fixed, external IP address to the Service.
+
+
+
+clean up
+
+{{< notice warning >}}  
+
+
+Do not forget to remove your AKS cluster. We will no longer need this. 
+
+ {{< /notice >}} 
+delete your aks cluster with below command, this will took around 5 minutes.
+
+
+```bash
+clustername=$(whoami)
+az aks delete --name ${clustername} -g ${clustername}-k8s101-workshop -y
+```
+
+Summary
+
+You have sucessfully bring up a managed kubernetes (AKS) and sucessfully deployed POD, deployment also learned how to scale the deployment with replicas.  to better learn kubernetes, lets install a self-managed kubernetes. 
+
