@@ -148,5 +148,5 @@ kubectl rollout restart deployment coredns -n kube-system
 kubectl rollout status deployment coredns -n kube-system 
 
 cat /home/${username}/workloadtojoin.sh
-[ $? -eq 0 ] && echo "installation done,you may want ssh into worker node to join cluster with above command in sudo mode"  
+[ $? -eq 0 ] && echo "installation done on master node"
 trap - ERR
