@@ -98,10 +98,11 @@ IPADDR=$local_ip
 NODENAME=`hostname | tr -d '-'`
 POD_CIDR="10.244.0.0/16"
 SERVICE_CIDR="10.96.0.0/12"
+FQDN="localhost"
 echo $IPADDR $NODENAME  | sudo tee -a  /etc/hosts
 
 sudo kubeadm reset -f
-sudo kubeadm init --cri-socket=unix:///var/run/crio/crio.sock --apiserver-advertise-address=$IPADDR  --apiserver-cert-extra-sans=$IPADDR,k8strainingmaster001.westus.cloudapp.azure.com  --service-cidr=$SERVICE_CIDR --pod-network-cidr=$POD_CIDR --node-name $NODENAME  --token-ttl=0 -v=5
+sudo kubeadm init --cri-socket=unix:///var/run/crio/crio.sock --apiserver-advertise-address=$IPADDR  --apiserver-cert-extra-sans=$IPADDR,$FQDN  --service-cidr=$SERVICE_CIDR --pod-network-cidr=$POD_CIDR --node-name $NODENAME  --token-ttl=0 -v=5
 
 mkdir -p /home/${username}/.kube
 sudo cp -f /etc/kubernetes/admin.conf /home/${username}/.kube/config
