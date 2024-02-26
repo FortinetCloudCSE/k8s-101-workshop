@@ -82,5 +82,5 @@ sudo chmod +x /usr/local/bin/kubectl
 
 sudo systemctl enable --now kubelet
 cd $HOME
-[ $? -eq 0 ] && echo "installation done"  
+[ $? -eq 0 ] && echo "installation done on worker node"  
 trap - ERR
