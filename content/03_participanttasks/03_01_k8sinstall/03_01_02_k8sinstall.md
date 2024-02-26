@@ -44,6 +44,12 @@ assume you already deployed two VM with `terraform apply -var="username=$(whoami
 
 ### generate ssh-key for master and worker node
 
+
+- clean existing kubeconfig
+```bash
+rm -f ~/.kube/config
+```
+
 - clean knowhost 
 ```bash
 rm -f /home/$(whoami)/.ssh/known_hosts
@@ -61,7 +67,7 @@ echo $vmpassword
 - generate ssh-key 
 if key exist, choose either Overwrite or not. 
 ```bash
-ssh-keygen -q -N "" -f ~/.ssh/id_rsa 
+[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
 ```
 
 - copy ssh-key to master node, enter password  when prompted.
