@@ -10,11 +10,83 @@ weight: 5
 This is only for experienced user who interested to explore the detail of use kubeadm to install master node.
 {{% /notice %}}
 
-SSH into master node.
+from **azure shell** , create alias for ssh into master and worker node. 
+
+### create some script 
+```bash
+echo 'ssh_worker_function() {
+    cd $HOME/k8s-101-workshop/terraform/
+    nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
+    username=$(terraform output -json | jq -r .linuxvm_username.value)
+    ssh -o "StrictHostKeyChecking=no" $username@$nodename
+}
+alias ssh_worker="ssh_worker_function"' >> $HOME/.bashrc
+
+echo 'ssh_master_function() {
+    cd $HOME/k8s-101-workshop/terraform/
+    nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+    username=$(terraform output -json | jq -r .linuxvm_username.value)
+    export fqdn=${nodename}
+    ssh -o "StrictHostKeyChecking=no"  -t $username@$nodename "export fqdn=${fqdn}; exec bash"
+}
+alias ssh_worker="ssh_worker_function"' >> $HOME/.bashrc
+
+alias k='kubectl' >> $HOME/.bashrc
+source $HOME/.bashrc
+```
+### generate ssh-key for master and worker node
+
+
+- clean existing kubeconfig
+```bash
+rm -f ~/.kube/config
+```
+
+- clean knowhost 
+```bash
+rm -f /home/$(whoami)/.ssh/known_hosts
+
+```
+
+- get the password for VM 
+the password will be needed when use ssh-copy-id to copy ssh key into the master node.
+
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+terraform output -json | jq -r .linuxvm_password.value
+echo $vmpassword
+```
+- generate ssh-key 
+if key exist, choose either Overwrite or not. 
+```bash
+[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
+```
+
+- copy ssh-key to master node, enter password  when prompted.
+
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
+```
+
+
+- copy ssh-key to worker node, enter password  when prompted.
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
+```
+
+after done above, you shall able to use alias `ssh_master` and `ssh_worker` to ssh into worker node and master node.
 
 
 
-#### Install required tool  
+#### Install required tool  on master node.
+
+use alias `ssh_master` to ssh into master node. below all config are done on master node. 
 
 ```bash
 sudo apt-get update -y
@@ -106,20 +178,6 @@ curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernete
 ```
 After this step, you can optionaly use `sudo crictl info` to check the status of crio. it shall tell you the container runtime is ready, but the network status is not ready. 
 
-#### Install CNI 
-
-**download and install Container Network Interface (CNI) plugins**
-
-CNI plugins are essential for configuring the network connectivity of containers in Kubernetes clusters. By installing these plugins, the Kubernetes cluster can manage network namespaces and connectivity for pods, enabling communication between pods across the cluster as well as with external networks.Check CNI release notes for more information https://github.com/containernetworking/cni/releases  
-the default build-in CNI is bridge CNI, which only support single node cluster. which mean this bridge CNI does not support networking multiple node.
-```
-CNI_PLUGINS_VERSION="v1.1.1"
-ARCH="amd64"
-DEST="/opt/cni/bin"
-sudo mkdir -p "$DEST"
-curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
-```
-After this step, you can optionaly use `sudo crictl info` and `journalctl -f -u crio` to check crio status . you shall see crictl show both runtime and network is ready and crio found a valid CNI configuration which is bridge
 
 ####  Install  kubeadm, kubelet and kubectl
 
@@ -152,9 +210,9 @@ Download kubectl.
 sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
 sudo cp kubectl /usr/local/bin
 sudo chmod +x /usr/local/bin/kubectl
-alias k='kubectl'
 ```
 Enabling and Starting kubelet
+
 ```
 sudo systemctl enable --now kubelet
 
@@ -196,7 +254,7 @@ echo $IPADDR $NODENAME  | sudo tee -a  /etc/hosts
 Initializing the Kubernetes Cluster
 ```
 sudo kubeadm reset -f 
-sudo kubeadm init --cri-socket=unix:///var/run/crio/crio.sock --apiserver-advertise-address=$IPADDR  --apiserver-cert-extra-sans=$IPADDR,k8strainingmaster001.westus.cloudapp.azure.com  --service-cidr=$SERVICE_CIDR --pod-network-cidr=$POD_CIDR --node-name $NODENAME  --token-ttl=0 -v=5
+sudo kubeadm init --cri-socket=unix:///var/run/crio/crio.sock --apiserver-advertise-address=$IPADDR  --apiserver-cert-extra-sans=$IPADDR,${fqdn}  --service-cidr=$SERVICE_CIDR --pod-network-cidr=$POD_CIDR --node-name $NODENAME  --token-ttl=0 -v=5
 ```
 
 **Configuring kubectl for the Current User and Root**
@@ -209,24 +267,14 @@ sudo cp -f /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
 sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config
 sudo mkdir -p /root/.kube
 sudo cp -f /home/ubuntu/.kube/config /root/.kube/config
-kubectl --kubeconfig /home/ubuntu/.kube/config config set-cluster kubernetes --server "https://$local_ip:6443"
+kubectl --kubeconfig /home/ubuntu/.kube/config config set-cluster kubernetes --server "https://$fqdn:6443"
 
 ```
-#### create token for other worker node to join
 
-**create a new token for worker node to join**
-
-```bash
-kubeadm token create --print-join-command > /home/ubuntu/workloadtojoin.sh
-kubeadm config print join-defaults  > /home/ubuntu/kubeadm-join.default.yaml
-echo '#sudo kubeadm join --config kubeadm-join.default.yaml' | sudo tee -a  /home/ubuntu/workloadtojoin.sh
-chmod +x /home/ubuntu/workloadtojoin.sh
-cat /home/ubuntu/workloadtojoin.sh 
-```
 
 #### Install Calico CNI 
 
-The default bridge CNI in Kubernetes does not support cross-node networking. To enable this capability, we recommend replacing the default bridge with Calico. Calico uses VXLAN technology to facilitate network expansion across multiple nodes, providing enhanced networking features.
+The default bridge CNI in Kubernetes does not support cross-node networking. To enable this capability, We diretly install Calico CNI,  Calico uses VXLAN technology to facilitate network expansion across multiple nodes, providing enhanced networking features.
 
 Calico CNI extends standard Kubernetes API with its own API definitions, allowing for advanced network configurations. The installation and management of Calico are streamlined through the use of tigera-operator.yaml and custom-resources.yaml. The Tigera Operator automates Calico's lifecycle management, while custom-resources.yaml enables administrators to tailor Calico's configuration to the specific needs of their Kubernetes cluster.
 
@@ -261,20 +309,38 @@ kubectl rollout status ds calico-node -n calico-system
 use `sudo calicoctl node status` to check calico node status, until it show calico process is running 
 use `kubectl get tigerastatus` to check calico status via calico extended api
 
-after install calico. restart coredns is required
+expected output from `watch kubectl get tigerastatus`
+
+until both AVAILABLE to "True"
+
+expected outcome
+
 ```
-kubectl rollout restart deployment coredns -n kube-system
-kubectl rollout status deployment coredns -n kube-system
+apiserver   True        False         False      68s
+calico      True        False         False      83s
 ```
+then exit from master node back to **azure shell**, we are going to install component on worker node.
 
 
-### install worker node
+#### create token for other worker node to join
+
+**create a new token for worker node to join**
+
+```bash
+kubeadm token create --print-join-command > /home/ubuntu/workloadtojoin.sh
+kubeadm config print join-defaults  > /home/ubuntu/kubeadm-join.default.yaml
+echo '#sudo kubeadm join --config kubeadm-join.default.yaml' | sudo tee -a  /home/ubuntu/workloadtojoin.sh
+chmod +x /home/ubuntu/workloadtojoin.sh
+cat /home/ubuntu/workloadtojoin.sh 
+```
+
+### install worker node 
 
 To configure the worker nodes in your Kubernetes cluster, you need to install specific components that manage the container lifecycle and networking. Each worker node requires the installation of kubelet and cri-o for container management, as well as kube-proxy to set up iptables rules for service-to-container communication.
 
 Since the commands for installing these components on the worker nodes overlap with those covered in the "Install Master Node" section, this guide will focus on providing a streamlined, "simple way" to set up each worker node. This method allows for a quick and efficient installation by copying and pasting the script below directly into the terminal of each worker node.
 
-ssh into your workder node 
+ssh into your workder node use alias `ssh_worker`
 
 and Execute the Installation Script by Copy and paste the following script into the terminal of the worker node to start the installation process:
 
@@ -288,7 +354,7 @@ error_handler() {
 }
 
 trap error_handler ERR
-
+sudo kubeadm reset -f 
 cd $HOME
 sudo apt-get update -y
 sudo apt-get install socat conntrack -y
@@ -334,11 +400,7 @@ CRICTL_VERSION="v1.25.0"
 ARCH="amd64"
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-$ARCH.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 
-CNI_PLUGINS_VERSION="v1.1.1"
-ARCH="amd64"
-DEST="/opt/cni/bin"
-sudo mkdir -p "$DEST"
-curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
+
 
 
 #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
@@ -375,7 +437,7 @@ Now that we have everything set up, it's time to join the worker node to the clu
 
 
 Retrieve the Join Command
-Once logged into the master node, use the following command to display the join token and CA certificate hash. This information is stored in the workloadtojoin.sh file:
+Once logged into the **master node**, use the following command to display the join token and CA certificate hash. This information is stored in the workloadtojoin.sh file:
 ```bash
 cat /home/ubuntu/workloadtojoin.sh
 ```
@@ -385,11 +447,7 @@ Copy the content displayed by the cat command.
 Exit the Master Node
 After copying the necessary join command, exit the master node session.
 
-SSH into the Worker Node
-Next, access your worker node via SSH:
-
-
-Join the Cluster
+SSH into the **Worker Node** to join the worker node to  Cluster
 On the worker node, paste the previously copied join command to connect the worker node to the Kubernetes cluster. Replace <your master node ip>, Replace <paste your token here> and <paste your hash here> with the actual token and hash values you copied earlier. This command requires sudo to ensure it has the necessary permissions:
 ```bash
 sudo kubeadm join <master node ip>:6443 --token <paste your token here> --discovery-token-ca-cert-hash <paste your hash here>
@@ -419,24 +477,19 @@ Once you have successfully joined the worker nodes to the cluster, return to the
 
  After successfully joining the worker nodes to the cluster, the next step is to deploy a demo application and enable auto-scaling using Horizontal Pod Autoscaler (HPA). This process involves executing a script on the master node that sets up the demo application and configures HPA to automatically scale the number of pods based on certain metrics, such as CPU usage.
 
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename
-```
+
+SSH  into the Master Node with alias `ssh_master`
 
 
-
-
-SSH  into the Master Node
-
-paste below deployment script  into the terminal to deploy your demo application and setting up HPA:
+then paste below deployment script  into the terminal to deploy your demo application and setting up HPA:
 
 
 ```bash
 
+
+#!/bin/bash -xe
+
+nodename=$(hostname)
 error_handler() {
     echo -e "\e[31mAn error occurred. Exiting...\e[0m" >&2
     tput bel
@@ -458,7 +511,11 @@ kubectl create -f https://raw.githubusercontent.com/rancher/local-path-provision
 kubectl delete pod volume-test
 kubectl delete pvc local-path-pvc
 
+curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml" -o components.yaml
+sed -i '/- --metric-resolution/a \ \ \ \ \ \ \ \ - --kubelet-insecure-tls' components.yaml
 
+#kubectl create -f components.yaml
+#kubectl rollout status deployment metrics-server -n kube-system
 
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
 kubectl rollout status deployment controller -n metallb-system
@@ -468,6 +525,7 @@ kubectl get all -n metallb-system
 
 cd $HOME
 local_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}') 
+
 cat <<EOF | sudo tee metallbippool.yaml
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -484,13 +542,14 @@ metadata:
   name: example
   namespace: metallb-system
 EOF
+
 kubectl apply -f metallbippool.yaml
 
 kubectl apply -f  https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.10.0/deploy/single/all-in-one-dbless.yaml
 kubectl rollout status deployment proxy-kong -n kong
 kubectl rollout status deployment ingress-kong -n kong
 
-cat <<EOF | tee nginx-deployment-svc.yaml
+cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -519,8 +578,11 @@ spec:
           limits:
             memory: "128Mi" # Maximum memory limit for the container
             cpu: "40m"     # 200 millicpu (0.2 CPU) maximum limit for the container
+EOF
 
----
+kubectl rollout status deployment nginx-deployment
+
+cat << EOF | kubectl apply -f -
 apiVersion: v1
 kind: Service
 metadata:
@@ -541,16 +603,14 @@ spec:
   sessionAffinity: None
   type: ClusterIP
 EOF
-kubectl apply -f nginx-deployment-svc.yaml
-
 
 kubectl get namespace cert-manager || kubectl create namespace cert-manager 
 kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
 kubectl rollout status deployment cert-manager -n cert-manager
 kubectl rollout status deployment cert-manager-cainjector -n cert-manager
 kubectl rollout status deployment cert-manager-webhook  -n cert-manager
-hostname=$(hostname)
-cat << EOF | tee  cert-issuer-certificate.yaml
+
+cat << EOF | kubectl apply -f -
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -572,8 +632,12 @@ spec:
     kind: ClusterIssuer
   commonName: kong.example
   dnsNames:
-  - ${hostname}
----
+  - ${nodename}
+  - ${fqdn}
+EOF
+
+
+cat <<EOF  | kubectl apply -f - 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -584,10 +648,21 @@ metadata:
 spec:
   tls:
   - hosts:
-    - ${hostname} 
+    - ${nodename} 
+    - ${fqdn}
   ingressClassName: kong
   rules:
-  - host: ${hostname}
+  - host: ${nodename}
+    http:
+      paths:
+      - path: /default
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: nginx-deployment
+            port:
+              number: 80
+  - host: ${fqdn}
     http:
       paths:
       - path: /default
@@ -599,10 +674,8 @@ spec:
               number: 80
 EOF
 
-kubectl apply -f cert-issuer-certificate.yaml
 
-
-cat << EOF | tee nginx-hpa.yaml
+cat << EOF | kubectl apply -f -
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -622,18 +695,14 @@ spec:
         type: Utilization
         averageUtilization: 50
 EOF
-kubectl apply -f nginx-hpa.yaml 
+
 kubectl rollout status deployment nginx-deployment
 kubectl get deployment nginx-deployment
 kubectl get pod 
+kubectl create -f components.yaml
 
-
-curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml" -o components.yaml
-sed -i '/- --metric-resolution/a \ \ \ \ \ \ \ \ - --kubelet-insecure-tls' components.yaml
-
-kubectl apply -f components.yaml
-kubectl rollout status deployment metrics-server -n kube-system
 trap - ERR
+
 ```
 
 
@@ -641,4 +710,35 @@ trap - ERR
 Please note that executing the script may take a few minutes. Once completed, you can expect to see two deployments with two Nginx pods up and running, demonstrating the application deployment and ready for test the auto-scaling capabilities of your Kubernetes cluster.
 
 
+
+#### prepare access kubernetes on **azure shell**
+
+copy kubectl configuration to **azure shell** to use kubenetnes. as **azure shell** is outside for azure VM VPC, so it's required to use kubernetes master node **public ip** to access it. 
+
+
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+rm -rf $HOME/.kube/
+mkdir -p ~/.kube/
+scp -o 'StrictHostKeyChecking=no' $username@$nodename:~/.kube/config $HOME/.kube
+sed -i "s|server: https://[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}:6443|server: https://$nodename:6443|" $HOME/.kube/config
+
+```
+
+### Verify the deployment is sucessful 
+
+To confirm that the deployment of your Nginx service has been successfully completed, you can test the response from the Nginx server using the curl command:
+
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+curl -k https://$nodename/default
+```
+This command should return a response from the Nginx server, indicating that the service is active and capable of handling requests.
+
+
+
+With the Nginx service deployed and verified, we are now prepared to initiate benchmark traffic towards the Nginx service. This step will demonstrate Kubernetes' ability to dynamically scale out additional Nginx pods to accommodate the incoming request load.
 
