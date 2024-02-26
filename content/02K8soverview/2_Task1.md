@@ -38,10 +38,13 @@ Best For: Organizations looking for an enterprise Kubernetes management platform
 
 ### use azure shell as client
 
-before proceed, make sure you have already completed the deployment using terrafrom in azure shell. below all operation are performed on same **azure cloud shell** where you deploy your terraform script. 
+before proceed, make sure you have already completed the deployment using terrafrom in azure shell. below all operation are performed on same **azure cloud shell** where you deployed your terraform script. 
 
+assume you already deployed two VM with `terraform apply -var="username=$(whoami)" --auto-approve` 
 
 ### generate ssh-key for master and worker node
+
+- clean knowhost 
 ```bash
 rm -f /home/$(whoami)/.ssh/known_hosts
 
@@ -56,7 +59,7 @@ terraform output -json | jq -r .linuxvm_password.value
 echo $vmpassword
 ```
 - generate ssh-key 
-
+if key exist, choose either Overwrite or not. 
 ```bash
 ssh-keygen -q -N "" -f ~/.ssh/id_rsa 
 ```
@@ -87,6 +90,7 @@ ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
 cd $HOME/k8s-101-workshop/terraform/
 nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
+sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
 ```
@@ -116,8 +120,37 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename < ./workloadtojoin.sh
 
 ```
+#### prepare access kubernetes on **azure shell**
 
-### Deploy Demo Application And Enable Auto Scalling (HPA)
+copy kubectl configuration to **azure shell** to use kubenetnes. as **azure shell** is outside for azure VM VPC, so it's required to use kubernetes master node **public ip** to access it. 
+
+
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+rm -rf $HOME/.kube/
+mkdir -p ~/.kube/
+scp -o 'StrictHostKeyChecking=no' $username@$nodename:~/.kube/config $HOME/.kube
+sed -i "s|server: https://[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}:6443|server: https://$nodename:6443|" $HOME/.kube/config
+
+```
+#### Verify the installation 
+from your az shell, watch the node getting "Ready". it will take a while to get worker node become "Ready".
+
+```bash
+watch kubectl get node 
+```
+expected outcome
+```
+NAME          STATUS   ROLES           AGE   VERSION
+node-worker   Ready    <none>          14m   v1.26.1
+nodemaster    Ready    control-plane   18m   v1.26.1
+```
+
+### Deploy Demo Application and enable auto scalling (HPA)
+
+The Deployed demo application include two POD but will auto scale if coming traffic reach some limit. 
 
 ```bash
 cd $HOME/k8s-101-workshop/terraform/
@@ -127,7 +160,18 @@ sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/deploy_applicati
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
 
 ```
+use `kubectl get pod` to check deployment.
 
+```bash
+kubectl get pod
+```
+expected outcome
+
+```bash
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-55c7f467f8-q26f2   1/1     Running   0          9m53s
+nginx-deployment-55c7f467f8-rfdck   1/1     Running   0          7m2s
+```
 
 ### Verify the deployment is sucessful 
 
@@ -141,47 +185,49 @@ curl -k https://$nodename/default
 This command should return a response from the Nginx server, indicating that the service is active and capable of handling requests.
 
 
+
 With the Nginx service deployed and verified, we are now prepared to initiate benchmark traffic towards the Nginx service. This step will demonstrate Kubernetes' ability to dynamically scale out additional Nginx pods to accommodate the incoming request load.
 
+### Stress the nginx deployment
 
+paste below command into azure shell to create a client deployment to send http request towards nginx deployment to stress it.  this client deployment will create two POD to keep issue http request towards nginx server.
 
-### SSH into master node  
 ```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
-``` 
-
-### Check application deployment status
-```bash
-kubectl get pod
+cat <<EOF | kubectl apply -f - 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infinite-calls
+  labels:
+    app: infinite-calls
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: infinite-calls
+  template:
+    metadata:
+      name: infinite-calls
+      labels:
+        app: infinite-calls
+    spec:
+      containers:
+      - name: infinite-calls
+        image: busybox
+        command:
+        - /bin/sh
+        - -c
+        - "while true; do wget -q -O- http://nginx-deployment.default.svc.cluster.local; done"
+EOF
 ```
-expected outcome 
-``` 
-NAME                                READY   STATUS    RESTARTS   AGE
-nginx-deployment-55c7f467f8-b5h7z   1/1     Running   0          8m31s
-nginx-deployment-55c7f467f8-bmzvg   1/1     Running   0          8m31s 
-```
-From above, we know that two nginx POD is Running. 
 
-### Stress Test the Nginx Server with Hey on master node
 
-To evaluate the scalability and responsiveness of the Nginx web server under heavy load, we'll utilize the hey tool. This utility is designed to generate a high volume of requests to stress test the server, allowing us to observe how Kubernetes dynamically scales the application to meet demand.
+### Monitor Application Scaling up on master node
+
+After initiating the stress test with **client deployment**, you can monitor the deployment as Kubernetes automatically scales out by adding new Pods to handle the increased load. Use the watch command alongside kubectl get pods to observe the scaling process in real time:
 
 ```bash
-
-hey -n 10000 -c 1000 https://$(hostname)/default
-```
-This command instructs hey to send a total of 10,000 requests (-n 10000) with a concurrency level of 1,000 (-c 1000) to the Nginx server.
-
-
-### Monitor Application Scaling on master node
-
-After initiating the stress test with **hey**, you can monitor the deployment as Kubernetes automatically scales out by adding new Pods to handle the increased load. Use the watch command alongside kubectl get pods to observe the scaling process in real time:
-
-```bash
-watch kubectl get pods
+watch kubectl get pods -l app=nginx 
 ```
 expect to see pod increasing as a response to the increased load.
 ```bash
@@ -196,11 +242,22 @@ nginx-deployment-55c7f467f8-bmzvg   1/1     Running   0          5m39s
 nginx-deployment-55c7f467f8-r6ndt   1/1     Running   0          35s
 nginx-deployment-55c7f467f8-xr2l7   1/1     Running   0          5s
 ```
-As **hey** continues to send traffic to the Nginx service, you will see the number of Pods gradually increase, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
+As **client deployment** continues to send traffic to the Nginx service, you will see the number of Pods gradually increase, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
 
-Once the traffic generated by hey starts to decrease and eventually ceases, watch as Kubernetes smartly scales down the application by terminating the extra Pods that were previously spawned. This behavior illustrates the system's efficient management of resources, scaling down to match the reduced demand.
+### delete client deployment to stop sending client traffic
+
+```bash
+kubectl delete deployment infinite-calls
+```
+
+### Monitor Application Scaling down on master node
+Once the traffic generated by client deployment starts to decrease and eventually ceases, watch as Kubernetes smartly scales down the application by terminating the extra Pods that were previously spawned. This behavior illustrates the system's efficient management of resources, scaling down to match the reduced demand.
 
 
+```bash
+watch kubectl get pods
+```
+expected outcome 
 
 ```
 NAME                                READY   STATUS    RESTARTS   AGE
@@ -226,17 +283,36 @@ kubectl delete deployment nginx-deployment
 ### Starting Over
 If you wish to start over and completely remove Kubernetes from all master and worker nodes, execute the following command on each node. This step is ideal if you're seeking a clean slate for experimenting further or if any part of the setup did not go as planned:
 
+ssh into master worker and worker node.  
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
+```  
+or 
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
+``` 
+
+then on master worker or worker node , run 
 ```bash
 sudo kubeadm reset -f 
 ```
 
 Note: This action will reset your Kubernetes cluster, removing all configurations, deployments, and associated data. It's a critical step, so proceed with caution.
 
-On the other hand, if you are satisfied with your current Kubernetes setup and ready to move on to the next task, you can skip this step. This flexibility allows you to either delve deeper into Kubernetes functionalities or reset your environment for additional testing and learning opportunities.
+if you are satisfied with your current Kubernetes setup and ready to move on to the next task, you can skip this step. This flexibility allows you to either delve deeper into Kubernetes functionalities or reset your environment for additional testing and learning opportunities.
+
+if you want delete VM completely, use `terraform destroy -var="username=$(whoami)" --auto-approve` , then use `terraform apply -var="username=$(whoami)" --auto-approve` to recreate.  do that on terraform directory. this will give you a fresh environement to begin with again.
+
+
 
 
 Summary
 
 This chapter aims to demonstrate the ease of dynamically scaling your applications using Kubernetes.  
-
 
