@@ -5,14 +5,17 @@ weight: 2
 ---
 
 
-In this chapter, we'll explore the fundamentals of Kubernetes using a managed AKS cluster. Since you're already in the Azure Shell, we can directly use the az aks command to set up a cluster, avoiding the complex installation process." We will cover **POD**, **Label**, **Deployment**, **Replicas**, **Namespace**. 
+In this chapter, we delve into Kubernetes fundamentals using a managed AKS cluster. You're set to begin right from the Azure Shell, leveraging the az aks command to streamline cluster setup without navigating through complex installation steps. Our focus areas include **Pods**, **Labels**, **Deployments**, **Replicas**, and **Namespaces**.
 
 
-### Quickly Bring up AKS cluster 
 
-Let's start by creating a managed AKS cluster with 1 worker node to get some hands-on experience with Kubernetes basics. This step will take around 5 minutes.
+
+### Quick AKS Cluster Setup
+
+We'll kick off by deploying a managed AKS cluster featuring a single worker node. This hands-on approach introduces you to Kubernetes essentials efficiently, with the setup process completing in about 5 minutes."
 
 ```bash
+[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
 clustername=$(whoami)
 az aks create \
     --name ${clustername} \
@@ -29,13 +32,18 @@ az aks get-credentials -g  ${clustername}-kubernetes101-workshop -n ${clusternam
 
 ```
 
-There are two main ways to manage Kubernetes objects: 
 
-- imperative (with kubectl commands) and declarative (by writing manifests and then using kubectl apply). Each has its own advantages and disadvantages, so it's best to choose one method based on your use case.
+There are two primary methods for managing Kubernetes objects:
 
-- Imperative commands are great for learning and interactive experiments, but they don't give you full access to the Kubernetes API. They're more commonly used to create YAML manifests and objects on the go. Declarative commands are useful for reproducible deployments and production.
+- Imperative Management: This approach uses direct kubectl commands to create, update, and delete Kubernetes resources. It's beneficial for ad-hoc development and experimentation due to its straightforward syntax. However, it might not fully leverage all Kubernetes API features and is less suited for tracking changes in version control.
 
-In this Tasks we will run through imperative approach of kubectl. 
+- Declarative Management: This method involves defining resources in YAML or JSON manifests and managing them with commands like kubectl apply. It's ideal for production environments and version-controlled configuration, offering reproducibility and easier management of complex deployments.
+
+While imperative commands offer a quick way to perform tasks and are excellent for learning Kubernetes, declarative management provides a more robust framework for consistent and reproducible infrastructure management.
+
+In this task, we will explore the imperative approach using kubectl to familiarize ourselves with basic Kubernetes operations.
+
+
 
 ### Use Kubectl 
 
