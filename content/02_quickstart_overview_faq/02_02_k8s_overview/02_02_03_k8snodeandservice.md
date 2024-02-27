@@ -6,16 +6,21 @@ weight: 3
 
 ### Node
 
-In Self Managed kubernets, a Node include kubernetes master node and worker node, while In Azure Kubernetes Service (AKS), the term "Node" typically refers to what is known in Kubernetes terminology as a "worker node." These are the virtual machines (VMs) or physical machines that run your containerized applications and services. In AKS, the control plane (master nodes) is managed by Azure and abstracted from the user, providing a simplified user experience and reducing the operational overhead for cluster management.
+Kubernetes runs your workload by placing containers into Pods to run on **Nodes**. A node may be a virtual or physical machine, depending on the cluster. Each node is managed by the control plane and contains the services necessary to run Pods.
+
+In Self Managed kubernets, a Node include kubernetes master node and worker node, while In Azure Kubernetes Service (AKS), the term "Node" typically refers to what is known in Kubernetes terminology as a "worker node." These are the virtual machines (VMs) or physical machines that run your containerized applications and services. In AKS, the control plane (master nodes) is managed by Azure and abstracted from the user, providing a simplified user experience and reducing the operational overhead for cluster management. Unlike with self-managed Kubernetes clusters, you do not have direct access to the control plane VMs or their configurations in AKS. This means you cannot directly log into the control plane nodes or run commands on them as you might with worker nodes.
+
+Typically you have several nodes in a cluster, in a learning or resource-limited environment, you might have only one node. In this AKS deployment, There is only one single worker node exist. 
 
 
-Each Worker Node can host multiple Pods. It's up to the control plane to smartly schedule these Pods across the Nodes, making sure that each Node's resources (like CPU and memory) are used efficiently.
+The components on a worker node include the **kubelet**, a **container runtime**, and the **kube-proxy**. 
 
-There are a couple of key components you'll find running on every Kubernetes Node:
+**Kubelet**: This is the main guy talking to both the Node it's on and the control plane. It looks after the Pods and containers on the Node, making sure they're running as they should.
+**Container Runtime**: This is what actually runs your containers. It pulls the container images from where they're stored, unpacks them, and gets your application up and running. Docker and CRI-O are examples of container runtimes used in Kubernetes environments.
+**kube-proxy**: This is essential for the operation of Kubernetes services, allowing Pods to communicate with each other and with the outside world. It enables services to be exposed to the external network, load balances traffic across Pods, and is crucial for the overall networking functionality in Kubernetes.
 
-Kubelet: This is the main guy talking to both the Node it's on and the control plane. It looks after the Pods and containers on the Node, making sure they're running as they should.
-Container Runtime: This is what actually runs your containers. It pulls the container images from where they're stored, unpacks them, and gets your application up and running. Docker and CRI-O are examples of container runtimes used in Kubernetes environments.
-So, in short, a Worker Node is the workhorse of a Kubernetes cluster, providing the necessary environment for your applications (in containers) to run. The control plane keeps an eye on the resources and health of each Node to ensure the cluster operates efficiently.
+
+So, in short, a Worker Node is the workhorse of a Kubernetes cluster, providing the necessary environment for your applications (in containers) to run. The control plane or master node keeps an eye on the resources and health of each Node to ensure the cluster operates efficiently.
 
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_nodes.svg)
 
@@ -54,9 +59,11 @@ A Kubernetes Service is a way to expose an application running on a set of Pods 
 Services primarily operate at the transport layer (Layer 4 of the OSI model), dealing with IP addresses and ports. They provide a way to access pods within the cluster and, in the case of NodePort and LoadBalancer, expose them externally.
 
 
-1. Major Types of Kubernetes Services:
+####  Major Types of Kubernetes Services:
 
-**ClusterIP**: This is the default service type that exposes the service on an internal IP within the cluster, making the service reachable only from within the cluster.
+- **ClusterIP**: 
+
+This is the default service type that exposes the service on an internal IP within the cluster, making the service reachable only from within the cluster.
 
 To check the services in your Kubernetes cluster, you can use the following command:
 
@@ -149,9 +156,13 @@ Address: 2607:f8b0:4005:802::2004
 ```
 The kube-dns service is vital for internal name resolution in Kubernetes, enabling pods to communicate with each other and access various cluster services using DNS names. Verifying DNS resolution functionality with kube-dns is straightforward with a temporary pod and can help diagnose connectivity issues within the cluster.
 
-**NodePort**: Exposes the Service on the same port of each selected node in the cluster using NAT. It makes the Service accessible from outside the cluster by ****NodeIP:NodePort**, the NodePort has fixed range from **30000-32767**
+- **NodePort**: 
 
-**LoadBalancer**: Exposes the Service externally using a cloud provider’s load balancer. It assigns a fixed, external IP address to the Service.
+Exposes the Service on the same port of each selected node in the cluster using NAT. It makes the Service accessible from outside the cluster by ****NodeIP:NodePort**, the NodePort has fixed range from **30000-32767**
+
+- **LoadBalancer**:
+
+Exposes the Service externally using a cloud provider’s load balancer or other on-premise load balancer like metallb . It assigns a fixed, external IP address to the Service.
 
 
 
@@ -160,7 +171,7 @@ The kube-dns service is vital for internal name resolution in Kubernetes, enabli
 {{< notice warning >}}  
 
 
-Do not forget to remove your AKS cluster. We will no longer need this. 
+Do not forget to remove your AKS cluster. We will use self-managed k8s for handson activites.
 
  {{< /notice >}} 
 delete your aks cluster with below command, this will took around 5 minutes.
@@ -173,10 +184,12 @@ az aks delete --name ${clustername} -g ${clustername}-k8s101-workshop -y
 
 ### Summary
 
-You have sucessfully bring up a managed kubernetes (AKS) and sucessfully deployed POD, deployment also learned how to scale the deployment with replicas.  to better learn kubernetes, lets install a self-managed kubernetes. 
+You have sucessfully bring up a managed kubernetes (AKS) and walked throught the concept of POD, Deployment, Replicas, Namespace, Label, Node, different type of services etc in kubernetes. We will continue to install a self-managed kubernets to continue our jourey.
+
+
 
 ### Review Questions
 
+- What is the role of a worker node in Kubernetes, and what are three key components that run on every Kubernetes Worker Node?
 - What is a Kubernetes Service, and why is it important?
-- What is the role of a Node in Kubernetes, and what are two key components that run on every Kubernetes Node?
 - Describe the difference between ClusterIP, NodePort, and LoadBalancer Service types in Kubernetes.
