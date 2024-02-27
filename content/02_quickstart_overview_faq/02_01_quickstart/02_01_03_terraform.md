@@ -7,9 +7,6 @@ weight: 3
 
 All the components required for Lab are deployed through terraform. 
 
-Here is the Architecture diagram for Lab1: 
-
-![INSERT lab1diagram HERE](../vbfvjfgj)
 
 Perform the following steps in your Cloudshell console to create your environment.
 
