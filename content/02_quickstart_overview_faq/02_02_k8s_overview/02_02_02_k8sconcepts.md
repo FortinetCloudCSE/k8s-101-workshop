@@ -25,10 +25,10 @@ az aks create \
     --service-cidr  10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
-    --resource-group ${clustername}-kubernetes101-workshop 
+    --resource-group ${clustername}-k8s101-workshop 
 
 
-az aks get-credentials -g  ${clustername}-kubernetes101-workshop -n ${clustername} --overwrite-existing
+az aks get-credentials -g  ${clustername}-k8s101-workshop -n ${clustername} --overwrite-existing
 
 ```
 
