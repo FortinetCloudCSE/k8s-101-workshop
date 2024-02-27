@@ -5,7 +5,7 @@ weight: 1
 archetype: home
 ---
 
-## Welcome to the K8s 101 Workshop
+## Welcome to the Kubernets(k8s) 101 Workshop
 ACME is embarking on deploying a hyperscale web application.
 
 ### Concerns:
