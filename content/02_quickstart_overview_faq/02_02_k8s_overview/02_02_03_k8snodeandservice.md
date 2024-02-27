@@ -1,20 +1,21 @@
 ---
 title: " K8S Node and Service"
-menuTitle: "K8S Node and Service"
+menuTitle: "Node and Service"
 weight: 3
 ---
 
 ### Node
 
-A Node in Kubernetes is where a Pod gets to run. Think of a Node as a worker machine that could be either a virtual machine or a physical one, depending on how the cluster is set up. These Nodes are overseen by the cluster's control plane, which ensures everything runs smoothly.
+In Self Managed kubernets, a Node include kubernetes master node and worker node, while In Azure Kubernetes Service (AKS), the term "Node" typically refers to what is known in Kubernetes terminology as a "worker node." These are the virtual machines (VMs) or physical machines that run your containerized applications and services. In AKS, the control plane (master nodes) is managed by Azure and abstracted from the user, providing a simplified user experience and reducing the operational overhead for cluster management.
 
-Each Node can host multiple Pods. It's up to the control plane to smartly schedule these Pods across the Nodes, making sure that each Node's resources (like CPU and memory) are used efficiently.
+
+Each Worker Node can host multiple Pods. It's up to the control plane to smartly schedule these Pods across the Nodes, making sure that each Node's resources (like CPU and memory) are used efficiently.
 
 There are a couple of key components you'll find running on every Kubernetes Node:
 
 Kubelet: This is the main guy talking to both the Node it's on and the control plane. It looks after the Pods and containers on the Node, making sure they're running as they should.
 Container Runtime: This is what actually runs your containers. It pulls the container images from where they're stored, unpacks them, and gets your application up and running. Docker and CRI-O are examples of container runtimes used in Kubernetes environments.
-So, in short, a Node is the workhorse of a Kubernetes cluster, providing the necessary environment for your applications (in containers) to run. The control plane keeps an eye on the resources and health of each Node to ensure the cluster operates efficiently.
+So, in short, a Worker Node is the workhorse of a Kubernetes cluster, providing the necessary environment for your applications (in containers) to run. The control plane keeps an eye on the resources and health of each Node to ensure the cluster operates efficiently.
 
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_nodes.svg)
 
@@ -32,7 +33,7 @@ NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP  
 nodemaster    Ready    control-plane   55m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 node-worker   Ready    <none>          54m   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 ```
-on managed kubernetes like aks
+on managed kubernetes like AKS
 
 ```bash
 NAME                             STATUS   ROLES   AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
@@ -154,7 +155,7 @@ The kube-dns service is vital for internal name resolution in Kubernetes, enabli
 
 
 
-clean up
+### clean up
 
 {{< notice warning >}}  
 
@@ -170,7 +171,12 @@ clustername=$(whoami)
 az aks delete --name ${clustername} -g ${clustername}-k8s101-workshop -y
 ```
 
-Summary
+### Summary
 
 You have sucessfully bring up a managed kubernetes (AKS) and sucessfully deployed POD, deployment also learned how to scale the deployment with replicas.  to better learn kubernetes, lets install a self-managed kubernetes. 
 
+### Review Questions
+
+- What is a Kubernetes Service, and why is it important?
+- What is the role of a Node in Kubernetes, and what are two key components that run on every Kubernetes Node?
+- Describe the difference between ClusterIP, NodePort, and LoadBalancer Service types in Kubernetes.

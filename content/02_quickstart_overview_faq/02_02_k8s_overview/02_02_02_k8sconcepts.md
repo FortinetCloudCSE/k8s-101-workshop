@@ -3,10 +3,14 @@ title: "Kubernetes Concepts"
 menuTitle: "Kubernetes Concepts"
 weight: 2
 ---
-### Bring up AKS cluster 
 
-let's create a managed AKS cluster with 1 worker node to get some hands on for kubernets basic concepts.
-this step will took around 5 minutes.
+
+In this chapter, we'll explore the fundamentals of Kubernetes using a managed AKS cluster. Since you're already in the Azure Shell, we can directly use the az aks command to set up a cluster, avoiding the complex installation process." We will cover **POD**, **Label**, **Deployment**, **Replicas**, **Namespace**. 
+
+
+### Quickly Bring up AKS cluster 
+
+Let's start by creating a managed AKS cluster with 1 worker node to get some hands-on experience with Kubernetes basics. This step will take around 5 minutes.
 
 ```bash
 clustername=$(whoami)
@@ -18,10 +22,10 @@ az aks create \
     --service-cidr  10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
-    --resource-group ${clustername}-k8s101-workshop 
+    --resource-group ${clustername}-kubernetes101-workshop 
 
 
-az aks get-credentials -g  ${clustername}-k8s101-workshop -n ${clustername} --overwrite-existing
+az aks get-credentials -g  ${clustername}-kubernetes101-workshop -n ${clustername} --overwrite-existing
 
 ```
 
@@ -80,7 +84,8 @@ for example, you can use `kubectl get node` to check cluster node detail
 ```bash
 kubectl get node
 ```
-if you are on self-managed k8s, you are expected to see a cluster with both master and worker node.however, if you are on managed k8s like aks, you will only see worker node listed.  Kubernetes will choose where to deploy our application based on woker node available.
+
+"If you're using self-managed Kubernetes, you'll see both master and worker nodes in your cluster. However, with managed Kubernetes services like AKS, only worker nodes are visible. Kubernetes will deploy our application based on the available worker nodes."
 
 ### POD
 
@@ -90,9 +95,9 @@ A Pod in Kubernetes is like a single instance of an application. It can hold clo
 
 1. To create a pod:
 
-- kubectl run: Quick way to create a single pod for ad-hoc tasks or debugging.(Imperative)
-- kubectl create: Creates specific Kubernetes resources with more control. Use kubectl create -f to create from file.(Declarative)
-- kubectl apply: Creates or updates resources based on their configuration files. Use kubectl apply -f to create from file.(Declarative)
+- kubectl run: Quick way to create a single pod for ad-hoc tasks or debugging.
+- kubectl create: Creates specific Kubernetes resources with more control. Use kubectl create -f to create from file. 
+- kubectl apply: Creates or updates resources based on their configuration files. Use kubectl apply -f to create from file. 
 
 2. Run POD with `kubectl run`
 ```bash
@@ -121,7 +126,6 @@ kubectl delete pod juiceshop
 
 4. Create POD with `kubectl create -f`
 
-
 ```bash
 cat << EOF | kubectl create -f - 
 apiVersion: v1
@@ -136,6 +140,8 @@ spec:
     name: juiceshop
 EOF
 ```
+`cat << EOF` is a shell syntax for a "here document" (heredoc). It allows you to provide a block of input text directly in the shell. The input continues until the token EOF (End Of File) is encountered again in the input stream.
+``|`` is the pipe operator, which takes the output of the command on its left (the heredoc in this case) and uses it as the input for the command on its right. In the next following chapters, we are going to use this a lot.
 
 ### Labels
 
@@ -158,10 +164,9 @@ kubectl label pod juiceshop purpose=debug
 ```bash
 kubectl get pod --show-labels
 ``` 
-4. Output 
+Expected Output 
 
 ```bash
-kubectl get pod  --show-labels
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE   LABELS
 juiceshop   1/1     Running   0          4m7s   purpose=debug,run=juiceshop
 ```
@@ -188,6 +193,7 @@ It requires specifying the deployment name and the location of the application i
 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+
 ```
 
 Congratulations! You've just deployed your first application by creating a deployment. 
@@ -232,9 +238,11 @@ kubectl describe rs kubernetes-bootcamp
 ```
 
 2. from the output , we can find a line saying "Controlled By:  Deployment/kubernetes-bootcamp" with cli command 
-
+```bash
+kubectl describe rs kubernetes-bootcamp
 ```
-expected outcome
+
+expected output
 ```
 NAME                             DESIRED   CURRENT   READY   AGE
 kubernetes-bootcamp-5485cc6795   1         1         1       18m
@@ -264,7 +272,7 @@ Events:
   Type    Reason            Age   From                   Message
   ----    ------            ----  ----                   -------
   Normal  SuccessfulCreate  18m   replicaset-controller  Created pod: kubernetes-bootcamp-5485cc6795-cdwz7
-  ```
+```
 
 ### Manage your Deployment 
  
@@ -370,4 +378,12 @@ use `kubectl delete namespace production` and `kubectl delete namespace developm
 kubectl delete namespace production
 kubectl delete namespace development
 ```
+
+### Review Questions
+
+1. Explain the role of a Deployment in Kubernetes. How does it simplify the process of scaling and managing application instances within the cluster?
+
+2. How do namespaces contribute to resource management and isolation in a Kubernetes cluster? Provide an example scenario where separating resources into different namespaces would be beneficial.
+
+3. Describe how containers are organized within a Pod in Kubernetes and explain the advantages of this arrangement for container communication and resource sharing.
 
