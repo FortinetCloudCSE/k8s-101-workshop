@@ -7,12 +7,13 @@ weight: 2
 
 ## Objective: 
 
-Pick the most appropriate Kubernetes runtime to install also show you how easy to use kubernetes to scale your application.
+Use kubeadm to install a self-managed kubernetes cluster with 1 master node and 1 worker node on Azure ubuntu VM.
+
 
 ## Choose your kubernetes 
-Although Cloud-Managed Kubernetes becoming the popular choice for enteprise production environments, self-managed Kubernetes gives users full control over their Kubernetes environments. Choosing the proper self-install method  can vary significantly based on the intended use case, from development and testing environments to production deployments. Here's a short description of different options to install Kubernetes, tailored to specific needs:
+Although Cloud-Managed Kubernetes becoming the popular choice for enteprise to use in production network, But Self Managed Kubernetes  give users full control over their Kubernetes environments. Choosing the right method to install Self Managed Kubernetes can vary significantly based on the intended use case, from development and testing environments to production deployments. Here's a short description of different ways to install Kubernetes, tailored to specific needs:
 
-### Development and Testing
+### For Development and Testing
 
 - Minikube:
 Best For: Individual developers and small teams experimenting with Kubernetes applications or learning the Kubernetes ecosystem.
@@ -24,7 +25,7 @@ Best For: Kubernetes contributors, developers working on CI/CD pipelines, and te
 Best for: development and testing on **MacOS desktop with Apple Silicon or intel chipset** , it eliminates the complexity of setting up and managing full-fledged Kubernetes clusters.
 
 
-### Production Deployment
+### For Production Deployment
 
 - Kubeadm:
 Best For: Organizations looking for a customizable production-grade Kubernetes setup that adheres to best practices. Suitable for those with specific infrastructure requirements and those who wish to integrate Kubernetes into existing systems with specific configurations.

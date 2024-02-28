@@ -74,7 +74,7 @@ use `kubectl get svc` to check service
 kubectl get svc --show-labels
 ```
 expected output 
-```bash
+```
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   LABELS
 kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   49m   component=apiserver,provider=kubernetes
 ```
@@ -93,11 +93,11 @@ kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -
 ```
 
 Expected output:
-```bash
+```
 HTTP/1.1 401 Unauthorized
 ```
 or 
-```bash
+```
 HTTP/1.1 403 Forbidden
 ```
 
@@ -142,7 +142,7 @@ Automatically removes the pod after the command execution (--rm flag).
 Expected Output
 If kube-dns is functioning correctly, you should see output similar to the following, indicating the IP address that kubernetes.default resolves to:
 
-```bash
+```
 Server:         10.96.0.10
 Address:        10.96.0.10:53
 
