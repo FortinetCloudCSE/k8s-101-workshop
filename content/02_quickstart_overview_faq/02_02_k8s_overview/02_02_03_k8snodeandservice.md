@@ -33,14 +33,13 @@ kubectl get node -o wide
 expected outcome:
 on self-managed kubernetes 
 ```
-kubectl get node -o wide
 NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
 nodemaster    Ready    control-plane   55m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 node-worker   Ready    <none>          54m   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 ```
 on managed kubernetes like AKS
 
-```bash
+```
 NAME                             STATUS   ROLES   AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
 aks-worker-24706581-vmss000000   Ready    agent   7m32s   v1.27.9   10.224.0.4    <none>        Ubuntu 22.04.3 LTS   5.15.0-1054-azure   containerd://1.7.7-1
 ```
@@ -61,9 +60,12 @@ Services primarily operate at the transport layer (Layer 4 of the OSI model), de
 
 ####  Major Types of Kubernetes Services:
 
-- **ClusterIP**: 
+- **ClusterIP** to expose service to cluster internal
 
 This is the default service type that exposes the service on an internal IP within the cluster, making the service reachable only from within the cluster.
+
+![clusterIP svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-clusterip.png)
+ 
 
 To check the services in your Kubernetes cluster, you can use the following command:
 
@@ -81,11 +83,13 @@ This output shows the built-in kubernetes service, which serves as the internal 
 
 The ClusterIP is only accessible from within the cluster, which means it cannot be directly accessed from the master node using kubectl. To interact with it, one must use another pod within the same cluster.
 
-Below, we launch a pod using the curl command to access the HTTPS port on 10.96.0.1. Receiving a 403 Forbidden response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
+- kubernetes API clusterIP service 
+
+Below, we launch a pod using the curl command to access the HTTPS port on 10.96.0.1 which is kubernetes API.  Receiving either 401 or 403  response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
 
 
 ```bash
-kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1
+kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1/
 ```
 
 Expected output:
@@ -97,14 +101,17 @@ or
 HTTP/1.1 403 Forbidden
 ```
 
-"401" or "403" is because curl need to supply a certificate to authenticate itself which we did not supply, however, above is enough to show you the 10.96.0.1 is reachable. 
+"401" or "403" is because curl need to supply a certificate to authenticate itself which we did not supply, however, above is enough to show you the 10.96.0.1 is reachable via clusterIP Service.
 
  
 
-Exploring the Kubernetes Default ClusterIP type Service: kube-dns
+- Exploring the Kubernetes Default ClusterIP type Service: kube-dns
 
 Kubernetes includes several built-in services essential for its operation  , with **kube-dns** being a key component. The **kube-dns** service is responsible for DNS resolution within the Kubernetes cluster, allowing pods to resolve the IP addresses of other services and external domains.
 
+![clusterIP svc ](https://www.tigera.io/app/uploads/2023/05/image13-1.png)
+
+*In this workshop, the kube-dns svc has configured with ip 10.96.0.10 instead of 10.0.0.10*
 
 To check the kube-dns services in your Kubernetes cluster namespace kube-system , use 
 
@@ -115,7 +122,8 @@ kubectl get svc --namespace=kube-system -l k8s-app=kube-dns
 You should see kube-dns listed among the services, typically with a ClusterIP type, indicating it's internally accessible within the cluster.
 
 Verifying DNS Resolution with kube-dns
-To verify that kube-dns is correctly resolving domain names within the cluster, you can perform a DNS lookup from a pod. Here’s how to launch a temporary pod for testing DNS resolution using the busybox image:
+To verify that kube-dns is correctly resolving domain names within the cluster, you can perform a DNS lookup from a pod. Here’s how to launch a temporary pod for testing DNS resolution using the busybox image, the FQDN name for kubernetes service is in format "svcname.namespace.svc.cluster.local". kube-dns service help how to solve cluster internal and external FQDN to IP address.
+
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  kubernetes.default.svc.cluster.local
 ```
@@ -123,6 +131,7 @@ and
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  www.google.com
 ```
+
 
 This command does the following:
 
@@ -156,13 +165,30 @@ Address: 2607:f8b0:4005:802::2004
 ```
 The kube-dns service is vital for internal name resolution in Kubernetes, enabling pods to communicate with each other and access various cluster services using DNS names. Verifying DNS resolution functionality with kube-dns is straightforward with a temporary pod and can help diagnose connectivity issues within the cluster.
 
-- **NodePort**: 
+- **NodePort**:  expose service to cluster external 
 
-Exposes the Service on the same port of each selected node in the cluster using NAT. It makes the Service accessible from outside the cluster by ****NodeIP:NodePort**, the NodePort has fixed range from **30000-32767**
 
-- **LoadBalancer**:
+Exposes the service externally on the same port of each selected node in the cluster via NAT. Accessible by NodeIP:NodePort within the range 30000-32767.
 
-Exposes the Service externally using a cloud provider’s load balancer or other on-premise load balancer like metallb . It assigns a fixed, external IP address to the Service.
+![nodePort svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-nodeport.png) 
+
+
+
+
+- **LoadBalancer**: expose service to cluster external 
+
+Exposes the service externally using a cloud provider's load balancer or an on-premise solution like MetalLB, assigning a fixed, external IP to the service."
+
+![LoadBalancer svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-loadbalancer.png)
+
+
+### Summary
+
+
+Worker nodes host your pods. A ClusterIP service enables internal cluster access to these pods, while NodePort and LoadBalancer services provide external access.
+
+You have sucessfully bring up a managed kubernetes (AKS) and walked throught the concept of POD, Deployment, Replicas, Namespace, Label, Node, different type of services etc in kubernetes. We will continue to install a self-managed kubernets to continue our jourey.
+
 
 
 
@@ -171,7 +197,7 @@ Exposes the Service externally using a cloud provider’s load balancer or other
 {{< notice warning >}}  
 
 
-Do not forget to remove your AKS cluster. We will use self-managed k8s for handson activites.
+Do not forget to remove your AKS cluster. We will use self-managed k8s for hands-on activites.
 
  {{< /notice >}} 
 delete your aks cluster with below command, this will took around 5 minutes.
@@ -179,13 +205,9 @@ delete your aks cluster with below command, this will took around 5 minutes.
 
 ```bash
 clustername=$(whoami)
-az aks delete --name ${clustername} -g ${clustername}-k8s101-workshop -y
+resourcegroupname=$(az group list --tag FortiLab="k8s101-lab" | jq -r .[].name)
+az aks delete --name ${clustername} -g $resourcegroupname  -y
 ```
-
-### Summary
-
-You have sucessfully bring up a managed kubernetes (AKS) and walked throught the concept of POD, Deployment, Replicas, Namespace, Label, Node, different type of services etc in kubernetes. We will continue to install a self-managed kubernets to continue our jourey.
-
 
 
 ### Review Questions

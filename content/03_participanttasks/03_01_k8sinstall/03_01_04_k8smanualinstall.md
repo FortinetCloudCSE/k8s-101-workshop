@@ -29,7 +29,7 @@ echo 'ssh_master_function() {
     export fqdn=${nodename}
     ssh -o "StrictHostKeyChecking=no"  -t $username@$nodename "export fqdn=${fqdn}; exec bash"
 }
-alias ssh_worker="ssh_worker_function"' >> $HOME/.bashrc
+alias ssh_master="ssh_master_function"' >> $HOME/.bashrc
 
 alias k='kubectl' >> $HOME/.bashrc
 source $HOME/.bashrc
@@ -237,6 +237,9 @@ sudo kubeadm config images pull --cri-socket unix:///var/run/crio/crio.sock --ku
 **Config kubeadm init parameters** 
 
 Kubeadm require some parameter to initionize the installation which include NODEIP, cluster-dns, POD_CIDR, SERVICE_CIDR, also certificate parameter like sans etc., kubeadm will also create a token for worker node to join.
+**CLUSTERDNSIP** must in range of SERVICE_CIDR. the ${fqdn} will be required if kubectl use fqdn of API_SERVER to use kubernetes API. 
+
+when use alias ssh_master to ssh into the master node, the fqdn already set to actual domain name of the master node VM, if not, you must set fqdn byself, for example , `fqnd=k8sXX-master.eastus.cloudapp.azure.com`
 
 ```
 local_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
@@ -293,7 +296,8 @@ kubectl rollout status deployment tigera-operator -n tigera-operator
 curl --insecure --retry 3 --retry-connrefused -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/custom-resources.yaml
 sed -i -e "s?blockSize: 26?blockSize: 24?g" custom-resources.yaml
 sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
-sed -i -e "s?192.168.0.0/16?10.244.0.0/16?g" custom-resources.yaml
+sed -i -e "s?192.168.0.0/16?$POD_CIDR?g" custom-resources.yaml
+#sed -i -e "s?192.168.0.0/16?10.244.0.0/16?g" custom-resources.yaml
 sed -i '/calicoNetwork:/a\    containerIPForwarding: Enabled ' custom-resources.yaml
 sed -i '/calicoNetwork:/a\    bgp: Disabled ' custom-resources.yaml
 kubectl --kubeconfig /home/ubuntu/.kube/config create namespace calico-system
@@ -319,12 +323,12 @@ expected outcome
 apiserver   True        False         False      68s
 calico      True        False         False      83s
 ```
-then exit from master node back to **azure shell**, we are going to install component on worker node.
-
 
 #### create token for other worker node to join
 
 **create a new token for worker node to join**
+
+on master node do 
 
 ```bash
 kubeadm token create --print-join-command > /home/ubuntu/workloadtojoin.sh
@@ -333,6 +337,7 @@ echo '#sudo kubeadm join --config kubeadm-join.default.yaml' | sudo tee -a  /hom
 chmod +x /home/ubuntu/workloadtojoin.sh
 cat /home/ubuntu/workloadtojoin.sh 
 ```
+then `exit` the master node, back to az shell.
 
 ### install worker node 
 
@@ -342,9 +347,9 @@ Since the commands for installing these components on the worker nodes overlap w
 
 ssh into your workder node use alias `ssh_worker`
 
-and Execute the Installation Script by Copy and paste the following script into the terminal of the worker node to start the installation process:
+and Execute the Installation Script by copy and paste the following script into the terminal of the worker node to start the installation process: We are not going to explain each step for install worker node as those are just part of install master node. 
 
-```
+```bash
 #!/bin/bash -xe
 
 error_handler() {
@@ -430,44 +435,44 @@ cd $HOME
 trap - ERR
 ```
 
+then `exit` the worker node back to az shell
+
 ### Joining a Worker Node to the Cluster
 
 Now that we have everything set up, it's time to join the worker node to the cluster. This process involves using a token for joining, as well as the hash of the master node's CA certificate for authentication purposes. This ensures the worker node is joining the intended Kubernetes cluster.
 
 
 
-Retrieve the Join Command
-Once logged into the **master node**, use the following command to display the join token and CA certificate hash. This information is stored in the workloadtojoin.sh file:
+Retrieve the Join Command from master node
+Once logged into the **master node** via `ssh_master` from azure shell,  use the following command to display the join token and CA certificate hash. This information is stored in the workloadtojoin.sh file:
 ```bash
 cat /home/ubuntu/workloadtojoin.sh
 ```
 
 Copy the content displayed by the cat command.
+After copying the necessary join command, `exit` the master node session.
 
-Exit the Master Node
-After copying the necessary join command, exit the master node session.
-
-SSH into the **Worker Node** to join the worker node to  Cluster
+SSH into the **Worker Node** with alias `ssh_worker` to join the worker node to  Cluster
 On the worker node, paste the previously copied join command to connect the worker node to the Kubernetes cluster. Replace <your master node ip>, Replace <paste your token here> and <paste your hash here> with the actual token and hash values you copied earlier. This command requires sudo to ensure it has the necessary permissions:
 ```bash
 sudo kubeadm join <master node ip>:6443 --token <paste your token here> --discovery-token-ca-cert-hash <paste your hash here>
 ```
 
-Note: If there's a need to reset the Kubernetes setup on the worker node before joining, you can use `sudo kubeadm reset -f`. This step is generally only necessary if you're reconfiguring or troubleshooting the node.
+*If there's a need to reset the Kubernetes setup on the worker node before joining, you can use `sudo kubeadm reset -f`. This step is generally only necessary if you're reconfiguring or troubleshooting the node*
 
 Following these steps will successfully join your worker node to the Kubernetes cluster. You can repeat the process for multiple worker nodes to expand the cluster's capacity for running workloads.
+then `exit` the worker node and `ssh_master` into the master node to check cluster node status 
 
-use below to check cluster node
- ```bash
-kubectl get node -o wide
-```
-you are expected to see both master node (ubuntu 22) and worker node (worker001) shall in Ready status. 
+you are expected to see both master node and worker node shall in Ready status. 
 
 ```bash
 kubectl get node -o wide
-NAME        STATUS   ROLES           AGE    VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
-ubuntu22    Ready    control-plane   5m9s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
-worker001   Ready    <none>          112s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
+```
+expected outcome
+```
+NAME          STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+node-worker   Ready    <none>          78s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.4 LTS   6.5.0-1015-azure   cri-o://1.25.4
+nodemaster    Ready    control-plane   14m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.4 LTS   6.5.0-1015-azure   cri-o://1.25.4
 ```
 
 After Successfully Joining Worker Nodes to the Cluster
@@ -707,8 +712,7 @@ trap - ERR
 
 
 
-Please note that executing the script may take a few minutes. Once completed, you can expect to see two deployments with two Nginx pods up and running, demonstrating the application deployment and ready for test the auto-scaling capabilities of your Kubernetes cluster.
-
+Please note that executing the script may take a few minutes. Once completed, you can expect to see two deployments with two Nginx pods up and running, demonstrating the application deployment and ready for test the auto-scaling capabilities of your Kubernetes cluster. aften done the deployment, `exit` from master node back to az shell.
 
 
 #### prepare access kubernetes on **azure shell**
@@ -744,4 +748,6 @@ With the Nginx service deployed and verified, we are now prepared to initiate be
 
 ### Review Questions
 
-- 
+- Try to use flannel instead calico as CNI
+- Try to replace CRI-O with Docker as container runtime
+- List all the k8s component that installed on master node and worker node.

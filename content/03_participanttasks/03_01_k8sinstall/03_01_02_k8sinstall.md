@@ -39,7 +39,7 @@ Best For: Organizations looking for an enterprise Kubernetes management platform
 
 ### use azure shell as kubenetes client
 
-To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your deployment using Terraform in Azure Cloud Shell. Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations. Follow these steps, assuming you've already deployed two VMs with Terraform, if not. use below command to deploy two VM to install kubernetes. 
+To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your provision using Terraform in Azure Cloud Shell. Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations. 
 
 ```bash
 cd $HOME/k8s-101-workshop/terraform
@@ -69,7 +69,7 @@ echo 'ssh_master_function() {
     export fqdn=${nodename}
     ssh -o "StrictHostKeyChecking=no"  -t $username@$nodename "export fqdn=${fqdn}; exec bash"
 }
-alias ssh_worker="ssh_worker_function"' >> $HOME/.bashrc
+alias ssh_master="ssh_master_function"' >> $HOME/.bashrc
 
 alias k='kubectl' >> $HOME/.bashrc
 source $HOME/.bashrc
@@ -122,7 +122,10 @@ ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
 
 #### install kubernetes master node: 
 
+
 - ssh into master node to run kubernetes master installation script 
+
+*this step take around 4 minutes* 
 
 ```bash
 cd $HOME/k8s-101-workshop/terraform/
@@ -137,6 +140,8 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/s
 
 
 - ssh into worker node to run kubernetes worker installation script 
+
+*it took around 3 minutes* 
 
 ```bash
 cd $HOME/k8s-101-workshop/terraform/
@@ -160,7 +165,7 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < ./workloadtojoin.sh
 
 #### prepare access kubernetes from **azure shell**
 
-To use Kubernetes from Azure Shell, copy your kubectl configuration. Because Azure Shell is external to your Azure VM VPC, you must use the Kubernetes master node's public IP for access. Follow these steps:
+To use Kubernetes from Azure Shell, copy your kubectl configuration. Because Azure Shell is external to your Azure VM VNET, you must use the Kubernetes master node's public IP for access. Follow these steps:
 
 
 ```bash
@@ -194,20 +199,8 @@ If you wish to start over and completely remove Kubernetes from all master and w
  {{< /notice >}} 
  
 
-ssh into master worker and worker node.  
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
-```  
-or 
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename 
-``` 
+ssh into master worker and worker node with alias `ssh_master` and `ssh_worker`
+
 
 then on master or worker node , run 
 ```bash
@@ -228,7 +221,12 @@ if you want delete VM completely, use `terraform destroy -var="username=$(whoami
 
 ### Summary
 
-This chapter aims to demonstrate the ease of dynamically scaling your applications using Kubernetes.  
+This chapter aims to install a kubernetes cluster with kube-adm based script
 
 ### Review Questions
-- Describe How to Join a worker node to cluster
+
+- What is the kube-API FQDN name ?
+- What is the version of this kubernetes server ?
+- What is the container runtime name and version ?
+- Describe general step to add a new VM as worker node in this cluster 
+
