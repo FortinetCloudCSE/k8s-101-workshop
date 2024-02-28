@@ -25,14 +25,23 @@ terraform init
 
 4. Set the Terraform environment variables **(check in dedicated the e-mail send to you by the organizers)**:
     
-5. Run `terraform apply  -var='username=userXX' --auto-approve` or `terraform apply -var="username=$(whoami)" --auto-approve` to apply it
+5. Run the following command ` to apply it
 
-    Your username can be found in the login email.  
-    Say your Azure account login is se31@ftntxxxxx.onmicrosoft.com, your username is **se31** 
+    ```sh
+   terraform apply -var="username=$(whoami)" --auto-approve
+    ```
+
+    {{% notice style="warning" title="**IF THE COMMAND ABOVE RESULTS IN AN ERROR**" %}} 
+
+You can manually specify your username (found in your Azure Account email) in the command  
+If your Workshop Azure account login is se31@ftntxxxxx.onmicrosoft.com, your username is **se31**, and the command to enter is:
 
 ```sh
-terraform apply  -var='username=UserXX' --auto-approve
+terraform apply  -var='username=se31' --auto-approve
 ```
+    
+    {{% /notice %}} 
+
 
 ![lab12](../../images/terraform2.png)
     
@@ -44,6 +53,10 @@ terraform apply  -var='username=UserXX' --auto-approve
 
     (will add picture here)
 
-8. To print the node VM's login password, you can run this command ```terraform output -raw linuxvm_password```
+8. To print the node VM's login password, you can run this command 
 
-    (will add picture here)
+   ```
+   terraform output -raw linuxvm_password
+   ```
+
+    ![](linux_passwd.png)
