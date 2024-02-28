@@ -88,22 +88,8 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
 
 4. Install kubernetes master node: 
 
-<<<<<<< HEAD
-
-- ssh into master node to run kubernetes master installation script 
-
-*this step take around 4 minutes* 
-
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
-```
-=======
    - ssh into master node to run kubernetes master installation script 
+   *this step take around 4 minutes*
 
    ```bash
    cd $HOME/k8s-101-workshop/terraform/
@@ -113,12 +99,11 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/s
    ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
    ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
    ```
->>>>>>> f098090 (add numbering and indentation to K8s install tasks)
-
 5. Install kubernetes worker node :
 
    - ssh into worker node to run kubernetes worker installation script 
-
+   *this step take around 3 minutes*
+   
    ```bash
    cd $HOME/k8s-101-workshop/terraform/
    nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
@@ -142,32 +127,7 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/s
 
 7. Prepare access kubernetes from **azure shell**
 
-<<<<<<< HEAD
-*it took around 3 minutes* 
-
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_workernode.sh
-```
-
-#### Join worker node to cluster
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-scp -o 'StrictHostKeyChecking=no' $username@$nodename:workloadtojoin.sh .
-nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < ./workloadtojoin.sh
-```
-=======
    - To use Kubernetes from Azure Shell, copy your kubectl configuration. Because Azure Shell is external to your Azure VM VPC, you must use the Kubernetes master node's public IP for access. Follow these steps:
->>>>>>> f098090 (add numbering and indentation to K8s install tasks)
-
-
    ```bash
    cd $HOME/k8s-101-workshop/terraform/
    nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
@@ -178,12 +138,10 @@ ssh -o 'StrictHostKeyChecking=no' $username@$nodename < ./workloadtojoin.sh
    sed -i "s|server: https://[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}:6443|server: https://$nodename:6443|" $HOME/.kube/config
    ```
 
-<<<<<<< HEAD
-To use Kubernetes from Azure Shell, copy your kubectl configuration. Because Azure Shell is external to your Azure VM VNET, you must use the Kubernetes master node's public IP for access. Follow these steps:
-=======
+
+
 8. Verify the installation 
    - **From your Azure shell**, watch the node getting "Ready". it will take a while to get worker node become "Ready".
->>>>>>> f098090 (add numbering and indentation to K8s install tasks)
 
    ```bash
    watch kubectl get node 
