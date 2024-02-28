@@ -15,8 +15,12 @@ In this chapter, we delve into Kubernetes fundamentals using a managed AKS clust
 We'll kick off by deploying a managed AKS cluster featuring a single worker node. This hands-on approach introduces you to Kubernetes essentials efficiently, with the setup process completing in about 5 minutes."
 
 ```bash
+##generate public key if not exist 
 [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
 clustername=$(whoami)
+
+##get the resourcegrname name 
+resourcegroupname=$(az group list --tag FortiLab="k8s101-lab" | jq -r .[].name)
 az aks create \
     --name ${clustername} \
     --node-count 1 \
@@ -25,13 +29,14 @@ az aks create \
     --service-cidr  10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
-    --resource-group ${clustername}-k8s101-workshop 
+    --resource-group $resourcegroupname
 
-
-az aks get-credentials -g  ${clustername}-k8s101-workshop -n ${clustername} --overwrite-existing
-
+##update kubeconfig file for kubectl to use 
+az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
+##list provisioned aks list
+az aks list --output table 
 ```
-
+### Operate Kubernetes objects
 
 There are two primary methods for managing Kubernetes objects:
 
@@ -51,13 +56,11 @@ Once you have a running Kubernetes cluster, you can deploy your containerized ap
 
 kubectl relies on a configuration file found at ~/.kube/config for authentication and communication with the kube-api-server. Running `kubectl config view` displays details about the kube-API server, including its address, name, and the client's key and certificate.
 
-We have created **config** file for **az shell** as well as the master node. 
-
-To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address.  
+*To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address.*  
 
 
 
-- **basic usage of** `kubectl`
+- basic usage of kubectl
 
 The common format of a kubectl command is: **kubectl _ACTION RESOURCE_**
 
@@ -93,7 +96,13 @@ for example, you can use `kubectl get node` to check cluster node detail
 kubectl get node
 ```
 
-"If you're using self-managed Kubernetes, you'll see both master and worker nodes in your cluster. However, with managed Kubernetes services like AKS, only worker nodes are visible. Kubernetes will deploy our application based on the available worker nodes."
+*If you're using self-managed Kubernetes, you'll see both master and worker nodes in your cluster. However, with managed Kubernetes services like AKS, only worker nodes are visible. Kubernetes will deploy our application based on the available worker nodes.*
+
+expected outcome on AKS cluster
+```
+NAME                             STATUS   ROLES   AGE     VERSION
+aks-worker-20494901-vmss000000   Ready    agent   2m56s   v1.27.9
+```
 
 ### POD
 
@@ -125,6 +134,8 @@ juiceshop   1/1     Running   0          7s
 ```
 You might see the **STATUS** of POD is **ContainerCreating** , but eventually, it will become "Running".
 
+use `kubectl logs po/juiceshop` to check the terminal log from pod. you are expected see logs like **info: Server listening on port 3000** 
+
 
 3. delete POD with `kubectl delete`. check pod again with `kubectl get pod`
 
@@ -132,10 +143,10 @@ You might see the **STATUS** of POD is **ContainerCreating** , but eventually, i
 kubectl delete pod juiceshop
 ```
 
-4. Create POD with `kubectl create -f`
+4. Create POD with `kubectl create -f <yamlfile>`
 
 ```bash
-cat << EOF | kubectl create -f - 
+cat << EOF | tee juice-shop.yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -147,6 +158,7 @@ spec:
   - image: bkimminich/juice-shop
     name: juiceshop
 EOF
+kubectl create -f juice-shop.yaml
 ```
 `cat << EOF` is a shell syntax for a "here document" (heredoc). It allows you to provide a block of input text directly in the shell. The input continues until the token EOF (End Of File) is encountered again in the input stream.
 ``|`` is the pipe operator, which takes the output of the command on its left (the heredoc in this case) and uses it as the input for the command on its right. In the next following chapters, we are going to use this a lot.
@@ -185,6 +197,8 @@ juiceshop   1/1     Running   0          4m7s   purpose=debug,run=juiceshop
 
 While directly creating pods might be suitable for learning purposes or specific use cases (like one-off debugging tasks), **deployments** offer a robust and scalable way to manage containerized applications in production environments. Deployments abstract away much of the complexity associated with pod management, providing essential features such as automatic scaling, self-healing, rolling updates, and rollbacks, which are critical for running reliable and available applications in Kubernetes.
 
+
+![deployment_replicasset_pod](../../images/deployment_replicaset_pod.png)
 - Deployment in Kubernetes manages app instances, ensuring they run and update smoothly.
 - Simplifies app management and scaling by handling instance replication and updates.
 - Using kubectl, you can scale pods easily (e.g., from 1 to 10) to meet demand.
@@ -356,13 +370,13 @@ By default, a Kubernetes cluster will instantiate a default namespace when provi
 
 `kubectl get deployment kubernetes-bootcamp -n default` is same as `kubectl get deployment kubernetes-bootcamp`.
 
-2. we can use `kubectl create namespace` to create different namespace name. below we create two new deployment in two different namespace. 
+2. we can use `kubectl create namespace` to create different namespace name. use `kubectl get namespace` to list all namespaces in cluster.
 
 3. Let's imagine a scenario where an organization is using a shared Kubernetes cluster for development and production use cases.
 
-4. The development team would like to maintain a space in the cluster where they can get a view on the list of Pods, Services, and Deployments they use to build and run their application. In this space, Kubernetes resources come and go, and the restrictions on who can or cannot modify resources are relaxed to enable agile development.
+The development team would like to maintain a space in the cluster where they can get a view on the list of Pods, Services, and Deployments they use to build and run their application. In this space, Kubernetes resources come and go, and the restrictions on who can or cannot modify resources are relaxed to enable agile development.
 
-5. The operations team would like to maintain a space in the cluster where they can enforce strict procedures on who can or cannot manipulate the set of Pods, Services, and Deployments that run the production site.
+The operations team would like to maintain a space in the cluster where they can enforce strict procedures on who can or cannot manipulate the set of Pods, Services, and Deployments that run the production site.
 
 One pattern this organization could follow is to partition the Kubernetes cluster into two namespaces: development and production.
 
