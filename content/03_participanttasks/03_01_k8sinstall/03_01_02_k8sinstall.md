@@ -41,10 +41,6 @@ Best For: Organizations looking for an enterprise Kubernetes management platform
 
 To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your provision using Terraform in Azure Cloud Shell. Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations. 
 
-```bash
-cd $HOME/k8s-101-workshop/terraform
-terraform apply -var="username=$(whoami)" --auto-approve
-```
 
 Navigate to your project directory where your Kubernetes workshop materials are located:
 ```bash

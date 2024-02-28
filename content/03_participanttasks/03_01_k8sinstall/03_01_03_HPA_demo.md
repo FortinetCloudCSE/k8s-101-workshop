@@ -155,6 +155,7 @@ Let's proceed by cleaning up and deleting the resources we've created, preparing
 kubectl delete ingress nginx
 kubectl delete svc nginx-deployment
 kubectl delete deployment nginx-deployment
+kubectl delete hpa nginx-hpa
 
 ```
 also delete loadbalancer and ingress controller
@@ -163,6 +164,7 @@ also delete loadbalancer and ingress controller
 kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
 kubectl delete -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.10.0/deploy/single/all-in-one-dbless.yaml
 kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
 
 
