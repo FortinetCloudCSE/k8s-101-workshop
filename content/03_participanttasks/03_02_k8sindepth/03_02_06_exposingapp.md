@@ -1,7 +1,7 @@
 ---
 title: "Task 4 - Exposing Applications with Loadbalancer and Ingress"
 menuTitle: "Task 4 -  Exposing application"
-weight: 4
+weight: 6
 ---
 
 ## Objective: 

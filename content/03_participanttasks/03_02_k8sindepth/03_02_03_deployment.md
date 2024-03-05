@@ -1,6 +1,7 @@
 ---
-title: "Task 1 - Deployment"
-weight: 2
+title: "Task 3 - Deployments"
+menuTitle: "Task 3 - Deployments"
+weight: 3
 ---
 
 1. ### Objective: Master the Creation and Management of Deployments
