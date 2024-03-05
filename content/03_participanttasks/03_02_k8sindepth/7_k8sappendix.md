@@ -1,7 +1,7 @@
 ---
 title: "Appendix - More info"
 menuTitle: "Appendix - More info"
-weight: 6
+weight: 7
 ---
 
 

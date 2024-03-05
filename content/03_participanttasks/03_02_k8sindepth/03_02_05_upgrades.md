@@ -1,6 +1,6 @@
 ---
 title: "Task 5 - Upgrade"
-menuTitle: "Task 4 - Upgrade"
+menuTitle: "Task 5 - Upgrade"
 weight: 5
 ---
 
