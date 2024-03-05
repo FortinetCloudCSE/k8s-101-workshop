@@ -81,13 +81,14 @@ To get configmap, try ```kubectl get configmap```
 
 - Encode a string to base64:
 
-c``echo -n 'your_secret_value' | base64```
+```echo -n 'your_secret_value' | base64```
 
 for example: 
 
 ```bash
 base64_encoded_username=$(echo -n 'ftntadmin' | base64)
 base64_encoded_password=$(echo -n 'password123' | base64)
+
 cat << EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret

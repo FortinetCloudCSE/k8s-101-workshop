@@ -4,14 +4,14 @@ menuTitle: "Task 4 - Scaling"
 weight: 4
 ---
 
-1. ### Using kubectl autoscale
+#### Using kubectl autoscale
 
 When kubernetes has **Resouce Metrics API** installed,  We can using the kubectl autoscale command `kubectl autoscale deployment` to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
 
 
 using the kubectl autoscale command to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
 
-2. #### Enable resource-API 
+#### Enable resource-API 
 
 The Resource Metrics API in Kubernetes is crucial for providing core metrics about pods and nodes within a cluster, such as CPU and memory usage to enable feature like Horizontal Pod Autoscaler (HPA), Vertical Pod Autoscaler (VPA) and enable efficent resource scheduling.
 
@@ -25,7 +25,7 @@ kubectl rollout status deployment metrics-server -n kube-system
 
 use `kubectl top node` and `kubectl top pod` to check the pod and node resource usage
 
-3. #### Create a deployment  with resource constrain 
+#### Create a deployment  with resource constrain 
 
 1. In this deployment , we add some resource restriction like memory and cpu for a POD.
 
@@ -96,7 +96,7 @@ kubectl get deployment nginx-deployment
 kubectl get svc nginx-deployment
 ```
 
-4. #### Use autoscale  (HPA) to scale your application
+#### Use autoscale  (HPA) to scale your application
 
 1. We can use `kubectl autoscale` command or use create a hpa yaml file then follow a `kubectl apply -f` to create hpa.
 
@@ -164,7 +164,7 @@ use `kubectl get deployment nginx-deployment` to check the change of deployment.
 use `kubectl get hpa` and `kubectl describe hpa` to check the  size of replicas.
 
 
-5. ### Send http traffic to application 
+#### Send http traffic to application 
 
 since the nginx-deployment service is cluster-ip type service which can only be accessed from cluster internal, so we need to create a POD which can send http traffic to nginx-deployment service.
 
