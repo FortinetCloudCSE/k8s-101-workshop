@@ -6,12 +6,12 @@ weight: 6
 
 ## Objective: 
 
-Expose your deployment to external of cluster.
+1. Expose your deployment to external of cluster.
 
-We have covered Kubernetes clusterIP svc in previous chapter, in this chapter, we focus on expose application to cluster external service which are NodePort, LoadBalancer and Ingress.
+2. We have covered Kubernetes clusterIP svc in previous chapter, in this chapter, we focus on expose application to cluster external service which are NodePort, LoadBalancer and Ingress.
 
+3. Before We can continue, let's create a deployment first with 
 
-Before We can continue, let's create a deployment first with 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=2
 ```
@@ -19,39 +19,35 @@ check with
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ``` 
-expected Outcome 
+4. expected Outcome 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   2/2     2            2           4s
 ```
 
-
 #### NodePort
 
+1. To allow access the app from cluster external for example internet , we need to expose the service for app via NodePort or Loadbalancer. 
 
-To allow access the app from cluster external for example internet , we need to expose the service for app via NodePort or Loadbalancer. 
-
-With NodePort, the worker node that actually running that container will open a NATTed PORT to external , you will also need whitelist the port if you have external firewall.
+2. With NodePort, the worker node that actually running that container will open a NATTed PORT to external , you will also need whitelist the port if you have external firewall.
 the NATTED PORT use default range 30000-32767. This means when you create a service of type NodePort without specifying a particular port, Kubernetes will automatically allocate a port for that service from within this default range.
 
-We can use `kubectl expose` command to expose it or we can create service yaml definition  then use `kubectl create -f` to create service. use `kubectl create -f` give more flexibility. 
+3. We can use `kubectl expose` command to expose it or we can create service yaml definition  then use `kubectl create -f` to create service. use `kubectl create -f` give more flexibility. 
 
-- use kubectl expose 
+4. use kubectl expose 
 
 ```bash
 kubectl expose deployment kubernetes-bootcamp --port 80 --type=NodePort --target-port=8080 --name kubernetes-bootcamp-nodeportsvc --save-config
 
 ```
 
-expected Outcome
+5. expected Outcome
 
 ```bash
 service/kubernetes-bootcamp-nodeportsvc exposed
 ```
 
-- use yaml file
-
-use yaml file give more flexbility, for example , you can assign static nodePort as long as it's not being used.
+6. using yaml file give more flexbility, for example , you can assign static nodePort as long as it's not being used.
 
 ```bash
 cat << EOF | tee kubernetes-bootcamp-nodeportsvc.yaml
@@ -73,12 +69,12 @@ spec:
 EOF
 kubectl apply -f kubernetes-bootcamp-nodeportsvc.yaml
 ```
-expected outcome
+7. expected outcome
 ```
 service/kubernetes-bootcamp-nodeportsvc configured
 ```
 
-- check service detail
+8. check service detail
 
 check service detail with `kubectl get svc kubernetes-bootcamp-nodeportsvc` 
 
@@ -89,11 +85,11 @@ NAME                              TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(
 kubernetes-bootcamp-nodeportsvc   NodePort   10.103.189.68   <none>        80:30913/TCP   24s
 
 ```
-the NATTED PORT on worker node that running POD is **30913**.
+9. the NATTED PORT on worker node that running POD is **30913**.
 
 NodePort service will  exposes the service on a static port which is **30913** in this example on every node in the cluster, including both master and worker nodes. This means you can access the service using the IP address of **any node** in the cluster followed by the NodePort. you also need to config azure cloud to allow incoming traffic to **30913** from internet.
 
-- from azure shell , access the application via nodeport service 
+10. from azure shell , access the application via nodeport service 
 
 use
 ```bash
@@ -104,14 +100,13 @@ or
 curl http://$(whoami)-worker.eastus.cloudapp.azure.com:30913
 ```
 
-
-expected outcome
+11. expected outcome
 
 ```
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-bcbb7fc75-q7sqc | v=1
 ```
 
-you can find the actual endpoint for nodeport service through command
+12. you can find the actual endpoint for nodeport service through command
 ```bash
 kubectl get ep  -l app=kubernetes-bootcamp
 ```
@@ -120,7 +115,6 @@ expected output
 NAME                              ENDPOINTS                                 AGE
 kubernetes-bootcamp-nodeportsvc   10.244.152.116:8080,10.244.152.117:8080   20m
 ```
-
 
 ### summary 
 
@@ -146,8 +140,6 @@ LoadBalancer service require an **external IP** to use which we use metallb and 
 In a self-managed Kubernetes environment, external traffic management and service exposure are not handled automatically by the infrastructure, unlike managed Kubernetes services in cloud environments (e.g., AWS ELB with EKS, Azure Load Balancer with AKS, or Google Cloud Load Balancer with GKE). This is where solutions like MetalLB and the Kong Ingress Controller become essential
 
 MetalLB provides a network load balancer implementation for Kubernetes clusters that do not run on cloud providers, offering a LoadBalancer type service. In cloud environments, when you create a service of type LoadBalancer, the cloud provider provisions a load balancer for your service. In contrast, on-premises or self-managed clusters do not have this luxury. MetalLB fills this gap by allocating IP addresses from a configured pool and managing access to services through these IPs, enabling external traffic to reach the cluster services.
-
-
 
 
 ```bash
@@ -194,9 +186,7 @@ first-pool   true          false             ["10.0.0.4/32"]
 
 ### Create loadBalacncer Service 
 
-
-
-- create kubernetes-bootcamp deployment 
+1. create kubernetes-bootcamp deployment 
 
 We need create deployment first 
 
@@ -204,13 +194,14 @@ We need create deployment first
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=2
 ``` 
 
-- create loadBalancer service 
+2. create loadBalancer service 
 
 since loadBalancer service require an dedicated external ip, if IP has already occupied by other loadBalancer, we will not able to create new loadBalancer. so if you have kong loadbalaner installed, delete it first with
 ```bash
 kubectl delete svc kong-proxy -n kong
 ``` 
-then create new loadBalancer 
+
+3. then create new loadBalancer 
 
 ```bash
 kubectl expose deployment kubernetes-bootcamp --port=80 --type=LoadBalancer --target-port=8080 --name=kubernetes-bootcamp-lb-svc 
@@ -219,13 +210,13 @@ kubectl expose deployment kubernetes-bootcamp --port=80 --type=LoadBalancer --ta
 ```bash
 kubectl get svc kubernetes-bootcamp-lb-svc
 ```
-expected outcome
+4. expected outcome
 ```
 NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
 kubernetes-bootcamp-lb-svc   LoadBalancer   10.106.121.27   10.0.0.4      80:32537/TCP   26s
 ```
 
-- verify with curl or external browser 
+5. verify with curl or external browser 
 
 ```bash
 curl http://$(whoami)-master.eastus.cloudapp.azure.com
@@ -234,7 +225,7 @@ expected outcome
 ```
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-bcbb7fc75-nh9sn | v=1
 ```
-- how it works 
+6. how it works 
 
 When we use the `kubectl expose` command to create a LoadBalancer service in a Kubernetes cluster with MetalLB installed in Layer 2 (L2) advertisement mode, the process simplifies to these key points:
 
@@ -271,7 +262,7 @@ Ingress requires an Ingress controller to be running in the cluster, which is a 
 
 
 #### Install Kong ingress controller 
-The Kong Ingress Controller is an Ingress controller for Kubernetes that manages external access to HTTP services within a cluster using Kong Gateway. It processes Ingress resources to configure HTTP routing, load balancing, authentication, and other functionalities, leveraging Kong's powerful API gateway features for Kubernetes services.  Kong will use the ippool that managed by metallb. 
+1. The Kong Ingress Controller is an Ingress controller for Kubernetes that manages external access to HTTP services within a cluster using Kong Gateway. It processes Ingress resources to configure HTTP routing, load balancing, authentication, and other functionalities, leveraging Kong's powerful API gateway features for Kubernetes services.  Kong will use the ippool that managed by metallb. 
 
 
 ```bash
@@ -280,17 +271,17 @@ kubectl rollout status deployment proxy-kong -n kong
 kubectl rollout status deployment ingress-kong -n kong
 
 ```
-check installed load balancer
+2. check installed load balancer
 
 ```bash
 kubectl get svc kong-proxy -n kong
 ``` 
-expected outcome
+3. expected outcome
 ```
 kong-proxy   LoadBalancer   10.97.121.60   10.0.0.4      80:32477/TCP,443:31364/TCP   2m10s
 ```
 
-check ingressclass 
+4. check ingressclass 
 ```bash
 kubectl get ingressclasses
 ```
@@ -303,7 +294,7 @@ kong   ingress-controllers.konghq.com/kong   <none>       9h
  
 #### Create nginx deployment  
 
-create nginx deployment with replicas set to 2. the container also configured resource usage limition for cpu and memory.
+5. create nginx deployment with replicas set to 2. the container also configured resource usage limition for cpu and memory.
 
 ```bash
 cd $HOME
@@ -341,7 +332,7 @@ kubectl apply -f nginx-deployment.yaml
 kubectl rollout status deployment nginx-deployment
 ```
 
-#### create nginx clusterIP svc for nginx-deployment 
+#### 6. create nginx clusterIP svc for nginx-deployment 
 
 ```bash
 cat << EOF | kubectl apply -f -
@@ -386,7 +377,7 @@ NAME               TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
 nginx-deployment   ClusterIP   10.103.221.158   <none>        80/TCP    4m53s
 ```
 
-#### Create https ingress rule for nginx-deployment 
+#### 7. Create https ingress rule for nginx-deployment 
 to support https, a certificate for ingress controller is required. user can choose "cert-manager" for manage and deploy certificate. 
 
 use below cli to deploy cert-manager which is used to issue certificate needed for service
@@ -468,11 +459,18 @@ spec:
             name: nginx-deployment
             port:
               number: 80
+      - path: /bootcamp
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: kubernetes-bootcamp
+            port:
+              number: 80  
 EOF
 kubectl apply -f nginx_ingress_rule_with_cert_${nodename}.yaml
 ```
 
-- check status 
+8. check status 
 ```bash
 kubectl get ingress nginx
 ```
@@ -500,22 +498,21 @@ Rules:
   ----                                    ----  --------
   k8s50-master.eastus.cloudapp.azure.com  
                                           /default   nginx-deployment:80 (10.244.152.118:80,10.244.152.119:80)
-  k8s50-master.eastus.cloudapp.azure.com  
-                                          /bootcamp   kubernetes-bootcamp-deployment:80 (10.244.152.156:8080)
+  
 Annotations:                              cert-manager.io/cluster-issuer: selfsigned-issuer-test
                                           konghq.com/strip-path: true
 Events:                                   <none>
 ```
 
-- verify 
+9. verify 
 ```bash
 curl -I -k https://$nodename/default
-curl -I http://$nodename/default
+
 ```
 both shall return 200 OK with response from nginx server 
 
 
-- verify with not configured path 
+10. verify with not configured path 
 
 ```bash
 curl -k https://$nodename/
@@ -531,7 +528,7 @@ expected result
 now let's create another path but point to a different service. 
 
 
-### create kubernetes-bootcamp svc 
+### 11. create kubernetes-bootcamp svc 
 ```bash
 cat << EOF | tee kubernetes-bootcamp.yaml
 apiVersion: apps/v1
@@ -578,7 +575,7 @@ EOF
 
 kubectl create -f kubernetes-bootcamp-clusterip.yaml
 ```
-- update the ingress rule 
+12. update the ingress rule 
 
 also add a new rule with path configured to /bootcamp with backendservice set to kubernetes-bootcamp-deployment
 
@@ -625,7 +622,7 @@ kubectl apply -f nginx_ingress_rule_with_cert_${nodename}_two_svc.yaml
 ```
 
 
-Verify ingress rule with 
+13. Verify ingress rule with 
 ```bash
 curl http://${nodename}/bootcamp
 curl http://${nodename}/default

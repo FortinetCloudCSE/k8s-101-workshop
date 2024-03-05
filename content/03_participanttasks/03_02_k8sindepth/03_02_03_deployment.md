@@ -4,11 +4,11 @@ menuTitle: "Task 3 - Deployments"
 weight: 3
 ---
 
-1. ### Objective: Master the Creation and Management of Deployments
+#### Objective: Master the Creation and Management of Deployments
 
 Description: This module zeroes in on Deployments as the primary mechanism for deploying applications on Kubernetes. You will delve into the creation of Deployments, learn how to scale them effectively, and update applications with zero downtime. Through hands-on lab exercises, you will experience deploying a multi-replica application and conducting rolling updates to ensure seamless application transitions.
 
-2. ### Deploying an Application with a Deployment
+#### Deploying an Application with a Deployment
 
 We've previously seen how to use kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 to create a deployment directly from the command line. However, Kubernetes also supports deploying applications using YAML or JSON manifests. This approach provides greater flexibility than using the kubectl CLI alone and facilitates version control of your deployment configurations.
 
@@ -44,11 +44,11 @@ kubectl create -f kubernetes-bootcamp.yaml
 - spec.containers: Lists the containers to run in the Pod.
 - image: gcr.io/google-samples/kubernetes-bootcamp:v1: Specifies the container image to use.
 
-3. ## Scale your deployment 
+#### Scale your deployment 
 
 After deploying the Kubernetes Bootcamp application, you might find the need to scale your deployment to accommodate an increased load or enhance availability. Kubernetes allows you to scale a deployment, increasing the number of replicas from 1 to 10, for instance. This ensures your application can handle a higher load. There are several methods to scale a deployment, each offering unique benefits.
 
-### Using kubectl scale
+## 1. Using kubectl scale
 
 **Benefits:**
 1. Immediate: This command directly changes the number of replicas in the deployment, making it a quick way to scale.
@@ -131,7 +131,7 @@ delete the deployment
 kubectl delete deployment kubernetes-bootcamp 
 ```
 
-4. ### use kubectl apply 
+ ## 2. use kubectl apply 
 
 1. if the intended resource to update is in yaml file, we can directly edit the yaml file with any editor, then  use `kubectl apply` to update.
 
@@ -204,7 +204,7 @@ kubectl delete -f kubernetes-bootcamp.yaml
 - Version Controlled: Can be version-controlled if using a local YAML file, allowing for tracking of changes and rollbacks.
 - Reviewable: Changes can be reviewed by team members before applying if part of a GitOps workflow.
 
-### use kubectl edit 
+## 3. use kubectl edit 
 
 1. This approach involves manually editing the resource definition in a text editor (invoked by kubectl edit), where you can change any part of the resource. After saving and closing the editor, Kubernetes applies the changes. This method requires no separate kubectl apply, as kubectl edit directly applies the changes once the file is saved and closed.
 
@@ -231,7 +231,7 @@ spec:
 kubectl delete deployment kubernetes-bootcamp
 ```
 
-### Kubectl patch 
+## 4. Kubectl patch 
 
 1. kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a pod or changing the number of replicas in a deployment.
 
@@ -257,7 +257,7 @@ kubectl patch deployment kubernetes-bootcamp --type='json' -p='[{"op": "replace"
 
 ```
 
-4. ### Directly update yaml file with  kubectl replace 
+#### Directly update yaml file with  kubectl replace 
 
 1. The kubectl replace -f command replaces a resource with the new state defined in the YAML file. If the resource doesn't exist, the command fails. This command requires that the resource be defined completely in the file being applied because it replaces the existing configuration with the new one provided.
 
@@ -287,7 +287,7 @@ spec:
       - name: kubernetes-bootcamp
         image: gcr.io/google-samples/kubernetes-bootcamp:v1
 EOF
-kubectl create -f kubernetes-bootcamp.yaml
+kubectl replace -f kubernetes-bootcamp.yaml
 ```
 5. then modify **replicas: 1** to **replicas: 10** in kubernetes-bootcamp.yaml
 ```bash
@@ -305,7 +305,7 @@ kubectl get deployment
 Expected output 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
-kubernetes-bootcamp   1/1     1            1           7m8s
+kubernetes-bootcamp   10/10   10           10          4m34s
 ```
 
 7. Risk of Downtime: For some resources, using kubectl replace can cause downtime since it may delete and recreate the resource, depending on the type and changes made. It's important to use this command with caution, especially for critical resources in production environments.
