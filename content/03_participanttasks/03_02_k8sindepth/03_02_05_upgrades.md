@@ -1,6 +1,7 @@
 ---
-title: "Task 3 - Upgrades"
-weight: 4
+title: "Task 5 - Upgrade"
+menuTitle: "Task 4 - Upgrade"
+weight: 5
 ---
 
 ### Upgrade the deployment
@@ -222,32 +223,26 @@ kubectl delete deployment kubernetes-bootcamp
 
 ### Review and Questions
 
--  Use `kubectl run` to create a POD with juice-shop image and add a label owner=dev 
+1.  Use `kubectl run` to create a POD with juice-shop image and add a label owner=dev 
 Use `kubectl create deployment` to create a deployment for juice-shop
 
-Answer: 
-
+**Answer:**
 
 - Create a yaml file for juice-shop deployment with 2 replicas and use `kubectl create -f` to create the deployment  with juice-shop image bkimminich/juice-shop:v15.0.0
 
 - scale out juice-shop deployment from 2 replicas to 6 replicas 
 
-Answer
+2. use rolling upgrade to upgrade your juice-shop deployment to use version v16.0.0.
 
-
-- use rolling upgrade to upgrade your juice-shop deployment to use version v16.0.0.
-
-Answer:
+**Answer:**
 
 ```bash
 kubectl set image deployment juice-shop juice-shop=bkimminich/juice-shop:v16.0.0
 ```
 
+3. Use `kubectl` to find the specifcation for imagePullPolicy which is need for create a deployment.  and set the juice-shop deployment container imagePullPolicy to use "IfNotPresent".
 
-- Use `kubectl` to find the specifcation for imagePullPolicy which is need for create a deployment.  and set the juice-shop deployment container imagePullPolicy to use "IfNotPresent".
-
-
-Answer 
+**Answer:**
 
 ```bash
 kubectl explain deployment.spec.template.spec.containers.imagePullPolicy

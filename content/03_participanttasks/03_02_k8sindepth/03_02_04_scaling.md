@@ -1,6 +1,7 @@
 ---
-title: "Task 2 - Scaling"
-weight: 3
+title: "Task 4 - Scaling"
+menuTitle: "Task 4 - Scaling"
+weight: 4
 ---
 
 1. ### Using kubectl autoscale
