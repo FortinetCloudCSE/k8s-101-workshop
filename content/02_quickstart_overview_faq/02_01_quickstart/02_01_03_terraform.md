@@ -51,7 +51,7 @@ terraform apply  -var='username=se31' --auto-approve
 
 7. Once Terraform is complete you should see the output. Please copy the output to notepad.
 
-    ![output](output.png)
+![output](output.png)
 
 8. To print the node VM's login password, you can run this command 
 
@@ -59,4 +59,4 @@ terraform apply  -var='username=se31' --auto-approve
    terraform output -raw linuxvm_password
    ```
 
-    ![](linux_passwd.png)
+![](linux_passwd.png)
