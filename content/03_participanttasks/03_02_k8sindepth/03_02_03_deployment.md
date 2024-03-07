@@ -54,23 +54,7 @@ After deploying the Kubernetes Bootcamp application, you might find the need to 
 1. Immediate: This command directly changes the number of replicas in the deployment, making it a quick way to scale.
 Simple: Easy to remember and use for ad-hoc scaling operations.
 
-
-```bash
-kubectl scale deployment kubernetes-bootcamp --replicas=10
-```
-
-2. You can monitor the scaling process and the deployment's progress using `kubectl rollout status deployment kubernetes-bootcamp`:
-
-3. To view the updated deployment and the status of the pods, use:
-
-```bash
-kubectl get deployment kubernetes-bootcamp
-kubectl get pod -l app=kubernetes-bootcamp
-```
-
-4. Expected Outcome: After scaling, you should observe that the number of pods has increased to meet the deployment's requirements. 
-
-5. Before scaling:
+2. Before scaling:
 
 ```bash
 kubectl get deployment
@@ -80,32 +64,36 @@ expected output
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           63m
 ```
-6. Scaling the deployment: 
+
+3. Scaling the deployment: 
+
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
 ```
-7. expected output 
+**expected output**
+
 ```
 deployment.apps/kubernetes-bootcamp scaled
 ```
-8. Checking the rollout status:
-```bash
-kubectl rollout status deployment kubernetes-bootcamp
-```
-- expected output
-```
-deployment "kubernetes-bootcamp" successfully rolled out
-```
-9. Verifying the deployment after scaling:
+
+4. You can monitor the scaling process and the deployment's progress using `kubectl rollout status deployment kubernetes-bootcamp`
+
+5. To view the updated deployment, use:
+
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
-expected output
+
+6. Expected Outcome: After scaling, you should observe that the number of pods has increased to meet the deployment's requirements. 
+
+**expected output**
+
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          64m
 ```
-10. Listing the pods:
+
+7. Listing the pods:
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp
 ```
@@ -126,12 +114,12 @@ kubernetes-bootcamp-bcbb7fc75-t4tkm   1/1     Running   0          44s
 
 This output confirms the deployment now runs 10 replicas of the Kubernetes Bootcamp application, demonstrating successful scaling.
 
-delete the deployment 
+8. delete the deployment 
 ```bash
 kubectl delete deployment kubernetes-bootcamp 
 ```
 
- ## 2. use kubectl apply 
+## 2. use kubectl apply 
 
 1. if the intended resource to update is in yaml file, we can directly edit the yaml file with any editor, then  use `kubectl apply` to update.
 
