@@ -34,7 +34,7 @@ az aks create \
 ##update kubeconfig file for kubectl to use 
 az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
 ##list provisioned aks list
-az aks list --output table 
+az aks list --resource-group $resourcegroupname --output table
 ```
 ### Operate Kubernetes objects
 

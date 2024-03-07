@@ -53,7 +53,7 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    
    ```
 
-   - get the password for VM **which will be needed when use ssh-copy-id to copy ssh key** into the master node.
+   - get the password for VM **which will be needed when use ssh-copy-id to copy ssh key** into the master node. Make sure to copy the password to a notepad. You will need this to login to Master node in next steps. 
 
    ```bash
    cd $HOME/k8s-101-workshop/terraform/

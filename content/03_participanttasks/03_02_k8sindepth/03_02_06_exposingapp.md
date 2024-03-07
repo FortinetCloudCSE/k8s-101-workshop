@@ -528,7 +528,8 @@ expected result
 now let's create another path but point to a different service. 
 
 
-### 11. create kubernetes-bootcamp svc 
+11. create Kubernetes-bootcamp deployment and service
+
 ```bash
 cat << EOF | tee kubernetes-bootcamp.yaml
 apiVersion: apps/v1
