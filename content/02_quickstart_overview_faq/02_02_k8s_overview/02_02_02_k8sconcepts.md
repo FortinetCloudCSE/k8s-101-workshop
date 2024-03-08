@@ -58,6 +58,14 @@ kubectl relies on a configuration file found at ~/.kube/config for authenticatio
 
 *To use kubectl from your personal client machine, you need to copy the ~/.kube/config file from the server to your client machine. Additionally, ensure your client machine can connect to the kube-API server's address.*  
 
+- download kubectl
+
+Download the kubectl version that is compatible with your Kubernetes server version.
+
+```bash
+curl -Lo $HOME/kubectl https://dl.k8s.io/release/v1.27.2/bin/linux/amd64/kubectl && chmod +x $HOME/kubectl && export PATH=$HOME:$PATH
+```
+
 
 
 - basic usage of kubectl
@@ -110,13 +118,16 @@ aks-worker-20494901-vmss000000   Ready    agent   2m56s   v1.27.9
 
 A Pod in Kubernetes is like a single instance of an application. It can hold closely related containers that work together. All containers in a Pod share the same IP address and ports, and they are always placed together on the same server (Node) in the cluster. This setup means they can easily communicate with each other.  Pods provide the environment in which containers run and offer a way to logically group containers together. 
 
-1. To create a pod:
+To create a pod:
 
 - kubectl run: Quick way to create a single pod for ad-hoc tasks or debugging.
 - kubectl create: Creates specific Kubernetes resources with more control. Use kubectl create -f to create from file. 
 - kubectl apply: Creates or updates resources based on their configuration files. Use kubectl apply -f to create from file. 
 
-2. Run POD with `kubectl run`
+Create pod:
+
+- use `kubectl run` to create pod
+
 ```bash
 kubectl run juiceshop --image=bkimminich/juice-shop
 ``` 
@@ -136,32 +147,79 @@ You might see the **STATUS** of POD is **ContainerCreating** , but eventually, i
 
 use `kubectl logs po/juiceshop` to check the terminal log from pod. you are expected see logs like **info: Server listening on port 3000** 
 
-
-3. delete POD with `kubectl delete`. check pod again with `kubectl get pod`
-
 ```bash
-kubectl delete pod juiceshop
+kubectl logs po/juiceshop
+```
+expected result
+```
+info: All dependencies in ./package.json are satisfied (OK)
+info: Detected Node.js version v20.10.0 (OK)
+info: Detected OS linux (OK)
+info: Detected CPU x64 (OK)
+info: Configuration default validated (OK)
+info: Entity models 19 of 19 are initialized (OK)
+info: Required file server.js is present (OK)
+info: Required file index.html is present (OK)
+info: Required file styles.css is present (OK)
+info: Required file polyfills.js is present (OK)
+info: Required file main.js is present (OK)
+info: Required file runtime.js is present (OK)
+info: Required file vendor.js is present (OK)
+info: Port 3000 is available (OK)
+info: Domain https://www.alchemy.com/ is reachable (OK)
+info: Chatbot training data botDefaultTrainingData.json validated (OK)
+info: Server listening on port 3000
 ```
 
-4. Create POD with `kubectl create -f <yamlfile>`
+- create POD from yaml file
+
+Create POD with `kubectl create -f <yamlfile>` or `kubectl apply -f <yamlfile>
 
 ```bash
-cat << EOF | tee juice-shop.yaml
+cat << EOF | tee juice-shop2.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: juiceshop
+  name: juiceshop2
   labels:
-    run: juiceshop
+    run: juiceshop2
 spec:
   containers:
   - image: bkimminich/juice-shop
     name: juiceshop
 EOF
-kubectl create -f juice-shop.yaml
+kubectl create -f juice-shop2.yaml
 ```
 `cat << EOF` is a shell syntax for a "here document" (heredoc). It allows you to provide a block of input text directly in the shell. The input continues until the token EOF (End Of File) is encountered again in the input stream.
 ``|`` is the pipe operator, which takes the output of the command on its left (the heredoc in this case) and uses it as the input for the command on its right. In the next following chapters, we are going to use this a lot.
+
+check result with `kubectl get pod`
+
+```bash
+kubectl get pod
+```
+expected result
+
+you shall see two POD is running
+```
+NAME         READY   STATUS    RESTARTS   AGE
+juiceshop   1/1     Running   0          84s
+juiceshop2   1/1     Running   0          20s
+```
+- delete the pod
+
+use `kubectl delete` to delete the pod 
+
+```bash
+kubectl delete pod juiceshop2
+```
+expected result
+you shall see juiceshop2 now deleted
+
+```
+NAME        READY   STATUS    RESTARTS   AGE
+juiceshop   1/1     Running   0          63s
+```
 
 ### Labels
 
