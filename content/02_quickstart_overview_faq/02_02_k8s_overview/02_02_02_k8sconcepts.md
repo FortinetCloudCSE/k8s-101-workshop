@@ -8,13 +8,30 @@ weight: 2
 In this chapter, we delve into Kubernetes fundamentals using a managed AKS cluster. You're set to begin right from the Azure Shell, leveraging the az aks command to streamline cluster setup without navigating through complex installation steps. Our focus areas include **Pods**, **Labels**, **Deployments**, **Replicas**, and **Namespaces**.
 
 
-
-
 ### Quick AKS Cluster Setup
 
 We'll kick off by deploying a managed AKS cluster featuring a single worker node. This hands-on approach introduces you to Kubernetes essentials efficiently, with the setup process completing in about 5 minutes."
 
 ```bash
+##generate public key if not exist 
+[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
+clustername=$(whoami)
+
+##get the resourcegrname name 
+resourcegroupname=$(az group list --tag FortiLab="k8s101-lab" | jq -r .[].name)
+az aks create \
+    --name ${clustername} \
+    --node-count 1 \
+    --vm-set-type VirtualMachineScaleSets \
+    --network-plugin azure \
+    --service-cidr  10.96.0.0/16 \
+    --dns-service-ip 10.96.0.10 \
+    --nodepool-name worker \
+    --resource-group $resourcegroupname
+
+##update kubeconfig file for kubectl to use 
+az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
+##list provisioned aks list
 ##generate public key if not exist 
 [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
 clustername=$(whoami)
@@ -114,7 +131,7 @@ aks-worker-20494901-vmss000000   Ready    agent   2m56s   v1.27.9
 
 ### POD
 
-## What is a POD?
+**What is a POD?**
 
 A Pod in Kubernetes is like a single instance of an application. It can hold closely related containers that work together. All containers in a Pod share the same IP address and ports, and they are always placed together on the same server (Node) in the cluster. This setup means they can easily communicate with each other.  Pods provide the environment in which containers run and offer a way to logically group containers together. 
 
@@ -126,7 +143,9 @@ To create a pod:
 
 Create pod:
 
-- use `kubectl run` to create pod
+1. use `kubectl run` to create pod
+
+2. Create a POD with `kubectl run`
 
 ```bash
 kubectl run juiceshop --image=bkimminich/juice-shop
@@ -137,7 +156,7 @@ use `kubectl get pod` to check the POD
 ```bash
 kubectl get pod
 ```
-exepcted result 
+**expected result**
 ```
 kubectl get pod
 NAME        READY   STATUS    RESTARTS   AGE
@@ -146,6 +165,10 @@ juiceshop   1/1     Running   0          7s
 You might see the **STATUS** of POD is **ContainerCreating** , but eventually, it will become "Running".
 
 use `kubectl logs po/juiceshop` to check the terminal log from pod. you are expected see logs like **info: Server listening on port 3000** 
+
+
+3. delete the POD with `kubectl delete`. check pod again with `kubectl get pod`
+
 
 ```bash
 kubectl logs po/juiceshop

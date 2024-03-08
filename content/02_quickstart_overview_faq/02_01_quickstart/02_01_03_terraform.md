@@ -22,10 +22,8 @@ terraform init
 
 ![lab11](../../images/terraform1.png)
 
-
-4. Set the Terraform environment variables **(check in dedicated the e-mail send to you by the organizers)**:
     
-5. Run the following command ` to apply it
+4. Run the following command to apply it
 
     ```sh
    terraform apply -var="username=$(whoami)" --auto-approve
@@ -45,15 +43,15 @@ terraform apply  -var='username=se31' --auto-approve
 
 ![lab12](../../images/terraform2.png)
     
-6. Terraform deployment takes atleast 10-15 min to complete.
+5. Terraform deployment takes atleast 10-15 min to complete.
 
 ![lab13](../../images/terraformoutput.png)
 
-7. Once Terraform is complete you should see the output. Please copy the output to notepad.
+6. Once Terraform is complete you should see the output. Please copy the output to notepad.
 
 ![output](output.png)
 
-8. To print the node VM's login password, you can run this command 
+7. To print the node VM's login password, you can run this command 
 
    ```
    terraform output -raw linuxvm_password

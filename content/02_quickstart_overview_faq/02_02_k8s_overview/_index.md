@@ -21,13 +21,13 @@ A microservice is like a small, specialized team in a company. Each team focuses
 
 ### Scaling from Few Users to Millions
 
-- Horizontal Pod Autoscaling (HPA): 
+* Horizontal Pod Autoscaling (HPA): 
 Kubernetes can automatically adjust the number of running instances (pods) of your microservices based on the actual demand observed. As the number of users grows, HPA increases the number of pods to maintain performance and reduce latency. Conversely, it reduces the number of pods during low demand periods to save resources.
 
--  Kubernetes Cluster Autoscaler:
+* Kubernetes Cluster Autoscaler:
 The Kubernetes Cluster Autoscaler is an automated component that adjusts the number of nodes (virtual machines) in a Kubernetes cluster to meet the current demand for application resources. It works closely with cloud providers to dynamically scale the cluster's infrastructure by adding nodes when there's insufficient capacity for application workloads (scaling out/up) and removing nodes when they're underutilized (scaling in/down). This ensures efficient resource use and maintains application performance as user demand changes, enabling seamless scalability from a few users to millions without manual intervention.
 
-- Resource Management: 
+* Resource Management: 
 Kubernetes efficiently manages the computing, networking, and storage resources that your microservices need to run. It ensures that each microservice has the resources it requires and is isolated from other services to prevent one service from over-consuming resources at the expense of others
 
 
@@ -50,36 +50,36 @@ Kubernetes is a powerful platform designed to manage containerized applications 
 ![](https://kubernetes.io/images/docs/kubernetes-cluster-architecture.svg)
 
 ### Kubernetes Master Components
-- Kubernetes API Server (kube-apiserver): 
+* Kubernetes API Server (kube-apiserver): 
 
 This is the front end of the Kubernetes control plane, handling REST requests and updating objects in the etcd database with the desired state. For example, when scaling a microservice, a request to update the number of replicas in a Deployment would be sent to the API Server. 
 
-- Etcd: 
+* Etcd: 
 
 A consistent and highly-available key-value store used as Kubernetes' backing store for all cluster data. It holds the actual state of the cluster, including the number of replicas for a scaled service.
 
-- Kube-Scheduler (kube-scheduler): 
+* Kube-Scheduler (kube-scheduler): 
 
 This component watches for newly created Pods with no assigned node and selects a node for them to run on based on various scheduling criteria. In the autoscaling scenario, once the desired number of replicas increases, the Scheduler decides on which nodes the additional Pods should be created, taking into account the resources available on each node.
 
-- Controller Manager (kube-controller-manager): 
+* Controller Manager (kube-controller-manager): 
 
 Runs controller processes, which are background tasks that handle routine tasks in the cluster. The Replication Controller ensures the number of Pods matches the desired state specified in the etcd for a scaled service. If a Pod crashes, the Controller Manager works to bring the system back to the desired state.
 
 ### Kubernetes Worker Node Components
-- Kubelet: 
+* Kubelet: 
 An agent that runs on each node in the cluster, ensuring that containers are running in a Pod. The Kubelet takes a set of PodSpecs and ensures that the containers described in those PodSpecs are running and healthy. When autoscaling a microservice, the Kubelet on each node starts the containers for the new Pods assigned to its node.
 
-- Kube-Proxy (kube-proxy): 
+* Kube-Proxy (kube-proxy): 
 Maintains network rules on nodes, allowing network communication to your Pods from network sessions inside or outside of your cluster. It ensures that each Pod gets its IP address and provides load balancing to distribute traffic to the Pods of a scaled service.
 
-- Container Runtime Interface (CRI): 
+* Container Runtime Interface (CRI): 
 Enables Kubernetes to use different container runtimes, like Docker, containerd, or any other implementation that matches the CRI. The runtime is responsible for running the containers as part of the Pods. common CRI are cri-o, containerd and docker. Kubernetes is deprecating Docker as a container runtime after v1.20. 
 
-- Container Network Interface (CNI) Plugins: 
+* Container Network Interface (CNI) Plugins: 
 Provide the networking layer for Pods, enabling connectivity between Pod networks within the cluster. This is crucial for service discovery and allowing microservices to communicate with each other across multiple nodes. common CNI like Calico , Cilium , Flannel etc., Managed kubernetes like EKS, AKS, and GKE often has it's own CNI which often optimized for cloud networking. 
 
-- Container Storage Interface (CSI) Plugins: 
+* Container Storage Interface (CSI) Plugins: 
 Allow Kubernetes to interface with a wide range of storage systems, making it possible to use persistent storage for stateful applications in the cluster.
 
 Below let's summarize with a comparsion between Kubernetes components and a manufacturing environment analogy.
@@ -101,10 +101,10 @@ Below let's summarize with a comparsion between Kubernetes components and a manu
 
 ## Different Kubernetes distribution
 
-- Self-Managed Kubernetes:
+* Self-Managed Kubernetes:
 Self-Managed Kubernetes distributions like Minikube, MicroK8s, K3s/K3d, and OpenShift give users full control over their Kubernetes environments, suitable for a range of scenarios from development to enterprise production.
 
-- Cloud-Managed Kubernetes:
+* Cloud-Managed Kubernetes:
 Cloud-Managed Kubernetes services such as EKS, AKS, and GKE, on the other hand, are designed for users who prefer to outsource the complexity of cluster management to their cloud provider, benefiting from deep cloud service integration, managed infrastructure, and scalability.
 
 Choosing between self-managed and cloud-managed Kubernetes depends on an organization's specific needs, expertise, and whether they prefer the control and flexibility of managing their own environment or the convenience and integration of a cloud-managed service.
