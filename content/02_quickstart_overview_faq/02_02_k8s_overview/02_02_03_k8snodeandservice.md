@@ -119,7 +119,8 @@ kubectl get svc --namespace=kube-system -l k8s-app=kube-dns
 
 You should see kube-dns listed among the services, typically with a ClusterIP type, indicating it's internally accessible within the cluster.
 
-Verifying DNS Resolution with kube-dns
+- Verifying DNS Resolution with kube-dns 
+
 To verify that kube-dns is correctly resolving domain names within the cluster, you can perform a DNS lookup from a pod. Here’s how to launch a temporary pod for testing DNS resolution using the busybox image, the FQDN name for Kubernetes service is in format "svcname.namespace.svc.cluster.local". kube-dns service help how to solve cluster internal and external FQDN to IP address.
 
 ```bash
@@ -175,7 +176,7 @@ Exposes the service externally on the same port of each selected node in the clu
 
 - **LoadBalancer**: expose service to cluster external 
 
-Exposes the service externally using a cloud provider's load balancer or an on-premise solution like MetalLB, assigning a fixed, external IP to the service."
+Exposes the service externally using a cloud provider's load balancer or an on-premises solution like MetalLB, assigning a fixed, external IP to the service."
 
 ![LoadBalancer svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-loadbalancer.png)
 
@@ -185,7 +186,7 @@ Exposes the service externally using a cloud provider's load balancer or an on-p
 
 Worker nodes host your pods. A ClusterIP service enables internal cluster access to these pods, while NodePort and LoadBalancer services provide external access.
 
-You have sucessfully bring up a managed Kubernetes (AKS) and walked throught the concept of POD, Deployment, Replicas, Namespace, Label, Node, different type of services etc in Kubernetes. We will continue to install a self-managed Kubernetes to continue our jourey.
+You have sucessfully brought up a managed Kubernetes (AKS) and walked through the concept of POD, Deployment, Replicas, Namespace, Label, Node, different type of services etc, in Kubernetes. We will continue to install a self-managed Kubernetes to continue our jourey.
 
 
 
@@ -195,7 +196,7 @@ You have sucessfully bring up a managed Kubernetes (AKS) and walked throught the
 {{< notice warning >}}  
 
 
-Do not forget to remove your AKS cluster. We will use self-managed k8s for hands-on activites.
+Do not forget to remove your AKS cluster. We will use self-managed k8s for hands-on activities.
 
  {{< /notice >}} 
 delete your aks cluster with below command, this will took around 5 minutes.
