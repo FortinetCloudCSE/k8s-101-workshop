@@ -3,6 +3,8 @@ title: "Task 1 - Setup Azure CloudShell"
 weight: 2
 ---
 
+
+
 #### 1. **Setup your AzureCloud Shell**
 
 * Login to Azure Cloud Portal [https://portal.azure.com/](https://portal.azure.com/) with the provided login/password

@@ -6,7 +6,7 @@ weight: 1
 #### Provisioning the Azure environment (40min)
 
 Provision your Azure Environment, enter your Email address and click _Provision_
-{{< launchdemoform >}}
+{{< launchdemoform labdefinition="azure-k8s-seintro-110" >}}
 
 {{< notice warning >}} After submitting, this page will return with a blank email address box and no other indications.
 
