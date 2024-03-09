@@ -1,19 +1,19 @@
 ---
-title: "Task 4 - Scaling"
-menuTitle: "Task 4 - Scaling"
+title: "Task 4 - Scaling Deployment"
+menuTitle: "Task 4 - Scaling Deployment"
 weight: 4
 ---
 
 #### Using kubectl autoscale
 
-When kubernetes has **Resouce Metrics API** installed,  We can using the kubectl autoscale command `kubectl autoscale deployment` to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
+When Kubernetes has **Resouce Metrics API** installed,  We can using the kubectl autoscale command `kubectl autoscale deployment` to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
 
 
 using the kubectl autoscale command to automatically scale a deployment based on CPU utilization (or any other metric) requires that the Kubernetes Metrics Server (or an equivalent metrics API) is installed and operational in your cluster. The Metrics Server collects resource metrics from Kubelets and exposes them in the Kubernetes API server through the Metrics API for use by Horizontal Pod Autoscaler (HPA) and other components.
 
 #### Enable resource-API 
 
-The Resource Metrics API in Kubernetes is crucial for providing core metrics about pods and nodes within a cluster, such as CPU and memory usage to enable feature like Horizontal Pod Autoscaler (HPA), Vertical Pod Autoscaler (VPA) and enable efficent resource scheduling.
+The Resource Metrics API in Kubernetes is crucial for providing core metrics about Pods and nodes within a cluster, such as CPU and memory usage to enable feature like Horizontal Pod Autoscaler (HPA), Vertical Pod Autoscaler (VPA) and enable efficent resource scheduling.
 
 ```bash
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml" -o components.yaml
@@ -23,7 +23,7 @@ kubectl apply -f components.yaml
 kubectl rollout status deployment metrics-server -n kube-system
 ```
 
-use `kubectl top node` and `kubectl top pod` to check the pod and node resource usage
+use `kubectl top node` and `kubectl top pod` to check the Pod and node resource usage
 
 #### Create a deployment  with resource constrain 
 
@@ -139,9 +139,9 @@ EOF
 kubectl apply -f nginx-deployment-hpa.yaml
 ```
 
-- **Target CPU Utilization**: This is set to 50%. It means the HPA will aim to adjust the number of pods so that the average CPU utilization across all pods is around 50% of the allocated CPU resources for each pod.
-- **Scaling Out**: If the average CPU utilization across all pods in the nginx-deployment exceeds 50%, the HPA will increase the number of pods, making more resources available to handle the workload, until it reaches the maximum limit of 10 pods.
-- **Scaling In**: If the average CPU utilization drops below 50%, indicating that the resources are underutilized, the HPA will decrease the number of pods to reduce resource usage, but it won't go below the minimum of 2 pod.
+- **Target CPU Utilization**: This is set to 50%. It means the HPA will aim to adjust the number of Pods so that the average CPU utilization across all Pods is around 50% of the allocated CPU resources for each Pod.
+- **Scaling Out**: If the average CPU utilization across all Pods in the nginx-deployment exceeds 50%, the HPA will increase the number of Pods, making more resources available to handle the workload, until it reaches the maximum limit of 10 Pods.
+- **Scaling In**: If the average CPU utilization drops below 50%, indicating that the resources are underutilized, the HPA will decrease the number of Pods to reduce resource usage, but it won't go below the minimum of 2 Pod.
 
 
 6. Check Result 
@@ -205,8 +205,8 @@ kubectl apply -f infinite-calls-deployment.yaml
 ```bash
 kubectl get deployment infinite-calls
 ```
-3. check the log from infinite-calls pods.
-{.items[0]} means use first pod 
+3. check the log from infinite-calls Pods.
+{.items[0]} means use first Pod 
 
 ```bash
 podName=$(kubectl get pod -l app=infinite-calls -o=jsonpath='{.items[0].metadata.name}')
@@ -216,10 +216,10 @@ kubectl logs  po/$podName
 
 
 5. use `kubectl top pod` and `kubectl top node` to check the resource usage status
-user expected to see the number of pod increased 
+user expected to see the number of Pod increased 
 
  
-6. you shall see that expected pod now increased automatically without use attention.
+6. you shall see that expected Pod now increased automatically without use attention.
 ```bash
 kubectl get pod -l app=nginx
 ```
@@ -282,7 +282,7 @@ Events:
 kubectl delete deployment infinite-calls
 ```
 
-13. after few minutes later, due to no more traffic is hitting the nginx server. hpa will scale in the number of pod to save resource. 
+13. after few minutes later, due to no more traffic is hitting the nginx server. hpa will scale in the number of Pod to save resource. 
 
 ```bash
 kubectl get hpa
@@ -295,7 +295,7 @@ nginx-deployment-hpa   Deployment/nginx-deployment   0%/50%   2         10      
 
 ```
 
-15. use `kubectl describe hpa` will tell you the reason why hpa scale in the number of pod.
+15. use `kubectl describe hpa` will tell you the reason why hpa scale in the number of Pod.
 
 ```bash
 kubectl describe hpa

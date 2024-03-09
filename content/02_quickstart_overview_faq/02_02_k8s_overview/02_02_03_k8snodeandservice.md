@@ -48,6 +48,61 @@ Nodes in Kubernetes can be made un-schedulable using the `kubectl cordon <nodena
 
 use `kubectl uncordon <nodename>` to put worker node back to work. 
 
+#### Task: Cordon worker node 
+
+- Cordon first node
+```bash
+firstNodeName=$(kubectl get node -o json | jq -r .items[0].metadata.name)
+kubectl cordon $firstNodeName
+```
+- Check node status
+```bash
+kubectl get node 
+```
+expected result
+```
+aks-worker-29142279-vmss000000   Ready,SchedulingDisabled   agent   29m   v1.27.9
+```
+the Node now marked with "SchedulingDisabled".
+
+- Create Pod
+```bash
+kubectl run juiceshop3 --image=bkimminich/juice-shop
+```
+
+- Check the Pod status
+```bash
+kubectl get pod juiceshop3
+```
+expected result
+```
+NAME         READY   STATUS    RESTARTS   AGE
+juiceshop3   0/1     Pending   0          42s
+```
+
+The Pod Juiceshop3 will remain in Pending status, as the only worker node now is disabled for scheduling.
+
+
+- Put node back
+```bash
+firstNodeName=$(kubectl get node -o json | jq -r .items[0].metadata.name)
+kubectl uncordon $firstNodeName
+```
+
+- Check node status
+```bash
+kubectl get node 
+```
+expected result
+```
+aks-worker-29142279-vmss000000   Ready    agent   29m   v1.27.9
+```
+
+- Check the Pod Juiceshop3 status 
+```bash
+kubectl get pod juiceshop3
+```
+The Pod juiceshop3 shall move to "Runing" status.
 
 
 ### What is Service
@@ -86,7 +141,6 @@ The ClusterIP is only accessible from within the cluster, which means it cannot 
 
 Below, we launch a pod using the curl command to access the HTTPS port on 10.96.0.1 which is Kubernetes API.  Receiving either 401 or 403  response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
 
-
 ```bash
 kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1/
 ```
@@ -105,6 +159,8 @@ HTTP/1.1 403 Forbidden
  
 
 - Exploring the Kubernetes Default ClusterIP type Service: kube-dns
+
+#### Task: Verify the Kube-dns service 
 
 Kubernetes includes several built-in services essential for its operation  , with **kube-dns** being a key component. The **kube-dns** service is responsible for DNS resolution within the Kubernetes cluster, allowing pods to resolve the IP addresses of other services and external domains.
 
@@ -181,6 +237,8 @@ Exposes the service externally using a cloud provider's load balancer or an on-p
 
 ![LoadBalancer svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-loadbalancer.png)
 
+
+#### Task: Expose deployment with LoadBalancer Service
 
 Let's use `kubectl expose deployment` command to expose our Kubernetes Bootcamp deployment to the internet by creating a LoadBalancer service. The kubectl expose command is used to expose a Kubernetes deployment, pod, or service to the internet or other parts of the cluster. When used within Azure Kubernetes Service (AKS), a managed Kubernetes platform, this command creates a service resource that defines how to access the Kubernetes workloads.  **--type=LoadBalancer**: Specifies the type of service to create. LoadBalancer services are public, cloud-provider-specific services that automatically provision an external load balancer (in this case, an Azure Load Balancer) to direct traffic to the service. This option makes the service accessible from outside the AKS cluster.
 
