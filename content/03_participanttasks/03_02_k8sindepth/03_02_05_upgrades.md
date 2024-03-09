@@ -1,16 +1,16 @@
 ---
-title: "Task 5 - Upgrade"
-menuTitle: "Task 5 - Upgrade"
+title: "Task 5 - Upgrade Deployment"
+menuTitle: "Task 5 - Upgrade Deployment"
 weight: 5
 ---
 
 ### Upgrade the deployment
 
-Upgrading a deployment in Kubernetes, particularly changing the version of the application your pods are running, can be smoothly managed using Kubernetes' built-in strategies to ensure minimal downtime and maintain stability. The most popular strategies for upgrading a deployment are:
+Upgrading a deployment in Kubernetes, particularly changing the version of the application your Pods are running, can be smoothly managed using Kubernetes' built-in strategies to ensure minimal downtime and maintain stability. The most popular strategies for upgrading a deployment are:
 
 1. Rolling Update (Default Strategy)
 
-How It Works: This strategy updates the pods in a rolling fashion, gradually replacing old pods with new ones. Kubernetes automatically manages this process, ensuring that a specified number of pods are running at all times during the update.
+How It Works: This strategy updates the Pods in a rolling fashion, gradually replacing old Pods with new ones. Kubernetes automatically manages this process, ensuring that a specified number of Pods are running at all times during the update.
 Advantages: Zero downtime, as the service remains available during the update. It allows for easy rollback in case the new version is faulty.
 
 
@@ -21,7 +21,7 @@ This strategy involves running two versions of the application simultaneously - 
 A small portion of the traffic is gradually shifted to the new version of the application. Based on feedback and metrics, the traffic is slowly increased to the new version until it handles all the traffic.
 
 4. ReCreate Strategy
-The "Recreate" strategy is a deployment strategy in Kubernetes that is particularly useful for managing stateful applications during updates. Unlike the default "RollingUpdate" strategy, which updates pods in a rolling fashion to ensure no downtime, the "Recreate" strategy works by terminating all the existing pods before creating new ones with the updated configuration or image. 
+The "Recreate" strategy is a deployment strategy in Kubernetes that is particularly useful for managing stateful applications during updates. Unlike the default "RollingUpdate" strategy, which updates Pods in a rolling fashion to ensure no downtime, the "Recreate" strategy works by terminating all the existing Pods before creating new ones with the updated configuration or image. 
 
 the use case for Recreate Strategy is for stateful application  where it's critical to avoid running multiple versions of the application simultaneously.
 

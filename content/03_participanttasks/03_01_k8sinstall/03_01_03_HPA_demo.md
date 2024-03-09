@@ -14,7 +14,7 @@ these include
 
 1. Deploy Demo Application and enable auto scalling (HPA)
 
-    - The Deployed demo application include two PODs but will auto scale if coming traffic reach some limit.
+    - The Deployed demo application include two Pods but will auto scale if coming traffic reach some limit.
     
     ```bash
     cd $HOME/k8s-101-workshop/terraform/
@@ -52,7 +52,7 @@ these include
 
 3. Stress the nginx deployment
 
-    - Paste below command into azure shell to create a client deployment to send http request towards nginx deployment to stress it.  this client deployment will create two POD to keep issue http request towards nginx server.
+    - Paste below command into azure shell to create a client deployment to send http request towards nginx deployment to stress it.  this client deployment will create two Pod to keep issue http request towards nginx server.
     
     ```bash
     cat <<EOF | tee  infinite-calls_client.yaml

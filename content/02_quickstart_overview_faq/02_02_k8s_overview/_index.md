@@ -86,6 +86,8 @@ Provide the networking layer for Pods, enabling connectivity between Pod network
 * Container Storage Interface (CSI) Plugins: 
 Allow Kubernetes to interface with a wide range of storage systems, making it possible to use persistent storage for stateful applications in the cluster.
 
+### Manufacturing Analogy to Kubernetes
+
 Below let's summarize with a comparsion between Kubernetes components and a manufacturing environment analogy.
 
 | Kubernetes Component         | Manufacturing Analogy                 | Description                                                                                                                                                                                                                          |

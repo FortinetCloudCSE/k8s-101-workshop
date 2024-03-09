@@ -10,7 +10,7 @@ Description: This module zeroes in on Deployments as the primary mechanism for d
 
 #### Deploying an Application with a Deployment
 
-We've previously seen how to use kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 to create a deployment directly from the command line. However, Kubernetes also supports deploying applications using YAML or JSON manifests. This approach provides greater flexibility than using the kubectl CLI alone and facilitates version control of your deployment configurations.
+We've previously seen how to use kubectl create deployment Kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 to create a deployment directly from the command line. However, Kubernetes also supports deploying applications using YAML or JSON manifests. This approach provides greater flexibility than using the kubectl CLI alone and facilitates version control of your deployment configurations.
 
 By defining deployments in YAML or JSON files, you can specify detailed configurations, manage them through source control systems, and apply changes systematically. This method enhances the maintainability and reproducibility of your deployments within a Kubernetes environment.
 
@@ -37,7 +37,7 @@ spec:
 EOF
 kubectl create -f kubernetes-bootcamp.yaml
 ```
-- replicas: 1: Specifies that only one replica of the pod should be running.
+- replicas: 1: Specifies that only one replica of the Pod should be running.
 - selector: Defines how the Deployment finds which Pods to manage using matchLabels.
 - template: Describes the Pod template used by the Deployment to create new Pods.
 - metadata.labels: Sets the label app: kubernetes-bootcamp on the Pod, matching the selector in the Deployment spec.
@@ -84,7 +84,7 @@ deployment.apps/kubernetes-bootcamp scaled
 kubectl get deployment kubernetes-bootcamp
 ```
 
-6. Expected Outcome: After scaling, you should observe that the number of pods has increased to meet the deployment's requirements. 
+6. Expected Outcome: After scaling, you should observe that the number of Pods has increased to meet the deployment's requirements. 
 
 **expected output**
 
@@ -93,7 +93,7 @@ NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          64m
 ```
 
-7. Listing the pods:
+7. Listing the Pods:
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp
 ```
@@ -126,7 +126,7 @@ kubectl delete deployment kubernetes-bootcamp
 2. The kubectl apply -f command is more flexible and is recommended for managing applications in production. It updates resources with the changes defined in the YAML file but retains any modifications that are not specified in the file.It's particularly suited for scenarios where you might want to maintain manual adjustments or unspecified settings. 
 
 
-3. First let's create kubernetes-bootcamp deployment yaml file with below 
+3. First let's create Kubernetes-bootcamp deployment yaml file with below 
 ```bash
 cat << EOF | tee kubernetes-bootcamp.yaml
 apiVersion: apps/v1
@@ -221,7 +221,7 @@ kubectl delete deployment kubernetes-bootcamp
 
 ## 4. Kubectl patch 
 
-1. kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a pod or changing the number of replicas in a deployment.
+1. kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a Pod or changing the number of replicas in a deployment.
 
 2. Automation Friendly: It's ideal for scripts and automation because you can specify the exact change in a single command line.
 

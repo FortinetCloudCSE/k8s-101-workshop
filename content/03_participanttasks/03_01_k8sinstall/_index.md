@@ -1,16 +1,16 @@
 ---
 title: "Kubernetes installation"
 chapter: false
-menuTitle: "K8S install"
+menuTitle: "K8s install"
 weight: 2
 ---
 
 ## Objective: 
 
-Use kubeadm to install a self-managed kubernetes cluster with 1 master node and 1 worker node on Azure ubuntu VM.
+Use kubeadm to install a self-managed Kubernetes cluster with 1 master node and 1 worker node on Azure ubuntu VM.
 
 
-## Choose your kubernetes 
+## Choose your Kubernetes 
 Although Cloud-Managed Kubernetes becoming the popular choice for enteprise to use in production network, But Self Managed Kubernetes  give users full control over their Kubernetes environments. Choosing the right method to install Self Managed Kubernetes can vary significantly based on the intended use case, from development and testing environments to production deployments. Here's a short description of different ways to install Kubernetes, tailored to specific needs:
 
 ### For Development and Testing
@@ -22,7 +22,7 @@ Best For: Individual developers and small teams experimenting with Kubernetes ap
 Best For: Kubernetes contributors, developers working on CI/CD pipelines, and testing Kubernetes configurations.
 
 - OrbStack Kubernetes:
-Best for: development and testing on **MacOS desktop with Apple Silicon or intel chipset** , it eliminates the complexity of setting up and managing full-fledged Kubernetes clusters.
+Best for: development and testing on MacOS desktop with Apple Silicon or intel chipset, it eliminates the complexity of setting up and managing full-fledged Kubernetes clusters.
 
 
 ### For Production Deployment

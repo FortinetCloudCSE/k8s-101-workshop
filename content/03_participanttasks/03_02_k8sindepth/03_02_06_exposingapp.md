@@ -6,11 +6,11 @@ weight: 6
 
 ## Objective: 
 
-1. Expose your deployment to external of cluster.
+1. Expose your Deployment to external of cluster.
 
 2. We have covered Kubernetes clusterIP svc in previous chapter, in this chapter, we focus on expose application to cluster external service which are NodePort, LoadBalancer and Ingress.
 
-3. Before We can continue, let's create a deployment first with 
+3. Before We can continue, let's create a Deployment first with 
 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=2
@@ -235,7 +235,7 @@ When we use the `kubectl expose` command to create a LoadBalancer service in a K
 
 **L2 Advertisement**: MetalLB advertises the assigned IP address across the local network using ARP, directing traffic to the Kubernetes node responsible for the service.
 
-**Traffic Routing**: Incoming traffic to the external IP is routed to the targeted pods within the cluster, enabling external access to the application.
+**Traffic Routing**: Incoming traffic to the external IP is routed to the targeted Pods within the cluster, enabling external access to the application.
 
 This streamlined process allows MetalLB to provide external IPs for services, enabling external access in environments without native cloud provider LoadBalancer support.
 

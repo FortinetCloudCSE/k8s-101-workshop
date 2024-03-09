@@ -5,7 +5,7 @@ weight: 7
 ---
 
 
-## POD life-cycle 
+## Pod life-cycle 
 
 The life cycle of a Kubernetes Pod involves several key stages from creation to termination. Here's a brief overview of these stages, illustrated with commands related to deploying a Pod using the `gcr.io/google-samples/kubernetes-bootcamp:v1` image:
 
@@ -34,34 +34,34 @@ Pods can be terminated gracefully by deleting them. Kubernetes first sends a SIG
 7. **Deletion**
 The Pod's entry remains in the system for a period after termination, allowing you to inspect its status posthumously. Eventually, Kubernetes cleans it up automatically.
 
-Through these stages, Kubernetes manages the application's lifecycle, ensuring that the desired state specified by the deployment configurations is maintained. Monitoring the Pod's lifecycle helps in managing and troubleshooting applications running on Kubernetes.
+Through these stages, Kubernetes manages the application's lifecycle, ensuring that the desired state specified by the Deployment configurations is maintained. Monitoring the Pod's lifecycle helps in managing and troubleshooting applications running on Kubernetes.
 
-we can use `kubectl get pod -l app=kubernetes-bootcamp` and `kuectl describe pod -l app=kubernetes-bootcamp` to check the detail state for a POD.
+we can use `kubectl get pod -l app=kubernetes-bootcamp` and `kuectl describe pod -l app=kubernetes-bootcamp` to check the detail state for a Pod.
 
-### Useful Command for POD
+### Useful Command for Pod 
 
-You can try a few useful command for operating a pod 
+You can try a few useful command for operating a Pod 
 
-- get the pod name only
+- get the Pod name only
 
-To retrieve just the name(s) of the pod(s) with a specific label (app=kubernetes-bootcamp), use the following command: 
+To retrieve just the name(s) of the Pod(s) with a specific label (app=kubernetes-bootcamp), use the following command: 
 
 ```bash
 kubectl get pods -l app=kubernetes-bootcamp -o=jsonpath='{.items[*].metadata.name}'
 ```
 
-- shell into the POD
-To access the shell of the default container in a pod labeled with app=kubernetes-bootcamp, first capture the pod name in a variable, then use kubectl exec:
+- shell into the Pod 
+To access the shell of the default container in a Pod labeled with app=kubernetes-bootcamp, first capture the Pod name in a variable, then use kubectl exec:
 
 ```bash
 PODNAME=$(kubectl get pods -l app=kubernetes-bootcamp -o=jsonpath='{.items[*].metadata.name}')
 kubectl exec -it po/$PODNAME -- bash
 ```
-Note: This command assumes that your selection returns a single pod name or you are only interested in the first pod. Use exit to leave the container shell. some of container in POD does not have `bash` or `sh` , then you will not able to shell into the container in that POD.
+Note: This command assumes that your selection returns a single Pod name or you are only interested in the first Pod. Use exit to leave the container shell. some of container in Pod does not have `bash` or `sh` , then you will not able to shell into the container in that Pod.
 
-you will be drop into POD's default container shell, use `exit` to exit the container.
+you will be drop into Pod's default container shell, use `exit` to exit the container.
 
-- check log for a pod
+- check log for a Pod
 To view the logs from the container in real-time:
 
 ```bash
@@ -75,12 +75,12 @@ Kubernetes Bootcamp App Started At: 2024-02-21T05:41:33.993Z | Running On:  kube
 
 
 - Delete Pod and Observe IP Address Change
-First, check the current pod's IP address:
+First, check the current Pod's IP address:
 
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp -o wide
 ``` 
-then delete pod 
+then delete Pod 
 ```bash
 PODNAME=$(kubectl get pods -l app=kubernetes-bootcamp -o=jsonpath='{.items[*].metadata.name}')
 kubectl delete po/$PODNAME
@@ -89,20 +89,20 @@ You will see an output similar to:
 ```
 pod "kubernetes-bootcamp-5485cc6795-cdwz7" deleted
 ```
-After deletion, check the pods again. You will find a new pod has been automatically recreated with a new IP address. This behavior is due to the Kubernetes Controller Manager ensuring the actual state matches the desired state specified by the deployment's replicas. A new pod is generated to maintain the desired number of replicas.
+After deletion, check the Pods again. You will find a new Pod has been automatically recreated with a new IP address. This behavior is due to the Kubernetes Controller Manager ensuring the actual state matches the desired state specified by the Deployment's replicas. A new Pod is generated to maintain the desired number of replicas.
 
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp -o wide
 ```
 
-The IP address assigned to a pod is ephemeral and will assign next available ip for recreation. 
+The IP address assigned to a Pod is ephemeral and will assign next available ip for recreation. 
 
 
-These commands provide a basic but powerful set of tools for interacting with pods in a Kubernetes environment, from accessing shells and viewing logs to managing pod lifecycles.
+These commands provide a basic but powerful set of tools for interacting with Pods in a Kubernetes environment, from accessing shells and viewing logs to managing Pod lifecycles.
 
 ### ServiceAccount 
 
-A ServiceAccounts are primarily designed for use by processes running in pods is like an identity for processes running in a pod, allowing them to interact with the Kubernetes API securely. When you create a pod, Kubernetes can automatically give it access to a ServiceAccount, so your applications can ask Kubernetes about other parts of the system without needing a separate login. It's a way for your apps to ask Kubernetes "Who am I?" and "What am I allowed to do?"
+A ServiceAccounts are primarily designed for use by processes running in Pods is like an identity for processes running in a Pod, allowing them to interact with the Kubernetes API securely. When you create a Pod, Kubernetes can automatically give it access to a ServiceAccount, so your applications can ask Kubernetes about other parts of the system without needing a separate login. It's a way for your apps to ask Kubernetes "Who am I?" and "What am I allowed to do?"
 
 
 check the default service account for a POD
@@ -118,7 +118,7 @@ Expected output:
 Service Account:  default
 ```
 
-Kubernetes adheres to the principle of least privilege, meaning the default ServiceAccount is assigned minimal permissions necessary for a pod's basic operations. Should your pod require additional permissions, you must create a new ServiceAccount with the requisite permissions and associate it with your pod. use `kubectl create rolebinding` to bind pre-defined role or custom role to serviceAccount.
+Kubernetes adheres to the principle of least privilege, meaning the default ServiceAccount is assigned minimal permissions necessary for a Pod's basic operations. Should your Pod require additional permissions, you must create a new ServiceAccount with the requisite permissions and associate it with your Pod. use `kubectl create rolebinding` to bind pre-defined role or custom role to serviceAccount.
 
 ### Kubernetes API-resources 
 
@@ -212,7 +212,7 @@ kubectl  delete -f minimalyamlforpod.yaml
 
 ### Wrap Up
 
-delete any deployment and pod you created 
+delete any Deployment and Pod you created 
 
 ```bash
 kubectl delete deployment kubernetes-bootcamp
