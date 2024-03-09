@@ -264,17 +264,15 @@ While directly creating pods might be suitable for learning purposes or specific
 
 
 ![deployment_replicasset_pod](../../images/deployment_replicaset_pod.png)
-- Deployment in Kubernetes manages app instances, ensuring they run and update smoothly.
-- Simplifies app management and scaling by handling instance replication and updates.
+- Deployment in Kubernetes manages app PODs, ensuring they run and update smoothly.
+- Simplifies app management and scaling by handling PODs replication and updates.
 - Using kubectl, you can scale pods easily (e.g., from 1 to 10) to meet demand.
-- Monitors app instances continuously for any failures.
-- Implements self-healing by replacing failed instances on other nodes in the cluster.
+- Monitors app PODs continuously for any failures.
+- Implements self-healing by replacing failed POD on other nodes in the cluster.
 
 ### Deploying an Application
 
-1. Deploy your first application on Kubernetes using the `kubectl create deployment` command. This is an imperative command.
-
-It requires specifying the deployment name and the location of the application image (including the full repository URL for images not hosted on Docker Hub).
+1. Deploy your first application on Kubernetes using the `kubectl create deployment` command. This is an imperative command.It requires specifying the deployment name and the location of the application image (including the full repository URL for images not hosted on Docker Hub).
 
 2. Deployment kubernetes-bootcamp application 
 
@@ -285,31 +283,30 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 
 Congratulations! You've just deployed your first application by creating a deployment. 
 
+The `kubectl create deployment` command is used to create a new deployment in Kubernetes. Deployments manage a set of replicas of your application, ensuring that a specified number of instances (pods) are running at any given time. This command specifically:
 
-This process automates several steps:
-Identifies a suitable node where the application instance can be run (assuming there's only one available node in this scenario).
-Schedules the application to run on that chosen node.
-Ensures the cluster is configured to reschedule the instance to a new node if necessary.
+Name: Specifies the name of the deployment, in this case, kubernetes-bootcamp.
+Image: Determines the container image to use for the pods managed by this deployment, here gcr.io/google-samples/kubernetes-bootcamp:v1, which is a sample application provided by Google.
+By executing this command, you instruct Kubernetes to pull the specified container image, create a pod for it, and manage its lifecycle based on the deployment's configuration. This process encapsulates the application in a scalable and manageable unit, facilitating easy updates, rollbacks, and scaling."
 
 3. To view your deployments use the kubectl get deployments command:
 
 ```bash
 kubectl get deployment -l app=kubernetes-bootcamp
 ```
-We see that there is 1 deployment running a single instance of your app. The instance is running inside a POD which include container on your node.
+We see that there is 1 deployment running a single POD of your app. Container(s) is running inside a POD with shared storage and IP.
 
 expected outcome
 
 ```
-
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           20m
 ```
 
-4. In this output:
+In this output:
 
 **kubernetes-bootcamp** is the name of the deployment managing your application.
-**READY 1/1** indicates that there is one **pod** targeted by the deployment, and it is ready.   1/1 mean's the deployment expect 1 POD  and POD in ready status is also 1 which mean the actual deployed POD meet the expected number (replica).  
+**READY 1/1** indicates that there is one **POD** targeted by the deployment, and it is ready.   1/1 mean's the deployment expect 1 POD  and POD in ready status is also 1 which mean the actual deployed POD meet the expected number (**replica**).  **UP-TO-DATE**: Indicates the number of replicas that have been updated to achieve the desired state. 1 suggests that one replica is up-to-date with the desired configuration.**AVAILABLE**: Shows the number of replicas that are available to serve requests. 1 means there is one replica available. 
 
 let's keep this deployment to explore what is **ReplicaSet** 
 
@@ -370,12 +367,18 @@ To manually scale your deployment with more replicas
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
 ```
-2. check new deployment
+2. Verify new deployment
 
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
-the **READY** will eventualy become 10/10. which means it expect 10 replicas, and now it reach 10. 
+expected output
+```
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   10/10   10           10          26m
+```
+
+The **READY** status will eventually show 10/10, indicating that 10 replicas were expected and all 10 are now available."
 
 We can use `kubectl get pod` to list the pod, use `-l` to select which pod to list.
 **app=kubernetes-bootcamp** is the label assigned to pod during creating.
@@ -387,6 +390,8 @@ kubectl get pod -l app=kubernetes-bootcamp
 
 3. scale in deployment
 
+To reduce resource usage by scaling in the deployment, modify the --replicas parameter to 1, decreasing the expected number of Pods:
+
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=1
 ```
@@ -397,8 +402,9 @@ kubectl get pod -l app=kubernetes-bootcamp -o wide
 ```
 expected output 
 
+You will observe some Pods in the **Terminating** state, and eventually, only 1 Pod will remain active.
+
 ```
-$kubectl get pod -o wide -l app=kubernetes-bootcamp
 NAME                                  READY   STATUS    RESTARTS   AGE   IP              NODE         
 kubernetes-bootcamp-bcbb7fc75-5r649   1/1     Running   0          73s   10.244.222.16   worker001    
 ```
@@ -445,26 +451,43 @@ The operations team would like to maintain a space in the cluster where they can
 
 One pattern this organization could follow is to partition the Kubernetes cluster into two namespaces: development and production.
 
+Follow the steps below to explore how namespaces organize your deployments in Kubernetes. Execute each command sequentially: 
+
+- Create namespace:
+
 ```bash
-# Create namespaces
 kubectl create namespace production
 kubectl create namespace development
-
-# Create the kubernetes-bootcamp deployment in production
+```
+- Verify the namespace creation:
+```bash
+kubectl get namespace production
+kubectl get namespace development
+```
+- Deploy an application into namespace:
+```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --namespace=production
 
-# Create the kubernetes-bootcamp deployment in developement
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --namespace=development
 
-# check the deployment progress
-kubectl rollout status deployment kubernetes-bootcamp
+```
 
-# check the deployment result 
-kubectl get deployment kubernetes-bootcamp
+- Monitor the deployment's progress:
+```bash
+kubectl rollout status deployment kubernetes-bootcamp -n development
+kubectl rollout status deployment kubernetes-bootcamp -n production
+```
+
+- Check the deployment details: 
+```bash
+kubectl get deployment kubernetes-bootcamp -n development
+kubectl get deployment kubernetes-bootcamp -n production
 kubectl get pod --namespace=production 
 kubectl get pod -n=development
 ```
-use `kubectl delete namespace production` and `kubectl delete namespace development` will delete both namespace and everything in that namespace.
+
+
+ - Delete namespace and everything inside it
 
 ```bash
 kubectl delete namespace production
@@ -473,7 +496,7 @@ kubectl delete namespace development
 
 ### Review Questions
 
-1. Explain the role of a Deployment in Kubernetes. How does it simplify the process of scaling and managing application instances within the cluster?
+1. Explain the role of a Deployment in Kubernetes. How does it simplify the process of scaling and managing application within the cluster?
 
 2. How do namespaces contribute to resource management and isolation in a Kubernetes cluster? Provide an example scenario where separating resources into different namespaces would be beneficial.
 
