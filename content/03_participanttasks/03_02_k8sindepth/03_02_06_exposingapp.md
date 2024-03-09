@@ -459,13 +459,6 @@ spec:
             name: nginx-deployment
             port:
               number: 80
-      - path: /bootcamp
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: kubernetes-bootcamp
-            port:
-              number: 80  
 EOF
 kubectl apply -f nginx_ingress_rule_with_cert_${nodename}.yaml
 ```
