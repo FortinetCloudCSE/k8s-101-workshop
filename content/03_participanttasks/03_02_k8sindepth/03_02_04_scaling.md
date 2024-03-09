@@ -1,8 +1,13 @@
 ---
-title: "Task 4 - Scaling Deployment"
-menuTitle: "Task 4 - Scaling Deployment"
+title: "Task 4 - Auto Scaling Deployment"
+menuTitle: "Task 4 - Auto Scaling Deployment"
 weight: 4
 ---
+
+#### Objective: Automate Deployment Scaling with HPA
+
+Learn to configure the Horizontal Pod Autoscaler (HPA) for a deployment and simulate traffic to test scaling.
+
 
 #### Using kubectl autoscale
 
@@ -15,6 +20,7 @@ using the kubectl autoscale command to automatically scale a deployment based on
 
 The Resource Metrics API in Kubernetes is crucial for providing core metrics about Pods and nodes within a cluster, such as CPU and memory usage to enable feature like Horizontal Pod Autoscaler (HPA), Vertical Pod Autoscaler (VPA) and enable efficent resource scheduling.
 
+1. copy/paste below command to enable resource-api
 ```bash
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml" -o components.yaml
 sed -i '/- --metric-resolution/a \ \ \ \ \ \ \ \ - --kubelet-insecure-tls' components.yaml
@@ -27,11 +33,11 @@ use `kubectl top node` and `kubectl top pod` to check the Pod and node resource 
 
 #### Create a deployment  with resource constrain 
 
-1. In this deployment , we add some resource restriction like memory and cpu for a POD.
+- In this deployment , we add some resource restriction like memory and cpu for a POD.
 
-2. when POD reach the CPU or memory limit, if HPA configured, new POD will be created according HPA policy.
+- when POD reach the CPU or memory limit, if HPA configured, new POD will be created according HPA policy.
 
-3. create deployment with CPU and Memory contrain
+2. create deployment with CPU and Memory contrain
 
 ```bash
 cat <<EOF | tee nginx-deployment_resource.yaml
@@ -90,7 +96,8 @@ spec:
 EOF
 kubectl apply -f nginx-deployment_clusterIP.yaml
 ```
-check the deployment and service
+3. check the deployment and service
+
 ```bash
 kubectl get deployment nginx-deployment
 kubectl get svc nginx-deployment
@@ -98,22 +105,20 @@ kubectl get svc nginx-deployment
 
 #### Use autoscale  (HPA) to scale your application
 
-1. We can use `kubectl autoscale` command or use create a hpa yaml file then follow a `kubectl apply -f` to create hpa.
+- We can use `kubectl autoscale` command or use create a hpa yaml file then follow a `kubectl apply -f` to create hpa.
 
-2. use kubectl command to create hpa 
-
-3. Command:
+4a. use kubectl command to create hpa 
 
 ```bash
 kubectl autoscale deployment nginx-deployment --name=nginx-deployment-hpa --min=2 --max=10 --cpu-percent=50  --save-config
 ```
 
-4. expected Outcome
+ expected Outcome
 ```
 horizontalpodautoscaler.autoscaling/nginx-deployment-hpa autoscaled
 ```
 
-5. **or** use yaml file to create hpa
+4b. **or** use yaml file to create hpa
 
 ```bash
 cat << EOF | tee > nginx-deployment-hpa.yaml
@@ -144,21 +149,21 @@ kubectl apply -f nginx-deployment-hpa.yaml
 - **Scaling In**: If the average CPU utilization drops below 50%, indicating that the resources are underutilized, the HPA will decrease the number of Pods to reduce resource usage, but it won't go below the minimum of 2 Pod.
 
 
-6. Check Result 
+5. Check Result 
 
 use `kubectl get hpa nginx-deployment` to check deployment 
 ````bash
 kubectl get hpa nginx-deployment-hpa
 ````
 
-7. Expected Outcome
+Expected Outcome
 
 ```
 NAME                   REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
 nginx-deployment-hpa   Deployment/nginx-deployment   0%/50%    2         10        2          23s
 ```
 
-8. For a deeper understanding, consider using the following command to conduct further observations" 
+For a deeper understanding, consider using the following command to conduct further observations" 
 
 use `kubectl get deployment nginx-deployment` to check the change of deployment. 
 use `kubectl get hpa` and `kubectl describe hpa` to check the  size of replicas.
@@ -168,7 +173,7 @@ use `kubectl get hpa` and `kubectl describe hpa` to check the  size of replicas.
 
 since the nginx-deployment service is cluster-ip type service which can only be accessed from cluster internal, so we need to create a POD which can send http traffic to nginx-deployment service.
 
-1. create deployment for generate http traffic, in this deployment, we will use wget to similuate the real traffic towards ngnix-deployment cluster-ip service which has service name `http://nginx-deployment.default.svc.cluster.local`.
+6. create deployment for generate http traffic, in this deployment, we will use wget to similuate the real traffic towards ngnix-deployment cluster-ip service which has service name `http://nginx-deployment.default.svc.cluster.local`.
 
 ```bash
 cat <<EOF | tee infinite-calls-deployment.yaml
@@ -200,31 +205,31 @@ EOF
 kubectl apply -f infinite-calls-deployment.yaml
 ```
 
-2. check the creation of busybox deployment 
+7. check the creation of infinite-calls deployment 
 
 ```bash
 kubectl get deployment infinite-calls
 ```
-3. check the log from infinite-calls Pods.
+8. check the log from infinite-calls Pods.
 {.items[0]} means use first Pod 
 
 ```bash
 podName=$(kubectl get pod -l app=infinite-calls -o=jsonpath='{.items[0].metadata.name}')
 kubectl logs  po/$podName
 ```
-4. you will see the response from nginx web server container. use ctr-c to stop.
+you will see the response from nginx web server container. use ctr-c to stop.
 
 
-5. use `kubectl top pod` and `kubectl top node` to check the resource usage status
+use `kubectl top pod` and `kubectl top node` to check the resource usage status
 user expected to see the number of Pod increased 
 
  
-6. you shall see that expected Pod now increased automatically without use attention.
+9. you shall see that expected Pod now increased automatically without use attention.
 ```bash
 kubectl get pod -l app=nginx
 ```
 
-7. expected outcome
+expected outcome
 ```
 NAME                                READY   STATUS    RESTARTS   AGE
 nginx-deployment-55c7f467f8-f2qbp   1/1     Running   0          19m
@@ -233,24 +238,23 @@ nginx-deployment-55c7f467f8-jx2k9   1/1     Running   0          19m
 nginx-deployment-55c7f467f8-r7vdv   1/1     Running   0          3m2s
 nginx-deployment-55c7f467f8-w6r8l   1/1     Running   0          3m17s
 ```
-8. use `kubectl get hpa` shall tell you that hpa is action  which increased the replicas from 2 to other numbers. 
+10. use `kubectl get hpa` shall tell you that hpa is action  which increased the replicas from 2 to other numbers. 
 ```bash
 kubectl get hpa
 ```
 
-9. expected outcome 
+expected outcome 
 ```
 NAME        REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
 nginx-deployment-hpa   Deployment/nginx-deployment   50%/50%   2         10        5          11m
 ```
 
-10. check hpa detail
+11. check hpa detail
 
 ```bash
 kubectl describe hpa
 ```
-
-11. expected outcome
+expected outcome
 
 ```
 Name:                     nginx-deployment-hpa
@@ -276,26 +280,26 @@ Events:
 ```
 
 
-12. delete infinite-calls to stop generate the traffic
+13. delete infinite-calls to stop generate the traffic
 
 ```bash
 kubectl delete deployment infinite-calls
 ```
 
-13. after few minutes later, due to no more traffic is hitting the nginx server. hpa will scale in the number of Pod to save resource. 
+after few minutes later, due to no more traffic is hitting the nginx server. hpa will scale in the number of Pod to save resource. 
 
 ```bash
 kubectl get hpa
 ```
 
-14. expected output
+expected output
 ```
 NAME        REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
 nginx-deployment-hpa   Deployment/nginx-deployment   0%/50%   2         10        5          12m
 
 ```
 
-15. use `kubectl describe hpa` will tell you the reason why hpa scale in the number of Pod.
+14. use `kubectl describe hpa` will tell you the reason why hpa scale in the number of Pod.
 
 ```bash
 kubectl describe hpa
@@ -327,7 +331,7 @@ Events:
   Normal  SuccessfulRescale  54s    horizontal-pod-autoscaler  New size: 5; reason: All metrics below target
   Normal  SuccessfulRescale  39s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
 ```
-### clean up
+#### clean up
 
 ```bash
 kubectl delete hpa nginx-deployment-hpa
@@ -335,6 +339,6 @@ kubectl delete deployment nginx-deployment
 kubectl delete svc nginx-deployment
 ```
 
-### Summary 
+#### Summary 
 
 Choosing the right scaling method depends on your specific needs, such as whether you need to quickly adjust resources, maintain performance under varying loads, or integrate scaling into a CI/CD pipeline. Manual methods like kubectl scale or editing the deployment are straightforward for immediate needs, while kubectl autoscale and HPA provide more dynamic, automated scaling based on actual usage, making them better suited for production environments with fluctuating workloads.

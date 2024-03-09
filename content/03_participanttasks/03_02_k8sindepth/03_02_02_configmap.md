@@ -4,9 +4,8 @@ menuTitle: "Task 2 - configmap and secret"
 weight: 2
 ---
 
-### Configuring Applications with ConfigMaps and Secrets
+#### Objective: Master injecting configuration into Pods.
 
-Objective: Master injecting configuration into Pods.
 Description: Learn to externalize application configuration using ConfigMaps and the Downward API. Understand how to pass environment variables, configure application settings, and expose Pod and container metadata to applications. Labs include creating ConfigMaps and using the Downward API to expose Pod information.
 
 **ConfigMaps:**
@@ -51,7 +50,7 @@ In Kubernetes, Secrets are another type of resource object used to store sensiti
 Overall, Secrets in Kubernetes provide a secure and convenient way to manage sensitive information within a cluster, ensuring that sensitive data is protected from unauthorized access while still being accessible to the applications that need it.
 
 
-## Creating ConfigMaps:
+#### Creating ConfigMaps:
 ```bash
 cat << EOF | kubectl apply -f -
 apiVersion: v1
@@ -75,7 +74,7 @@ EOF
 
 To get configmap, try ```kubectl get configmap```
 
-## Creating Secret:
+#### Creating Secret:
 
 - Firstly, we need encode a secret value to base64. On linux you can use the following commands to encode.
 
@@ -104,7 +103,7 @@ EOF
 There are several types of built in Secrets [!https://kubernetes.io/docs/concepts/configuration/secret/#secret-types] in Kubernetes. Opaque is a secret which is an arbitrary user defined data. 
 
 
-## Creating a pod using confimap and secret  
+#### Creating a pod using confimap and secret  
 
 ```bash
 cat << EOF | tee nginx-pod-with-configmap-secret.yaml
@@ -135,25 +134,15 @@ EOF
 kubectl apply -f nginx-pod-with-configmap-secret.yaml
 ```
 
-### Review Questions
+#### Review Questions
 
-- how to access nginx web page from container inside ?
+- how to access nginx Pod web page from container inside ?
 
-answer
-```bash
-kubectl exec -it po/nginx-pod-with-configmap-secret -- curl http://127.0.0.1
-```
-- delete pod nginx-pod-with-configmap-secret  and create again, check the web page of nginx again ? did you see any difference ? why ?
-answer
-```
-it will remain same, as configmap did not change. 
-```
+- delete Pod nginx-pod-with-configmap-secret  and create again, check the web page of nginx again ? did you see any difference ? why ?
 
-- how to make nginx server web page with secret just created 
+- Modify below nginx-deployment with VolumeMounts to use ConfigMap
 
-answer
-
-- Create a sample configmap, then update below nginx-deployment to use the ConfigMap
+nginx-deployment 
 
 ```bash
 apiVersion: apps/v1
@@ -179,7 +168,7 @@ spec:
         - containerPort: 80
 ```
 
-Answer
+ConfigMap 
 
 ```bash
 cat << EOF | tee nginx_deployment_cm.yaml
@@ -200,36 +189,3 @@ data:
 
 kubectl create -f nginx_deployment_cm.yaml
 ```
-and deployment
-
-```bash
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - name: webpage
-          mountPath: /usr/share/nginx/html  # NGINX serves content from this directory
-      volumes:
-      - name: webpage
-        configMap:
-          name: nginx-webpage  # Name of your ConfigMap
-```
-

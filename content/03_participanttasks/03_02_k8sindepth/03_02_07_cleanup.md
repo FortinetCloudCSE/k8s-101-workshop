@@ -1,6 +1,6 @@
 ---
-title: "Clean up"
-menuTitle: "Clean up"
+title: "Wrap up"
+menuTitle: "Wrap up"
 weight: 8
 ---
 

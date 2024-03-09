@@ -5,7 +5,7 @@ weight: 7
 ---
 
 
-## Pod life-cycle 
+#### Pod life-cycle 
 
 The life cycle of a Kubernetes Pod involves several key stages from creation to termination. Here's a brief overview of these stages, illustrated with commands related to deploying a Pod using the `gcr.io/google-samples/kubernetes-bootcamp:v1` image:
 
@@ -38,7 +38,7 @@ Through these stages, Kubernetes manages the application's lifecycle, ensuring t
 
 we can use `kubectl get pod -l app=kubernetes-bootcamp` and `kuectl describe pod -l app=kubernetes-bootcamp` to check the detail state for a Pod.
 
-### Useful Command for Pod 
+#### Useful Command for Pod 
 
 You can try a few useful command for operating a Pod 
 
@@ -100,7 +100,7 @@ The IP address assigned to a Pod is ephemeral and will assign next available ip 
 
 These commands provide a basic but powerful set of tools for interacting with Pods in a Kubernetes environment, from accessing shells and viewing logs to managing Pod lifecycles.
 
-### ServiceAccount 
+#### ServiceAccount 
 
 A ServiceAccounts are primarily designed for use by processes running in Pods is like an identity for processes running in a Pod, allowing them to interact with the Kubernetes API securely. When you create a Pod, Kubernetes can automatically give it access to a ServiceAccount, so your applications can ask Kubernetes about other parts of the system without needing a separate login. It's a way for your apps to ask Kubernetes "Who am I?" and "What am I allowed to do?"
 
@@ -120,7 +120,7 @@ Service Account:  default
 
 Kubernetes adheres to the principle of least privilege, meaning the default ServiceAccount is assigned minimal permissions necessary for a Pod's basic operations. Should your Pod require additional permissions, you must create a new ServiceAccount with the requisite permissions and associate it with your Pod. use `kubectl create rolebinding` to bind pre-defined role or custom role to serviceAccount.
 
-### Kubernetes API-resources 
+#### Kubernetes API-resources 
 
 Kubernetes is fundamentally built around APIs that adhere to the OpenAPI specification, defining **resources** and their operations. Based on API input, Kubernetes creates **objects** and stores them in the etcd database. Let's explore using the Kubernetes API to create a Pod, utilizing the kubectl api-resources and kubectl explain commands for guidance. 
 
@@ -210,10 +210,3 @@ use  `kubectl delete pod test-pod` to delete pod or use yaml file below
 kubectl  delete -f minimalyamlforpod.yaml 
 ```
 
-### Wrap Up
-
-delete any Deployment and Pod you created 
-
-```bash
-kubectl delete deployment kubernetes-bootcamp
-```

@@ -1,6 +1,6 @@
 ---
-title: "Task 3 - Deployments"
-menuTitle: "Task 3 - Deployments"
+title: "Task 3 - Deploy and Scale Deployments"
+menuTitle: "Task 3 - Deploy and Scale Deployments"
 weight: 3
 ---
 
@@ -48,13 +48,14 @@ kubectl create -f kubernetes-bootcamp.yaml
 
 After deploying the Kubernetes Bootcamp application, you might find the need to scale your deployment to accommodate an increased load or enhance availability. Kubernetes allows you to scale a deployment, increasing the number of replicas from 1 to 10, for instance. This ensures your application can handle a higher load. There are several methods to scale a deployment, each offering unique benefits.
 
-## 1. Using kubectl scale
+#### 1. Using kubectl scale
 
-**Benefits:**
-1. Immediate: This command directly changes the number of replicas in the deployment, making it a quick way to scale.
-Simple: Easy to remember and use for ad-hoc scaling operations.
+Benefits
 
-2. Before scaling:
+- Immediate: This command directly changes the number of replicas in the deployment, making it a quick way to scale.
+- Simple: Easy to remember and use for ad-hoc scaling operations.
+
+1. Check the existing Deployment 
 
 ```bash
 kubectl get deployment
@@ -65,35 +66,52 @@ NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           63m
 ```
 
-3. Scaling the deployment: 
+2. Scaling the deployment: 
 
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
 ```
-**expected output**
+expected output
 
 ```
 deployment.apps/kubernetes-bootcamp scaled
 ```
 
-4. You can monitor the scaling process and the deployment's progress using `kubectl rollout status deployment kubernetes-bootcamp`
+3. Check the Deployment status 
 
-5. To view the updated deployment, use:
+```bash
+kubectl rollout status deployment kubernetes-bootcamp
+```
+Expected output
+```
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 3 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 4 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 5 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 6 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 7 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 8 of 10 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 9 of 10 updated replicas are available...
+deployment "kubernetes-bootcamp" successfully rolled out
+```
+
+4. Verify the Deployment
 
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
 
-6. Expected Outcome: After scaling, you should observe that the number of Pods has increased to meet the deployment's requirements. 
+After scaling, you should observe that the number of Pods has increased to meet the deployment's requirements. 
 
-**expected output**
-
+expected output
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          64m
 ```
 
-7. Listing the Pods:
+5. Listing the Pods from Deployment
+
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp
 ```
@@ -114,19 +132,26 @@ kubernetes-bootcamp-bcbb7fc75-t4tkm   1/1     Running   0          44s
 
 This output confirms the deployment now runs 10 replicas of the Kubernetes Bootcamp application, demonstrating successful scaling.
 
-8. delete the deployment 
+6. delete the deployment 
 ```bash
 kubectl delete deployment kubernetes-bootcamp 
 ```
 
-## 2. use kubectl apply 
+#### 2. use kubectl apply 
 
-1. if the intended resource to update is in yaml file, we can directly edit the yaml file with any editor, then  use `kubectl apply` to update.
+Benefits
 
-2. The kubectl apply -f command is more flexible and is recommended for managing applications in production. It updates resources with the changes defined in the YAML file but retains any modifications that are not specified in the file.It's particularly suited for scenarios where you might want to maintain manual adjustments or unspecified settings. 
+If the intended resource to update is in yaml file, we can directly edit the yaml file with any editor, then  use `kubectl apply` to update.
+
+- Version Controlled: Can be version-controlled if using a local YAML file, allowing for tracking of changes and rollbacks.
+- Reviewable: Changes can be reviewed by team members before applying if part of a GitOps workflow.
 
 
-3. First let's create Kubernetes-bootcamp deployment yaml file with below 
+The kubectl apply -f command is more flexible and is recommended for managing applications in production. It updates resources with the changes defined in the YAML file but retains any modifications that are not specified in the file.It's particularly suited for scenarios where you might want to maintain manual adjustments or unspecified settings. 
+
+
+1.  create Kubernetes-bootcamp deployment with yaml file
+
 ```bash
 cat << EOF | tee kubernetes-bootcamp.yaml
 apiVersion: apps/v1
@@ -149,111 +174,143 @@ spec:
 EOF
 kubectl apply -f kubernetes-bootcamp.yaml 
 ```
-**expected Outcome**
+2. Verify the deployment
+
+```bash
+kubectl get deployment
+```
+expected output
 
 ```
-kubectl get deployment
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           3s
 ```
 
-4. Now, use editor like vim to change the replicas=1 in the yaml file to replicas=10.
+3.  modify replicas in yaml file
 
-5. you can also use `sed` to change it 
+ Now, use editor like vim to change the replicas=1 in the yaml file to replicas=10. Alternatively you can also use `sed` to change it 
 
 ```bash
 sed -i 's/replicas: 1/replicas: 10/' kubernetes-bootcamp.yaml
 
 ```
-6. then apply the changes with
+4. Apply the change with `kubectl apply`
 
  ```bash
  kubectl apply -f kubernetes-bootcamp.yaml
  ```
-check again
+
+5. Verify the result
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
 
-**expected outcome**
+expected outcome
 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          99s
 ```
 
-7. clean up
+6. clean up
 ```bash
 kubectl delete -f kubernetes-bootcamp.yaml
 ```
 
-**Benefits:**
 
-- Version Controlled: Can be version-controlled if using a local YAML file, allowing for tracking of changes and rollbacks.
-- Reviewable: Changes can be reviewed by team members before applying if part of a GitOps workflow.
 
-## 3. use kubectl edit 
+#### 3. use kubectl edit 
 
-1. This approach involves manually editing the resource definition in a text editor (invoked by kubectl edit), where you can change any part of the resource. After saving and closing the editor, Kubernetes applies the changes. This method requires no separate kubectl apply, as kubectl edit directly applies the changes once the file is saved and closed.
+This approach involves manually editing the resource definition in a text editor (invoked by kubectl edit), where you can change any part of the resource. After saving and closing the editor, Kubernetes applies the changes. This method requires no separate kubectl apply, as kubectl edit directly applies the changes once the file is saved and closed.
+
+Benefit
+- Able to review and modify other configuration which is not in YAML file
+
+1. create the deployment 
 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=1
+
+```
+
+2. Modify replicas with `kubectl edit` 
+```bash
 kubectl edit deployment kubernetes-bootcamp
 ```
 
-2. after run `kubectl edit`, it will show you a VI EDITOR with opened yaml file, locate the text 
+above command show you into **VI EDITOR** with opened yaml file, locate the text 
 ```
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
 ``` 
 
-3. then change replicas from 1 to 10, then save and  exit the EDITOR. and check the new deployment with updated replicas. 
+then change replicas from 1 to 10, save the change and exit the EDITOR with press Ctrl-C follow :wq!. 
 
+3. Verify the deployment 
 
-4. Use Case: Ideal for ad-hoc modifications where you might need to see the full context of the resource or make multiple edits.  
+```bash
+kubectl get deployment kubernetes-bootcamp
+```
 
-5. delete deployment after done the observation.
+4. delete deployment
 
 ```bash
 kubectl delete deployment kubernetes-bootcamp
 ```
 
-## 4. Kubectl patch 
+#### 4. Kubectl patch 
 
-1. kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a Pod or changing the number of replicas in a deployment.
+kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a Pod or changing the number of replicas in a deployment.
 
-2. Automation Friendly: It's ideal for scripts and automation because you can specify the exact change in a single command line.
+Benefit
+- ideal for scripts and automation because you can specify the exact change in a single command line.
 
+1. Create Deployment 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=1
 ```
-use `kubectl get deployment  kubernetes-bootcamp` to check
-
-3. expected result 
+2. Verify the Deployment
+```bash
+kubectl get deployment kubernetes-bootcamp
+``` 
+expected result 
 
 ```
-kubectl get deployment kubernetes-bootcamp
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           33s
 ```
 
-4. then use `kubectl patch` to change replicas 
+3. use `kubectl patch` to change replicas 
 
 ```bash
 kubectl patch deployment kubernetes-bootcamp --type='json' -p='[{"op": "replace", "path": "/spec/replicas", "value":10}]'
 
 ```
+4. Verify the Deployment
+```bash
+kubectl get deployment kubernetes-bootcamp
+``` 
+expected result 
 
-#### Directly update yaml file with  kubectl replace 
+```
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   10/10   10           10          97s
+```
+5. Delete the Deployment
+```bash
+kubectl delete deployment kubernetes-bootcamp
+```
 
-1. The kubectl replace -f command replaces a resource with the new state defined in the YAML file. If the resource doesn't exist, the command fails. This command requires that the resource be defined completely in the file being applied because it replaces the existing configuration with the new one provided.
+#### 5. use kubectl replace
 
-2. Deletion and Recreation: Under the hood, replace effectively deletes and then recreates the resource, which can lead to downtime for stateful applications or services. This method does not preserve unspecified fields or previous modifications made outside the YAML file.
+The kubectl replace -f command replaces a resource with the new state defined in the YAML file. If the resource doesn't exist, the command fails. This command requires that the resource be defined completely in the file being applied because it replaces the existing configuration with the new one provided.
 
-3. Usage: Use kubectl replace -f when you want to overwrite the resource entirely, and you are certain that the YAML file represents the complete and desired state of the resource.
+Deletion and Recreation: Under the hood, replace effectively deletes and then recreates the resource, which can lead to downtime for stateful applications or services. This method does not preserve unspecified fields or previous modifications made outside the YAML file.
 
-4. create deployment with replicas=1
+Usage: Use kubectl replace -f when you want to overwrite the resource entirely, and you are certain that the YAML file represents the complete and desired state of the resource.
+
+1. create deployment with image=gcr.io/google-samples/kubernetes-bootcamp:v1
 
 ```bash
 cat << EOF | tee kubernetes-bootcamp.yaml
@@ -262,7 +319,7 @@ kind: Deployment
 metadata:
   name: kubernetes-bootcamp
 spec:
-  replicas: 1 # Default value for replicas when not specified
+  replicas: 5 # Default value for replicas when not specified
   selector:
     matchLabels:
       app: kubernetes-bootcamp
@@ -274,29 +331,68 @@ spec:
       containers:
       - name: kubernetes-bootcamp
         image: gcr.io/google-samples/kubernetes-bootcamp:v1
+        
 EOF
-kubectl replace -f kubernetes-bootcamp.yaml
+kubectl create -f kubernetes-bootcamp.yaml
 ```
-5. then modify **replicas: 1** to **replicas: 10** in kubernetes-bootcamp.yaml
+2. verify the deployment
 ```bash
-sed -i 's/replicas: 1/replicas: 10/' kubernetes-bootcamp.yaml
+kubectl get pod -l app=kubernetes-bootcamp
 ```
-```bash
-# Update the replicas in the YAML file, then:
-kubectl replace -f kubernetes-bootcamp.yaml
+expected output
+
 ```
-6. check new deployment 
+NAME                                   READY   STATUS        RESTARTS   AGE
+kubernetes-bootcamp-5485cc6795-5wdrb   1/1     Running       0          4s
+kubernetes-bootcamp-5485cc6795-79qkm   1/1     Running       0          4s
+kubernetes-bootcamp-5485cc6795-ltqst   1/1     Running       0          4s
+kubernetes-bootcamp-5485cc6795-szgqt   1/1     Running       0          4s
+kubernetes-bootcamp-5485cc6795-xw7l6   1/1     Running       0          4s
+```
+the Pod has name from deployment template hash **kubernetes-bootcamp-5485cc6795**
+
+2. Modify image in yaml file
+
+ Modify container image in kubernetes-bootcamp.yaml. Modify this will affect the Pod template hash
 
 ```bash
-kubectl get deployment
+sed -i 's|image: gcr.io/google-samples/kubernetes-bootcamp:v1|image: jocatalin/kubernetes-bootcamp:v2|' kubernetes-bootcamp.yaml
+
+```
+3. apply the change 
+
+```bash
+kubectl replace -f kubernetes-bootcamp.yaml
+```
+4. Verify deployment 
+
+```bash
+kubectl get pod -l app=kubernetes-bootcamp
 ```
 Expected output 
 ```
-NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
-kubernetes-bootcamp   10/10   10           10          4m34s
+NAME                                   READY   STATUS        RESTARTS   AGE
+kubernetes-bootcamp-5485cc6795-5wdrb   1/1     Terminating   0          78s
+kubernetes-bootcamp-5485cc6795-79qkm   1/1     Terminating   0          78s
+kubernetes-bootcamp-5485cc6795-ltqst   1/1     Terminating   0          78s
+kubernetes-bootcamp-5485cc6795-szgqt   1/1     Terminating   0          78s
+kubernetes-bootcamp-5485cc6795-xw7l6   1/1     Terminating   0          78s
+kubernetes-bootcamp-7c6644499c-559fq   1/1     Running       0          7s
+kubernetes-bootcamp-7c6644499c-9zdg2   1/1     Running       0          7s
+kubernetes-bootcamp-7c6644499c-fb9dn   1/1     Running       0          6s
+kubernetes-bootcamp-7c6644499c-l9xhn   1/1     Running       0          6s
+kubernetes-bootcamp-7c6644499c-nzhj9   1/1     Running       0          7s
 ```
 
-7. Risk of Downtime: For some resources, using kubectl replace can cause downtime since it may delete and recreate the resource, depending on the type and changes made. It's important to use this command with caution, especially for critical resources in production environments.
+You should observe the creation of new Pods with a new hash in their names, indicating an update. Concurrently, all previous Pods with the old hash in their names will be deleted, suggesting that the entire resource has been recreated.
+
+5. Delete the deployment
+
+```bash
+kubectl delete deployment kubernetes-bootcamp
+``````
+
+Risk of Downtime: For some resources, using kubectl replace can cause downtime since it may delete and recreate the resource, depending on the type and changes made. It's important to use this command with caution, especially for critical resources in production environments.
 
 
 Summary 
@@ -311,9 +407,6 @@ Summary
 
 - kubectl apply -f: Applies changes from a YAML file to the deployment, allowing for version-controlled and incremental updates, including scaling operations.
 
-Let's explore how to automatically scale your deployment based on resource usage.
 
-### clean up
-```bash
-kubectl delete deployment kubernetes-bootcamp
-```
+
+
