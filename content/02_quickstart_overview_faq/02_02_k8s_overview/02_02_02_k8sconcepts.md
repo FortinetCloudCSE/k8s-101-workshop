@@ -12,6 +12,8 @@ In this chapter, we delve into Kubernetes fundamentals using a managed AKS clust
 
 We'll kick off by deploying a managed AKS cluster featuring a single worker node. This hands-on approach introduces you to Kubernetes essentials efficiently, with the setup process completing in about 5 minutes."
 
+In your **Azure Cloud Shell**, click the 'copy to clipboard' icon at the top right corner to copy the command. Then, paste it into the terminal and press enter to execute.
+
 ```bash
 ##generate public key if not exist 
 [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
@@ -32,25 +34,7 @@ az aks create \
 ##update kubeconfig file for kubectl to use 
 az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
 ##list provisioned aks list
-##generate public key if not exist 
-[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
-clustername=$(whoami)
 
-##get the resourcegrname name 
-resourcegroupname=$(az group list --tag FortiLab="k8s101-lab" | jq -r .[].name)
-az aks create \
-    --name ${clustername} \
-    --node-count 1 \
-    --vm-set-type VirtualMachineScaleSets \
-    --network-plugin azure \
-    --service-cidr  10.96.0.0/16 \
-    --dns-service-ip 10.96.0.10 \
-    --nodepool-name worker \
-    --resource-group $resourcegroupname
-
-##update kubeconfig file for kubectl to use 
-az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
-##list provisioned aks list
 az aks list --resource-group $resourcegroupname --output table
 ```
 ### Operate Kubernetes objects
@@ -97,7 +81,7 @@ Check that kubectl is installed and you can see both the client and the server v
 
 - Most used kubectl commands: 
 
-```bash
+```
 Basic Commands (Beginner):
   create          Create a resource from a file or from stdin
   expose          Take a replication controller, service, deployment or pod and expose it as a new Kubernetes service
@@ -267,7 +251,7 @@ kubectl get pod --show-labels
 ``` 
 Expected Output 
 
-```bash
+```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE   LABELS
 juiceshop   1/1     Running   0          4m7s   purpose=debug,run=juiceshop
 ```
@@ -472,6 +456,11 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 # Create the kubernetes-bootcamp deployment in developement
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --namespace=development
 
+# check the deployment progress
+kubectl rollout status deployment kubernetes-bootcamp
+
+# check the deployment result 
+kubectl get deployment kubernetes-bootcamp
 kubectl get pod --namespace=production 
 kubectl get pod -n=development
 ```
