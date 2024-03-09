@@ -22,6 +22,7 @@ So, in short, a Worker Node is the workhorse of a Kubernetes cluster, providing 
 
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_nodes.svg)
 
+*in above diagram , the Docker is used as container runtime, but in our AKS cluster, the container runtime is **containerd***
 
 we can use `kubectl get node -o wide` to check the node status in cluster.
 
@@ -179,6 +180,39 @@ Exposes the service externally on the same port of each selected node in the clu
 Exposes the service externally using a cloud provider's load balancer or an on-premises solution like MetalLB, assigning a fixed, external IP to the service."
 
 ![LoadBalancer svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-loadbalancer.png)
+
+
+Let's use `kubectl expose deployment` command to expose our Kubernetes Bootcamp deployment to the internet by creating a LoadBalancer service. The kubectl expose command is used to expose a Kubernetes deployment, pod, or service to the internet or other parts of the cluster. When used within Azure Kubernetes Service (AKS), a managed Kubernetes platform, this command creates a service resource that defines how to access the Kubernetes workloads.  **--type=LoadBalancer**: Specifies the type of service to create. LoadBalancer services are public, cloud-provider-specific services that automatically provision an external load balancer (in this case, an Azure Load Balancer) to direct traffic to the service. This option makes the service accessible from outside the AKS cluster.
+
+
+```bash
+kubectl expose deployment kubernetes-bootcamp --port=80 --type=LoadBalancer --target-port=8080 --name=kubernetes-bootcamp-lb-svc 
+```
+
+Verify the exposed service
+```bash
+kubectl get svc -l app=kubernetes-bootcamp
+```
+
+expected outcome
+```
+NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)        AGE
+kubernetes-bootcamp-lb-svc   LoadBalancer   10.96.250.234   4.157.216.24   80:32428/TCP   12m
+```
+You should observe the **EXTERNAL-IP** status transition from 'Pending' to an actual public IP address, serving as the entry point for the Kubernetes Bootcamp deployment. Coupled with PORT 80, this defines how to access the Kubernetes Bootcamp application.
+
+Access the Kubernetes Bootcamp application using the curl command or through your web browser."
+
+```bash
+ip=$(kubectl get svc -l app=kubernetes-bootcamp -o json | jq -r .items[0].status.loadBalancer.ingress[0].ip)
+curl http://$ip:80
+```
+Expected result
+```
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-855d5cc575-b97z8 | v=1
+```
+
+
 
 
 ### Summary
