@@ -237,7 +237,7 @@ sudo kubeadm config images pull --cri-socket unix:///var/run/crio/crio.sock --ku
 **Config kubeadm init parameters** 
 
 Kubeadm require some parameter to initionize the installation which include NODEIP, cluster-dns, POD_CIDR, SERVICE_CIDR, also certificate parameter like sans etc., kubeadm will also create a token for worker node to join.
-**CLUSTERDNSIP** must in range of SERVICE_CIDR. the ${fqdn} will be required if kubectl use fqdn of API_SERVER to use kubernetes API. 
+**CLUSTERDNSIP** must in range of SERVICE_CIDR. the ${fqdn} will be required if kubectl use fqdn of API_SERVER to use Kubernetes API. 
 
 when use alias ssh_master to ssh into the master node, the fqdn already set to actual domain name of the master node VM, if not, you must set fqdn byself, for example , `fqnd=k8sXX-master.eastus.cloudapp.azure.com`
 
@@ -281,7 +281,7 @@ The default bridge CNI in Kubernetes does not support cross-node networking. To 
 
 Calico CNI extends standard Kubernetes API with its own API definitions, allowing for advanced network configurations. The installation and management of Calico are streamlined through the use of tigera-operator.yaml and custom-resources.yaml. The Tigera Operator automates Calico's lifecycle management, while custom-resources.yaml enables administrators to tailor Calico's configuration to the specific needs of their Kubernetes cluster.
 
-The configuration below includes enabling IP forwarding for containers. Typically, this setting is not necessary unless the container acts as a Layer 3 router, involving multiple IP interfaces. In this setup, BGP is disabled because we utilize VXLAN for networking, which does not require direct exchange of POD IPs across nodes.
+The configuration below includes enabling IP forwarding for containers. Typically, this setting is not necessary unless the container acts as a Layer 3 router, involving multiple IP interfaces. In this setup, BGP is disabled because we utilize VXLAN for networking, which does not require direct exchange of Pod IPs across nodes.
 
 This approach ensures that Calico provides robust and flexible networking capabilities for Kubernetes clusters, supporting a wide range of deployment scenarios, including those requiring cross-node networking and advanced network routing features.
 
@@ -479,9 +479,9 @@ After Successfully Joining Worker Nodes to the Cluster
 Once you have successfully joined the worker nodes to the cluster, return to the master node to continue the setup or deployment process. Use the SSH command provided earlier to access the master node and proceed with your Kubernetes configuration or application deployment.
 
 
-#### prepare access kubernetes on **azure shell**
+#### prepare access Kubernetes on **azure shell**
 
-copy kubectl configuration to **azure shell** to use kubenetnes. as **azure shell** is outside for azure VM VPC, so it's required to use kubernetes master node **public ip** to access it. 
+copy kubectl configuration to **azure shell** to use kubenetnes. as **azure shell** is outside for azure VM VPC, so it's required to use Kubernetes master node **public ip** to access it. 
 
 
 ```bash

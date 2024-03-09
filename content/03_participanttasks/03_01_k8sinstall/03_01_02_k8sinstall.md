@@ -1,11 +1,11 @@
 ---
-title: "Task 1 - Install kubernetes"
-menuTitle: "Task 1 - K8S Installation"
+title: "Task 1 - Install Kubernetes"
+menuTitle: "Task 1 - K8s Installation"
 weight: 1
 ---
 
 
-## Use kubeadm to install kubernetes 
+## Use kubeadm to install Kubernetes 
 
 ### use azure shell as kubenetes client
 
@@ -86,9 +86,9 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
    ```
 
-4. Install kubernetes master node: 
+4. Install Kubernetes master node: 
 
-   - ssh into master node to run kubernetes master installation script 
+   - ssh into master node to run Kubernetes master installation script 
    *this step take around 4 minutes*
 
    ```bash
@@ -99,9 +99,9 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
    ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
    ```
-5. Install kubernetes worker node :
+5. Install Kubernetes worker node :
 
-   - ssh into worker node to run kubernetes worker installation script 
+   - ssh into worker node to run Kubernetes worker installation script 
    *this step take around 3 minutes*
    
    ```bash
@@ -125,7 +125,7 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    ```
 
 
-7. Prepare access kubernetes from **azure shell**
+7. Prepare access Kubernetes from **azure shell**
 
    - To use Kubernetes from Azure Shell, copy your kubectl configuration. Because Azure Shell is external to your Azure VM VPC, you must use the Kubernetes master node's public IP for access. Follow these steps:
    ```bash
@@ -183,12 +183,12 @@ if you want delete VM completely, use `terraform destroy -var="username=$(whoami
 
 ### Summary
 
-This chapter aims to install a kubernetes cluster with kube-adm based script
+This chapter aims to install a Kubernetes cluster with kube-adm based script
 
 ### Review Questions
 
 - What is the kube-API FQDN name ?
-- What is the version of this kubernetes server ?
+- What is the version of this Kubernetes server ?
 - What is the container runtime name and version ?
 - Describe general step to add a new VM as worker node in this cluster 
 

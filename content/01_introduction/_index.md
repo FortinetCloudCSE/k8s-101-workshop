@@ -17,8 +17,8 @@ archetype: home
 
 In this workshop, you will:
 
-- Understand why containers are important, and how they fit into a microservices architecture orchestrated by K8S
-- Build a kubernetes cluster on a Virtual Machine (VM)in Azure
+- Understand why containers are important, and how they fit into a microservices architecture orchestrated by K8s
+- Build a Kubernetes cluster on a Virtual Machine (VM)in Azure
 - Gain a fundamental understanding of Kubernetes concepts.
 - Learn how to deploy, manage, and scale applications using Kubernetes.
 - Explore key Kubernetes resources such as Pods, Deployments, Services, and more.
@@ -26,7 +26,7 @@ In this workshop, you will:
 
 
 
-## Building a K8S cluster from scratch vs using Managed Services like AKS,EKS,GKE?
+## Building a K8s cluster from scratch vs using Managed Services like AKS,EKS,GKE?
 
 - Building a self-managed cluster instead of relying on managed services for learning Kubernetes offers beginners hands-on experience, deeper understanding of core concepts, and greater control over configurations. 
 
