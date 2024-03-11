@@ -114,7 +114,7 @@ kubernetes-bootcamp-nodeportsvc   10.244.152.116:8080,10.244.152.117:8080   20m
 
 Using NodePort services in Kubernetes, while useful for certain scenarios, comes with several disadvantages, especially when considering the setup where traffic is directed through the IP of a single worker node has limitation of Inefficient Load Balancing, Exposure to External Traffic,Lack of SSL/TLS Termination etc., so NodePort services are often not suitable for production environments, especially for high-traffic applications that require robust load balancing, automatic scaling, and secure exposure to the internet. For scenarios requiring exposure to external traffic, using an Ingress controller or a cloud provider's LoadBalancer service is generally recommended. These alternatives offer more flexibility, better load distribution, and additional features like SSL/TLS termination and path-based routing, making them more suitable for production-grade applications.
 
-- clean up
+#### clean up
 
 ```bash
 kubectl delete svc kubernetes-bootcamp-nodeportsvc
@@ -145,6 +145,7 @@ kubectl rollout status deployment controller -n metallb-system
 
 2. create ippool for metallb 
 
+The IP address in the metallb IP pool is designated for assignment to the load balancer. Since Azure VMs have only one IP, which serves as the Node IP, you can retrieve the IP address using the `kubectl get node -o wide`` command.
 
 ```bash 
 cd $HOME
@@ -192,7 +193,7 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 since loadBalancer service require an dedicated external ip, if IP has already occupied by other loadBalancer, we will not able to create new loadBalancer. so if you have kong loadbalaner installed, delete it first
 
 ```bash
-kubectl delete svc kong-proxy -n kong
+kubectl get svc kong-proxy -n kong && kubectl delete svc kong-proxy -n kong
 ``` 
 
 6. Create new LoadBalancer
@@ -284,7 +285,10 @@ expected outcome
 kong-proxy   LoadBalancer   10.97.121.60   10.0.0.4      80:32477/TCP,443:31364/TCP   2m10s
 ```
 
-3. Verify the default ingressclasses
+3. Verify the default ingressClasses
+
+When Kong installed, Kong automatically configures itself as the default IngressClass for the cluster. With a default IngressClass set, you have the option to omit specifying ingressClassName: kong in your Ingress specifications.
+
 
 ```bash
 kubectl get ingressclasses
@@ -436,7 +440,7 @@ EOF
 kubectl apply -f cert-${nodename}.yaml
 ```
 
-use `kubectl get secret  test-tls-test` and `kubectl get cert test-tls-test` to check deployment
+use `kubectl get ClusterIssuer`, `kubectl get secret  test-tls-test` and `kubectl get cert test-tls-test` to check deployment
 
 8. create ingress rule for nginx svc 
 
@@ -629,20 +633,33 @@ kubectl apply -f nginx_ingress_rule_with_cert_${nodename}_two_svc.yaml
 
 
 14. Verify ingress rule with 
+
+verify bootcamp ingress rule with https url
+
+```bash
+curl -k https://${nodename}/bootcamp 
+```
+or plain http url 
 ```bash
 curl http://${nodename}/bootcamp
-curl http://${nodename}/default
 ```
-or 
-```bash
-curl -k https://${nodename}/bootcamp
-curl -k https://${nodename}/default 
-```
-Expected result
+Expected outcome
 
 ```
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-rsqs9 | v=1
+```
+
+verify nginx ingress rule with https url
+
+```bash
 curl -k https://${nodename}/default
-Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-zcstb | v=1
+```
+or plain http url
+```bash
+curl http://${nodename}/default
+```
+Expected outcome
+```
 <!DOCTYPE html>
 <html>
 <head>
@@ -666,7 +683,6 @@ Commercial support is available at
 <p><em>Thank you for using nginx.</em></p>
 </body>
 </html>
-
 ```
 
 #### Review Questions
