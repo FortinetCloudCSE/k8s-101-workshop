@@ -14,6 +14,7 @@ We've previously seen how to use kubectl create deployment Kubernetes-bootcamp -
 
 By defining deployments in YAML or JSON files, you can specify detailed configurations, manage them through source control systems, and apply changes systematically. This method enhances the maintainability and reproducibility of your deployments within a Kubernetes environment.
 
+1. Deployment kubernetes-bootcamp application
 
 ```bash
 cat << EOF | tee kubernetes-bootcamp.yaml

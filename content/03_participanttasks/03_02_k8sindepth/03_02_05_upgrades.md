@@ -225,7 +225,9 @@ kubernetes-bootcamp-d9f576d69-dwwc2   1/1     Running   0          110s   10.244
 kubernetes-bootcamp-d9f576d69-hhqqm   1/1     Running   0          108s   10.244.152.114   node-worker   <none>           <none>
 kubernetes-bootcamp-d9f576d69-w5tpc   1/1     Running   0          108s   10.244.152.115   node-worker   <none>           <none>
 ``` 
-Observe POD ip address has changed. POD has been refreshed.
+Notice that the Pod's IP address has changed, and the deployment's **Pod template hash** has also been updated to new prefix (d9f576d69). This indicates that all resources have been recreated following the kubectl rollout restart command.
+
+
 
 
 #### clean up

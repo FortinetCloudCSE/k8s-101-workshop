@@ -83,7 +83,7 @@ juiceshop3   0/1     Pending   0          42s
 The Pod Juiceshop3 will remain in Pending status, as the only worker node now is disabled for scheduling.
 
 
-- Put node back
+- Put node back to work
 ```bash
 firstNodeName=$(kubectl get node -o json | jq -r .items[0].metadata.name)
 kubectl uncordon $firstNodeName
@@ -257,7 +257,7 @@ expected outcome
 NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)        AGE
 kubernetes-bootcamp-lb-svc   LoadBalancer   10.96.250.234   4.157.216.24   80:32428/TCP   12m
 ```
-You should observe the **EXTERNAL-IP** status transition from 'Pending' to an actual public IP address, serving as the entry point for the Kubernetes Bootcamp deployment. Coupled with PORT 80, this defines how to access the Kubernetes Bootcamp application.
+You should observe the **EXTERNAL-IP** status transition from **'Pending'** to an actual public IP address, serving as the entry point for the Kubernetes Bootcamp deployment. Coupled with PORT 80, this defines how to access the Kubernetes Bootcamp application.
 
 Access the Kubernetes Bootcamp application using the curl command or through your web browser."
 

@@ -16,7 +16,7 @@ We'll kick off by deploying a managed AKS cluster featuring a single worker node
 
 In your **Azure Cloud Shell**, click the 'copy to clipboard' icon at the top right corner to copy the command. Then, paste it into the terminal and press enter to execute.
 
-
+Below script will creaet a managed azure K8s (AKS) with one worker node, also update kubeconfig for access AKS.
 
 ```bash
 ##generate public key if not exist 
@@ -37,10 +37,22 @@ az aks create \
 
 ##update kubeconfig file for kubectl to use 
 az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
-##list provisioned aks list
+```
 
+Verify provisioned AKS cluster with
+```bash
 az aks list --resource-group $resourcegroupname --output table
 ```
+expected output:
+
+```
+[Warning] This output may compromise security by showing the following secrets: ssh, linuxProfile, keyData, publicKeys. Learn more at: https://go.microsoft.com/fwlink/?linkid=2258669
+Name    Location    ResourceGroup          KubernetesVersion    CurrentKubernetesVersion    ProvisioningState    Fqdn
+------  ----------  ---------------------  -------------------  --------------------------  -------------------  -----------------------------------------------------------
+k8s50   eastus      k8s50-k8s101-workshop  1.27                 1.27.9                      Succeeded            k8s50-k8s50-k8s101-wor-02b500-eg9yx3nt.hcp.eastus.azmk8s.io
+```
+
+
 ### Operate Kubernetes objects
 
 There are two primary methods for managing Kubernetes objects:
@@ -120,6 +132,10 @@ expected outcome on AKS cluster
 NAME                             STATUS   ROLES   AGE     VERSION
 aks-worker-20494901-vmss000000   Ready    agent   2m56s   v1.27.9
 ```
+
+### Summary
+
+Above, we set up an AKS cluster with a single worker node and downloaded kubectl to interact with the AKS API server. Now let's learn basic Kubernetes concept.
 
 ### Pod
 
@@ -282,12 +298,14 @@ While directly creating Pods might be suitable for learning purposes or specific
 
 1. Deploy your first application on Kubernetes using the `kubectl create deployment` command. This is an imperative command.It requires specifying the deployment name and the location of the application image (including the full repository URL for images not hosted on Docker Hub).
 
-2. Deployment kubernetes-bootcamp application 
+2. Deployment kubernetes-bootcamp application
 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
-
 ```
+
+the **--image** choose the container image to use for Pod. Above we use image from image repository gcr.io , if you prefer to use juice-shop from docker' , you can use `kubectl create deployment juiceshop --image=docker.io/bkimminich/juice-shop`. as Docker Hub is the default registry. you could also use `kubectl create deployment juiceshop --image=bkimminich/juice-shop` instead.
+
 
 Congratulations! You've just deployed your first application by creating a deployment. 
 
@@ -497,9 +515,13 @@ kubectl get deployment kubernetes-bootcamp -n production
 kubectl get pod --namespace=production 
 kubectl get pod -n=development
 ```
+or use `kubectl get all -n=production` and `kubectl get all -n=development` to list everything in that namespace.
+
 
 
  - Delete namespace and everything inside it
+
+it will take a while to delete namespace. Do not interupt it.
 
 ```bash
 kubectl delete namespace production
