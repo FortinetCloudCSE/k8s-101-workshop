@@ -24,7 +24,7 @@ weight: 2
 
 - Beginners: 
 
-If you're new to Kubernetes, you are encouraged to follow the workshop through sections 1, 2, 3.1, and 3.2.
+If you're new to Kubernetes, you are encouraged to follow the workshop through sections 1, 2, 3.1, and 3.2. then take 3.3 with extend hours.
 
 - Experienced Users: 
 
