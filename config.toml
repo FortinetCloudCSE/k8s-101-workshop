@@ -57,44 +57,35 @@ enableEmoji = true
 home = [ "HTML", "RSS", "JSON"]
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools'></i> FortiSOAR Admin Guide "
-url = "https://docs.fortinet.com/document/fortisoar/7.4.1/administration-guide/249178/overview"
+name = "<i class='fas fa-tools'></i>Kubernetes Admin Guide "
+url = "https://kubernetes.io/docs/concepts/overview/#why-you-need-kubernetes-and-what-can-it-do"
 weight = 20
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools'></i> FortiSOAR Connectors "
-url = "https://docs.fortinet.com/fortisoar/connectors"
+name = "<i class='fas fa-tools'></i>  "
+url = ""
 weight = 21
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools'></i> FortiSOAR Content Hub "
-url = "https://fortisoar.contenthub.fortinet.com/"
+name = "<i class='fas fa-tools'></i>AKS documentation "
+url = "https://learn.microsoft.com/en-us/azure/aks/"
 weight = 22
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools'></i>FortiSOAR Playbook Guide "
-url = "http://docs.fortinet.com/document/fortisoar/7.4.1/playbooks-guide/331279/introduction-to-playbooks"
+name = "<i class='fas fa-tools'></i>Kubectl Quick Reference "
+url = "https://kubernetes.io/docs/reference/kubectl/quick-reference/"
 weight = 23
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-graduation-cap'></i>FortiSOAR Bytes Youtube Channel"
-url = "https://www.youtube.com/@fortisoarbytes3419"
+name = "<i class='fas fa-graduation-cap'></i>FortiGate Kubernetes Connector "
+url = "https://docs.fortinet.com/document/fortigate-private-cloud/7.4.0/kubernetes-administration-guide/736375/about-fortigate-vm-and-kubernetes"
 weight = 24
 
 [[menu.shortcuts]]
-name = "<i class='fas fa-tools'></i>FortiWeb ZTNA Setup Guide"
-url = "https://docs.fortinet.com/document/fortiweb/7.2.0/administration-guide/114128"
+name = "<i class='fas fa-tools'></i>Fortiweb Ingress Controller "
+url = "https://docs.fortinet.com/document/fortiweb/7.4.1/ingress-controller-installation-guide/742835/fortiweb-ingress-controller-overview"
 weight = 25
 
-[[menu.shortcuts]]
-name = "<i class='fas fa-tools'></i>FortiClient Admin Guide"
-url = "https://docs.fortinet.com/document/forticlient/7.2.1/administration-guide/725845/introduction"
-weight = 26
-
-[[menu.shortcuts]]
-name = "<i class='fas fa-tools'></i>FortiClient ZTNA Guide"
-url = "https://docs.fortinet.com/document/forticlient/7.2.1/administration-guide/550622/zero-trust-telemetry"
-weight = 27
 
 [markup]
   defaultMarkdownHandler = "goldmark"
