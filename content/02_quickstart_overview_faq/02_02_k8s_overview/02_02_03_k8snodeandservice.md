@@ -333,8 +333,9 @@ delete your aks cluster with below command, this will took around 5 minutes.
 
 ```bash
 clustername=$(whoami)
-resourcegroupname=$(az group list --tag FortiLab="k8s101-lab" | jq -r .[].name)
-az aks delete --name ${clustername} -g $resourcegroupname  -y
+resourcegroupname=$(az group list  | jq -r .[0].name)
+echo you are going to delete aks cluster $clustername in resourcegroup $resourcegroupname
+az aks delete --name ${clustername} -g $resourcegroupname  
 ```
 
 
