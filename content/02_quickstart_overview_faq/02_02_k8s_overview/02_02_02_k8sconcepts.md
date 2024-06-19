@@ -24,7 +24,7 @@ Below script will creaet a managed azure K8s (AKS) with one worker node, also up
 clustername=$(whoami)
 
 ##get the resourcegrname name 
-resourcegroupname=$(az group list --tag FortiLab="k8s101-lab" | jq -r .[].name)
+resourcegroupname=$(az group list | jq -r .[].name)
 az aks create \
     --name ${clustername} \
     --node-count 1 \
