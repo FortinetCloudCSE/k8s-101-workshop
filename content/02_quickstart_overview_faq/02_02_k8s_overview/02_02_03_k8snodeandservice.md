@@ -333,7 +333,7 @@ delete your aks cluster with below command, this will took around 5 minutes.
 
 ```bash
 clustername=$(whoami)
-resourcegroupname=$(az group list  | jq -r .[0].name)
+resourcegroupname=$(az group list --query "[?tags.UserPrincipalName=='$(az account show --query user.name -o tsv)'].name" -o tsv)
 echo you are going to delete aks cluster $clustername in resourcegroup $resourcegroupname
 az aks delete --name ${clustername} -g $resourcegroupname  
 ```
