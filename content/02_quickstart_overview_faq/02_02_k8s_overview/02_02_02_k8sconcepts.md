@@ -24,7 +24,7 @@ Below script will creaet a managed azure K8s (AKS) with one worker node, also up
 clustername=$(whoami)
 
 ##get the resourcegrname name 
-resourcegroupname=$(az group list | jq -r .[0].name)
+resourcegroupname=$(az group list --query "[?tags.UserPrincipalName=='$(az account show --query user.name -o tsv)'].name" -o tsv)
 echo use resourcegroup $resourcegroupname
 az aks create \
     --name ${clustername} \
