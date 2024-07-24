@@ -7,6 +7,8 @@ weight: 1
 
 ## Use kubeadm to install kubernetes 
 
+![labafter](../../images/K8s%20workshopafter-101.png)
+
 ### use azure shell as kubenetes client
 
 To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your [Terraform deployment in Azure Cloud Shell](../../02_quickstart_overview_faq/02_01_quickstart/02_01_03_terraform.html). Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations. 
