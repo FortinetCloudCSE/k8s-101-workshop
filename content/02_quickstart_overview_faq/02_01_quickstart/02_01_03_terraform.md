@@ -7,6 +7,9 @@ weight: 3
 
 All the components required for Lab are deployed through terraform. 
 
+Lab Architecture:
+
+![lab001](../../images/K8s%20workshop-101.png)
 
 Perform the following steps in your Cloudshell console to create your environment.
 
