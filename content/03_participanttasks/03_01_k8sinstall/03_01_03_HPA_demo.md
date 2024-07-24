@@ -8,13 +8,13 @@ weight: 2
 
 
 A quick demo using a few commands to demonstrate how Kubernetes can scale to handle increased web traffic.
-these include 
+These include 
 - Creating a client deployment to simulate HTTP traffic.
-- Setting up a web application with auto-scaling using Horizontal Pod Autoscaler (HPA)."
+- Setting up a web application with auto-scaling using Horizontal Pod Autoscaler (HPA).
 
 1. Deploy Demo Application and enable auto scalling (HPA)
 
-    - The Deployed demo application include two PODs but will auto scale if coming traffic reach some limit.
+    - The Deployed demo application include two Pods but able to auto scale if coming traffic reach certain limit.
     
     ```bash
     cd $HOME/k8s-101-workshop/terraform/
@@ -52,7 +52,7 @@ these include
 
 3. Stress the nginx deployment
 
-    - Paste below command into azure shell to create a client deployment to send http request towards nginx deployment to stress it.  this client deployment will create two POD to keep issue http request towards nginx server.
+    - Paste below command to create a client deployment to send http request towards nginx deployment to stress it.  this client deployment will create two Pod to keep issue http request towards nginx server.
     
     ```bash
     cat <<EOF | tee  infinite-calls_client.yaml
@@ -119,7 +119,7 @@ these include
     nginx-deployment-55c7f467f8-r6ndt   1/1     Running   0          35s
     nginx-deployment-55c7f467f8-xr2l7   1/1     Running   0          5s
     ```
-    - As **client deployment** continues to send traffic to the Nginx service, you will see the number of Pods gradually increase, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
+    - As **client deployment** continues to send traffic to the Nginx service, you will see the number of Pods gradually increase until reach configured limit - 10 Pods, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
 
 5. Delete client deployment to stop sending client traffic
 
@@ -166,10 +166,15 @@ these include
     kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
     ```
 
+### Summary
+This chapter provides a quick demonstration of deploying an application with Horizontal Pod Autoscaler (HPA). For a detailed understanding of how it works, please continue to the next section [Kubernetes in depth](../../03_participanttasks/03_02_k8sindepth.html)
+ 
 
 ### Review Questions 
 - Describe how to make client application - infinite-calls to generate more traffic ?
 
 - How many minutes need to wait before you can see nginx pod start increasing.
 
-- How to stop send traffic to nginx deployment
+- How to stop sending traffic to nginx deployment
+
+

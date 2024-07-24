@@ -22,8 +22,11 @@ So, in short, a Worker Node is the workhorse of a Kubernetes cluster, providing 
 
 ![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_nodes.svg)
 
+*in above diagram , the Docker is used as container runtime, but in our AKS cluster, the container runtime is **containerd***
 
 we can use `kubectl get node -o wide` to check the node status in cluster.
+
+1. Check the node detail
 
 ```bash
 kubectl get node -o wide
@@ -47,6 +50,63 @@ Nodes in Kubernetes can be made un-schedulable using the `kubectl cordon <nodena
 
 use `kubectl uncordon <nodename>` to put worker node back to work. 
 
+#### Cordon worker node 
+
+2. Cordon first node
+since this cluster only have one node, Cordon first node mean all nodes.
+
+```bash
+firstNodeName=$(kubectl get node -o json | jq -r .items[0].metadata.name)
+kubectl cordon $firstNodeName
+```
+- Check node status
+```bash
+kubectl get node 
+```
+expected result
+```
+aks-worker-29142279-vmss000000   Ready,SchedulingDisabled   agent   29m   v1.27.9
+```
+the Node now marked with "SchedulingDisabled".
+
+3 Create Pod
+```bash
+kubectl run juiceshop3 --image=bkimminich/juice-shop
+```
+
+4. Check the Pod status
+```bash
+kubectl get pod juiceshop3
+```
+expected result
+```
+NAME         READY   STATUS    RESTARTS   AGE
+juiceshop3   0/1     Pending   0          42s
+```
+
+The Pod Juiceshop3 will remain in Pending status, as the only worker node now is disabled for scheduling. if you have multiple worker node. then the Pod will be scheduled to other worker node.
+
+
+5. Put node back to work
+```bash
+firstNodeName=$(kubectl get node -o json | jq -r .items[0].metadata.name)
+kubectl uncordon $firstNodeName
+```
+
+6. Check node status
+```bash
+kubectl get node 
+```
+expected result
+```
+aks-worker-29142279-vmss000000   Ready    agent   29m   v1.27.9
+```
+
+7 Check the Pod Juiceshop3 status 
+```bash
+kubectl get pod juiceshop3
+```
+The Pod juiceshop3 shall move to "Runing" status.
 
 
 ### What is Service
@@ -67,6 +127,8 @@ This is the default service type that exposes the service on an internal IP with
 
 To check the services in your Kubernetes cluster, you can use the following command:
 
+1. Check Kubernetes build-in service 
+
 use `kubectl get svc` to check service 
 ```bash
 kubectl get svc --show-labels
@@ -85,6 +147,7 @@ The ClusterIP is only accessible from within the cluster, which means it cannot 
 
 Below, we launch a pod using the curl command to access the HTTPS port on 10.96.0.1 which is Kubernetes API.  Receiving either 401 or 403  response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
 
+2. Verify whether kubernetes svc API is reachable
 
 ```bash
 kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1/
@@ -105,6 +168,8 @@ HTTP/1.1 403 Forbidden
 
 - Exploring the Kubernetes Default ClusterIP type Service: kube-dns
 
+#### Verify the Kube-dns service 
+
 Kubernetes includes several built-in services essential for its operation  , with **kube-dns** being a key component. The **kube-dns** service is responsible for DNS resolution within the Kubernetes cluster, allowing pods to resolve the IP addresses of other services and external domains.
 
 ![clusterIP svc ](https://www.tigera.io/app/uploads/2023/05/image13-1.png)
@@ -113,55 +178,82 @@ Kubernetes includes several built-in services essential for its operation  , wit
 
 To check the kube-dns services in your Kubernetes cluster namespace kube-system , use 
 
+3. check kube-dns API in namespace kube-system
+
 ```bash
 kubectl get svc --namespace=kube-system -l k8s-app=kube-dns
 ```
 
+expected output
+```
+NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)         AGE
+kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP   33m
+```
 You should see kube-dns listed among the services, typically with a ClusterIP type, indicating it's internally accessible within the cluster.
 
 - Verifying DNS Resolution with kube-dns 
 
 To verify that kube-dns is correctly resolving domain names within the cluster, you can perform a DNS lookup from a pod. Here’s how to launch a temporary pod for testing DNS resolution using the busybox image, the FQDN name for Kubernetes service is in format "svcname.namespace.svc.cluster.local". kube-dns service help how to solve cluster internal and external FQDN to IP address.
 
+4. Verify whether kube-dns can resolve cluster internal svc
+
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  kubernetes.default.svc.cluster.local
 ```
-and 
+expected output
+```
+Server:         10.96.0.10
+Address:        10.96.0.10:53
+
+Name:   kubernetes.default.svc.cluster.local
+Address: 10.96.0.1
+
+
+pod "dns-test" deleted
+```
+
+5. Verify whether kube-dns can resolve public fqdn dns name
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  www.google.com
 ```
+expected output
+```
+Server:         10.96.0.10
+Address:        10.96.0.10:53
 
+Non-authoritative answer:
+Name:   www.google.com
+Address: 142.251.16.147
+Name:   www.google.com
+Address: 142.251.16.104
+Name:   www.google.com
+Address: 142.251.16.105
+Name:   www.google.com
+Address: 142.251.16.99
+Name:   www.google.com
+Address: 142.251.16.103
+Name:   www.google.com
+Address: 142.251.16.106
 
-This command does the following:
+Non-authoritative answer:
+Name:   www.google.com
+Address: 2607:f8b0:4004:c07::67
+Name:   www.google.com
+Address: 2607:f8b0:4004:c07::6a
+Name:   www.google.com
+Address: 2607:f8b0:4004:c07::63
+Name:   www.google.com
+Address: 2607:f8b0:4004:c07::68
+
+pod "dns-test" deleted
+```
+
+Above two commands does the following:
 
 Launches a temporary pod named dns-test using the busybox image.
 Executes the nslookup command to resolve the domain name Kubernetes.default.svc.cluster.local, which should be the internal DNS name for the Kubernetes API server.
 Automatically removes the pod after the command execution (--rm flag).
 
-Expected Output
-If kube-dns is functioning correctly, you should see output similar to the following, indicating the IP address that Kubernetes.default resolves to:
-
-```
-Server:         10.96.0.10
-Address:        10.96.0.10:53
-
-
-Name:   kubernetes.default.svc.cluster.local
-Address: 10.96.0.1
-
-and
-Server:         10.96.0.10
-Address:        10.96.0.10:53
-
-Non-authoritative answer:
-Name:   www.google.com
-Address: 142.250.189.164
-
-Non-authoritative answer:
-Name:   www.google.com
-Address: 2607:f8b0:4005:802::2004
-
-```
 The kube-dns service is vital for internal name resolution in Kubernetes, enabling pods to communicate with each other and access various cluster services using DNS names. Verifying DNS resolution functionality with kube-dns is straightforward with a temporary pod and can help diagnose connectivity issues within the cluster.
 
 - **NodePort**:  expose service to cluster external 
@@ -179,6 +271,43 @@ Exposes the service externally on the same port of each selected node in the clu
 Exposes the service externally using a cloud provider's load balancer or an on-premises solution like MetalLB, assigning a fixed, external IP to the service."
 
 ![LoadBalancer svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-loadbalancer.png)
+
+
+#### Expose deployment with LoadBalancer Service
+
+Let's use `kubectl expose deployment` command to expose our Kubernetes Bootcamp deployment to the internet by creating a LoadBalancer service. The kubectl expose command is used to expose a Kubernetes deployment, pod, or service to the internet or other parts of the cluster. When used within Azure Kubernetes Service (AKS), a managed Kubernetes platform, this command creates a service resource that defines how to access the Kubernetes workloads.  **--type=LoadBalancer**: Specifies the type of service to create. LoadBalancer services are public, cloud-provider-specific services that automatically provision an external load balancer (in this case, an Azure Load Balancer) to direct traffic to the service. This option makes the service accessible from outside the AKS cluster.
+
+1. expose kubernetes-bootcamp with LoadBalancer service 
+```bash
+kubectl expose deployment kubernetes-bootcamp --port=80 --type=LoadBalancer --target-port=8080 --name=kubernetes-bootcamp-lb-svc 
+```
+
+2. Verify the exposed service
+```bash
+kubectl get svc -l app=kubernetes-bootcamp
+```
+
+expected outcome
+```
+NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)        AGE
+kubernetes-bootcamp-lb-svc   LoadBalancer   10.96.250.234   4.157.216.24   80:32428/TCP   12m
+```
+You should observe the **EXTERNAL-IP** status transition from **'Pending'** to an actual public IP address, serving as the entry point for the Kubernetes Bootcamp deployment. Coupled with PORT 80, this defines how to access the Kubernetes Bootcamp application.
+
+3. Access Bootcamp  from external
+
+Access the Kubernetes Bootcamp application using the curl command or through your web browser."
+
+```bash
+ip=$(kubectl get svc -l app=kubernetes-bootcamp -o json | jq -r .items[0].status.loadBalancer.ingress[0].ip)
+curl http://$ip:80
+```
+Expected result
+```
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-855d5cc575-b97z8 | v=1
+```
+
+
 
 
 ### Summary
@@ -204,8 +333,9 @@ delete your aks cluster with below command, this will took around 5 minutes.
 
 ```bash
 clustername=$(whoami)
-resourcegroupname=$(az group list --tag FortiLab="k8s101-lab" | jq -r .[].name)
-az aks delete --name ${clustername} -g $resourcegroupname  -y
+resourcegroupname=$(az group list --query "[?tags.UserPrincipalName=='$(az account show --query user.name -o tsv)'].name" -o tsv)
+echo you are going to delete aks cluster $clustername in resourcegroup $resourcegroupname
+az aks delete --name ${clustername} -g $resourcegroupname  
 ```
 
 
