@@ -1,7 +1,7 @@
 ---
 title: "Self Managed K8s Workshop Hands-on Agenda"
 chapter: false
-menuTitle: "Self Managed K8s Workshop Hands-on"
+linkTitle: "Self Managed K8s Workshop Hands-on"
 weight: 3
 ---
 

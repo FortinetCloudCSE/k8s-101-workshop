@@ -1,6 +1,6 @@
 ---
 title: "Kubernetes TECWorkshop"
-menuTitle: "TECWorkshop"
+linkTitle: "TECWorkshop"
 weight: 1
 archetype: home
 ---

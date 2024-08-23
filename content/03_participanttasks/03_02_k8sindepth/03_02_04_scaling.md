@@ -1,6 +1,6 @@
 ---
 title: "Task 4 - Auto Scaling Deployment"
-menuTitle: "Task 4 - Auto Scaling Deployment"
+linkTitle: "Task 4 - Auto Scaling Deployment"
 weight: 4
 ---
 

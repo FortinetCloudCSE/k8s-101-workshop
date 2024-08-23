@@ -1,0 +1,42 @@
+{
+  "repoName":"k8s-101-workshop",
+  "author":"Srija Reddy Allam, Andy Wang",
+  "workshopTitle":"K8s 101 Workshop",
+  "themeVariant":"Xperts2024",
+  "logoBannerText":"K8s 101 Workshop",
+  "logoBannerSubText":"",
+  "errorLevel":"warning",
+  "googleServicesID":"G-5RZBH288ST",
+  "shortcuts": [
+  {
+    "text": "Kubernetes Admin Guide",
+    "URL": "https://kubernetes.io/docs/concepts/overview/#why-you-need-kubernetes-and-what-can-it-do",
+    "icon": "fa-tools-cap",
+    "weight":10
+  },
+  {
+    "text": "AKS documentation",
+    "URL": "https://learn.microsoft.com/en-us/azure/aks/",
+    "icon": "fa-tools-cap",
+    "weight":20
+  },
+  {
+    "text": "Kubectl Quick Reference",
+    "URL": "https://kubernetes.io/docs/reference/kubectl/quick-reference/",
+    "icon": "fa-tools-cap",
+    "weight":30
+  },
+  {
+    "text": "FortiGate Kubernetes Connector",
+    "URL": "https://docs.fortinet.com/document/fortigate-private-cloud/7.4.0/kubernetes-administration-guide/736375/about-fortigate-vm-and-kubernetes",
+    "icon": "fa-tools-cap",
+    "weight":40
+  },
+  {
+    "text": "Fortiweb Ingress Controller",
+    "URL": "https://docs.fortinet.com/document/fortiweb/7.4.1/ingress-controller-installation-guide/742835/fortiweb-ingress-controller-overview",
+    "icon": "fa-tools-cap",
+    "weight":50
+  }
+  ]
+}

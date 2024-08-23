@@ -1,6 +1,6 @@
 ---
 title: "Task 1 - Install Kubernetes"
-menuTitle: "Task 1 - K8s Installation"
+linkTitle: "Task 1 - K8s Installation"
 weight: 1
 ---
 

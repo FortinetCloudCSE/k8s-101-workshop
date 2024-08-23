@@ -1,6 +1,6 @@
 ---
 title: "Walk Through K8s Basic Concept with AKS"
-menuTitle: "K8s Basic"
+linkTitle: "K8s Basic"
 weight: 2
 ---
 

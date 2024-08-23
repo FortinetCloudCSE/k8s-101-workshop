@@ -1,6 +1,6 @@
 ---
 title: "Kubernetes Step by Step Install "
-menuTitle: "Optional-Task Manual Installation"
+linkTitle: "Optional-Task Manual Installation"
 weight: 5
 ---
 

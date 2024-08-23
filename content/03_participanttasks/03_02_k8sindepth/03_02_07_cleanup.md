@@ -1,6 +1,6 @@
 ---
 title: "cleanup"
-menuTitle: "cleanup"
+linkTitle: "cleanup"
 weight: 8
 ---
 

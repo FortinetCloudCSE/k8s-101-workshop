@@ -1,6 +1,6 @@
 ---
 title: "Task 6 - Exposing Applications with Loadbalancer and Ingress"
-menuTitle: "Task 6 -  Exposing application"
+linkTitle: "Task 6 -  Exposing application"
 weight: 6
 ---
 

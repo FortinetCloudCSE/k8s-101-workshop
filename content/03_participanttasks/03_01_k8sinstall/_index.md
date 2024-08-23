@@ -1,7 +1,7 @@
 ---
 title: "Kubernetes installation"
 chapter: false
-menuTitle: "K8s install"
+linkTitle: "K8s install"
 weight: 2
 ---
 

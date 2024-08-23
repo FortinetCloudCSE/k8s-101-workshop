@@ -1,6 +1,6 @@
 ---
 title: "Task 5 - Upgrade Deployment"
-menuTitle: "Task 5 - Upgrade Deployment"
+linkTitle: "Task 5 - Upgrade Deployment"
 weight: 5
 ---
 

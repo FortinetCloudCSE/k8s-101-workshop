@@ -1,7 +1,7 @@
 ---
 title: "Kubernetes Overview"
 chapter: false
-menuTitle: "Kubernetes Overview"
+linkTitle: "Kubernetes Overview"
 weight: 2
 ---
 

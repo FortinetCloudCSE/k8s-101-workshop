@@ -1,7 +1,7 @@
 ---
 title: "Kubernetes in depth"
 chapter: false
-menuTitle: "Kubernetes in depth"
+linkTitle: "Kubernetes in depth"
 weight: 3
 ---
 

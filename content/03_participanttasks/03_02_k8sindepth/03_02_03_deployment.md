@@ -1,6 +1,6 @@
 ---
 title: "Task 3 - Deploy and Scale Deployments"
-menuTitle: "Task 3 - Deploy and Scale Deployments"
+linkTitle: "Task 3 - Deploy and Scale Deployments"
 weight: 3
 ---
 

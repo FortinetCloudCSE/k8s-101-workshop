@@ -1,6 +1,6 @@
 ---
 title: " K8S Node and Service"
-menuTitle: "Node and Service"
+linkTitle: "Node and Service"
 weight: 3
 ---
 

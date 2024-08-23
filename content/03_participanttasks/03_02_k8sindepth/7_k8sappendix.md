@@ -1,6 +1,6 @@
 ---
 title: "Appendix - More info"
-menuTitle: "Appendix - More info"
+linkTitle: "Appendix - More info"
 weight: 7
 ---
 

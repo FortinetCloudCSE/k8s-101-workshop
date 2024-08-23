@@ -1,6 +1,6 @@
 ---
 title: "Task 2 - Deploy and Scalling Application"
-menuTitle: "Task 2 - Scaling Application"
+linkTitle: "Task 2 - Scaling Application"
 weight: 2 
 ---
 
