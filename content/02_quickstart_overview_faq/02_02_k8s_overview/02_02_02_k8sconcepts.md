@@ -22,6 +22,7 @@ Below script will creaet a managed azure K8s (AKS) with one worker node, also up
 ##generate public key if not exist 
 [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
 clustername=$(whoami)
+k8sversion="1.27.9"
 
 ##get the resourcegrname name 
 resourcegroupname=$(az group list --query "[?tags.UserPrincipalName=='$(az account show --query user.name -o tsv)'].name" -o tsv)
@@ -34,7 +35,8 @@ az aks create \
     --service-cidr  10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
-    --resource-group $resourcegroupname
+    --resource-group $resourcegroupname \
+    --kubernetes-version $k8sversion
 
 ##update kubeconfig file for kubectl to use 
 az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
