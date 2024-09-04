@@ -19,27 +19,44 @@ Below script will creaet a managed azure K8s (AKS) with one worker node, also up
 1. Create AKS cluster
 
 ```bash
-##generate public key if not exist 
+cat << 'EOF' > aks.sh
+#!/bin/bash -xe
+# Generate public key if it doesn't exist
 [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
 clustername=$(whoami)
-k8sversion="1.27.9"
 
-##get the resourcegrname name 
-resourcegroupname=$(az group list --query "[?tags.UserPrincipalName=='$(az account show --query user.name -o tsv)'].name" -o tsv)
-echo use resourcegroup $resourcegroupname
+# Get the resource group name
+userPrincipalName=$(az account show --query user.name -o tsv)
+
+queryString="[?tags.UserPrincipalName=='$userPrincipalName'].name"
+
+resourcegroupname=$(az group list --query "$queryString" -o tsv)
+
+if [ -z "$resourcegroupname" ]; then
+    resourcegroupname=$(az group list --query "[0].name" -o tsv)
+fi
+
+# Set the default group for Azure CLI
+az configure --defaults group="$resourcegroupname"
+
+# Create the AKS cluster
 az aks create \
     --name ${clustername} \
     --node-count 1 \
     --vm-set-type VirtualMachineScaleSets \
     --network-plugin azure \
-    --service-cidr  10.96.0.0/16 \
+    --service-cidr 10.96.0.0/16 \
     --dns-service-ip 10.96.0.10 \
     --nodepool-name worker \
-    --resource-group $resourcegroupname \
-    --kubernetes-version $k8sversion
+    --resource-group $resourcegroupname
 
-##update kubeconfig file for kubectl to use 
-az aks get-credentials -g  $resourcegroupname -n ${clustername} --overwrite-existing
+# Update kubeconfig file for kubectl to use
+az aks get-credentials -g $resourcegroupname -n ${clustername} --overwrite-existing
+EOF
+
+chmod +x aks.sh
+./aks.sh
+
 ```
 
 2. Verify provisioned AKS cluster  
