@@ -19,7 +19,8 @@ Below script will creaet a managed azure K8s (AKS) with one worker node, also up
 1. Create AKS cluster
 
 ```bash
-cat << 'EOF' > aks.sh
+# Save and execute script immediately
+cat << 'EOF' | tee aks.sh
 #!/bin/bash -xe
 # Generate public key if it doesn't exist
 [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
@@ -36,26 +37,39 @@ if [ -z "$resourcegroupname" ]; then
     resourcegroupname=$(az group list --query "[0].name" -o tsv)
 fi
 
-# Set the default group for Azure CLI
-az configure --defaults group="$resourcegroupname"
+# Export resourcegroupname and clustername to make them available in the current shell
+export resourcegroupname
+export clustername
 
-# Create the AKS cluster
-az aks create \
-    --name ${clustername} \
-    --node-count 1 \
-    --vm-set-type VirtualMachineScaleSets \
-    --network-plugin azure \
-    --service-cidr 10.96.0.0/16 \
-    --dns-service-ip 10.96.0.10 \
-    --nodepool-name worker \
-    --resource-group $resourcegroupname
+# Check if the cluster already exists
+clusterExists=$(az aks list --resource-group $resourcegroupname --query "[?name=='$clustername'].name" -o tsv)
+
+if [ -n "$clusterExists" ]; then
+    # If the cluster already exists, do nothing
+    echo "Cluster $clustername already exists. No changes made."
+else
+    # Create a new AKS cluster
+    echo "Cluster $clustername does not exist. Creating a new cluster..."
+    az aks create \
+        --name ${clustername} \
+        --node-count 1 \
+        --vm-set-type VirtualMachineScaleSets \
+        --network-plugin azure \
+        --service-cidr 10.96.0.0/16 \
+        --dns-service-ip 10.96.0.10 \
+        --nodepool-name worker \
+        --resource-group $resourcegroupname
+fi
 
 # Update kubeconfig file for kubectl to use
 az aks get-credentials -g $resourcegroupname -n ${clustername} --overwrite-existing
 EOF
 
+# Make the script executable
 chmod +x aks.sh
-./aks.sh
+
+# Source the script to run it in the current shell and expose environment variables
+source aks.sh
 
 ```
 
