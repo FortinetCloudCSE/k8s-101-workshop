@@ -26,11 +26,17 @@ So, in short, a Worker Node is the workhorse of a Kubernetes cluster, providing 
 
 we can use `kubectl get node -o wide` to check the node status in cluster.
 
+{{< tabs >}}
+{{% tab title="Check Detail" %}}
+
 1. Check the node detail
 
 ```bash
 kubectl get node -o wide
 ```
+{{% /tab %}}
+{{% tab title="Expected Output self managed" style="info" %}}
+
 expected outcome:
 on self-managed Kubernetes 
 ```
@@ -38,46 +44,66 @@ NAME        STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP  
 nodemaster    Ready    control-plane   55m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 node-worker   Ready    <none>          54m   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.3 LTS   6.2.0-1019-azure   cri-o://1.25.4
 ```
+{{% /tab %}}
+{{% tab title="Expected Output AKS" style="info" %}}
+
 on managed Kubernetes like AKS
 
 ```
 NAME                             STATUS   ROLES   AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
 aks-worker-24706581-vmss000000   Ready    agent   7m32s   v1.27.9   10.224.0.4    <none>        Ubuntu 22.04.3 LTS   5.15.0-1054-azure   containerd://1.7.7-1
 ```
+{{% /tab %}}
+{{< /tabs >}}
+
+### Cordon worker node 
 
 Nodes in Kubernetes can be made un-schedulable using the `kubectl cordon <nodename>` command, which is particularly useful when preparing a node for maintenance. When a node is cordoned, the kube-scheduler will no longer schedule new pods onto it, although existing pods on the node are not affected.
 
 
 use `kubectl uncordon <nodename>` to put worker node back to work. 
+{{< tabs >}}
+{{% tab title="Cordon first node" %}}
 
-#### Cordon worker node 
-
-2. Cordon first node
+Cordon first node
 since this cluster only have one node, Cordon first node mean all nodes.
 
 ```bash
 firstNodeName=$(kubectl get node -o json | jq -r .items[0].metadata.name)
 kubectl cordon $firstNodeName
 ```
+{{% /tab %}}
+{{% tab title="Check Cordon Status" %}}
 - Check node status
 ```bash
 kubectl get node 
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Cordon" style="info" %}}
+
 expected result
 ```
 aks-worker-29142279-vmss000000   Ready,SchedulingDisabled   agent   29m   v1.27.9
 ```
 the Node now marked with "SchedulingDisabled".
 
-3 Create Pod
+{{% /tab %}}
+{{% tab title="Create Pod" %}}
+
+Create Pod
 ```bash
 kubectl run juiceshop3 --image=bkimminich/juice-shop
 ```
+{{% /tab %}}
+{{% tab title="Check Status" %}}
 
-4. Check the Pod status
+Check the Pod status
 ```bash
 kubectl get pod juiceshop3
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Pending" style="info" %}}
+
 expected result
 ```
 NAME         READY   STATUS    RESTARTS   AGE
@@ -86,28 +112,39 @@ juiceshop3   0/1     Pending   0          42s
 
 The Pod Juiceshop3 will remain in Pending status, as the only worker node now is disabled for scheduling. if you have multiple worker node. then the Pod will be scheduled to other worker node.
 
+{{% /tab %}}
+{{< /tabs >}}
 
-5. Put node back to work
+{{< tabs >}}
+{{% tab title="Uncordon"  %}}
+
+Put node back to work
 ```bash
 firstNodeName=$(kubectl get node -o json | jq -r .items[0].metadata.name)
 kubectl uncordon $firstNodeName
 ```
+{{% /tab %}}
+{{% tab title="Uncordon Check"  %}}
 
-6. Check node status
+Check node status
 ```bash
 kubectl get node 
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Uncordon" style="info" %}}
 expected result
 ```
 aks-worker-29142279-vmss000000   Ready    agent   29m   v1.27.9
 ```
-
-7 Check the Pod Juiceshop3 status 
+{{% /tab %}}
+{{% tab title="Check Pod status" style="info" %}}
+Check the Pod Juiceshop3 status 
 ```bash
 kubectl get pod juiceshop3
 ```
 The Pod juiceshop3 shall move to "Runing" status.
-
+{{% /tab %}}
+{{< /tabs >}}
 
 ### What is Service
 
@@ -126,13 +163,16 @@ This is the default service type that exposes the service on an internal IP with
  
 
 To check the services in your Kubernetes cluster, you can use the following command:
-
+{{< tabs >}}
+{{% tab title="Check Service" %}}
 1. Check Kubernetes build-in service 
 
 use `kubectl get svc` to check service 
 ```bash
 kubectl get svc --show-labels
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected output 
 ```
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   LABELS
@@ -140,6 +180,8 @@ kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   49m   component=ap
 ```
 
 This output shows the built-in Kubernetes service, which serves as the internal endpoint for the Kubernetes API service. The ClusterIP 10.96.0.1 assigned to services like the Kubernetes API server (Kubernetes service) is a virtual IP (VIP) and does not correspond to a physical network interface. It is part of Kubernetes' service discovery and networking mechanism, which relies on kube-proxy (running on each node) and the cluster's network configuration to route traffic to the appropriate endpoints.
+{{% /tab %}}
+{{< /tabs >}}
 
 The ClusterIP is only accessible from within the cluster, which means it cannot be directly accessed from the master node using kubectl. To interact with it, one must use another pod within the same cluster.
 
@@ -147,11 +189,16 @@ The ClusterIP is only accessible from within the cluster, which means it cannot 
 
 Below, we launch a pod using the curl command to access the HTTPS port on 10.96.0.1 which is Kubernetes API.  Receiving either 401 or 403  response indicates that connectivity is working fine, but the request is not authorized. This lack of authorization occurs because curl did not supply a certificate to authenticate itself:
 
-2. Verify whether kubernetes svc API is reachable
+{{< tabs >}}
+{{% tab title="API reachable?" %}}
+
+Verify whether kubernetes svc API is reachable
 
 ```bash
 kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl -I -k https://10.96.0.1/
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 Expected output:
 ```
@@ -164,11 +211,12 @@ HTTP/1.1 403 Forbidden
 
 "401" or "403" is because curl need to supply a certificate to authenticate itself which we did not supply, however, above is enough to show you the 10.96.0.1 is reachable via clusterIP Service.
 
- 
+{{% /tab %}}
+{{< /tabs >}}
 
-- Exploring the Kubernetes Default ClusterIP type Service: kube-dns
 
 #### Verify the Kube-dns service 
+- Exploring the Kubernetes Default ClusterIP type Service: kube-dns
 
 Kubernetes includes several built-in services essential for its operation  , with **kube-dns** being a key component. The **kube-dns** service is responsible for DNS resolution within the Kubernetes cluster, allowing pods to resolve the IP addresses of other services and external domains.
 
@@ -177,12 +225,16 @@ Kubernetes includes several built-in services essential for its operation  , wit
 *In this workshop, the kube-dns svc has configured with ip 10.96.0.10 instead of 10.0.0.10*
 
 To check the kube-dns services in your Kubernetes cluster namespace kube-system , use 
+{{< tabs >}}
+{{% tab title="Check kube-dns" %}}
 
-3. check kube-dns API in namespace kube-system
+Check kube-dns API in namespace kube-system
 
 ```bash
 kubectl get svc --namespace=kube-system -l k8s-app=kube-dns
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 expected output
 ```
@@ -190,16 +242,24 @@ NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)         AGE
 kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP   33m
 ```
 You should see kube-dns listed among the services, typically with a ClusterIP type, indicating it's internally accessible within the cluster.
+{{% /tab %}}
+{{< /tabs >}}
 
 - Verifying DNS Resolution with kube-dns 
 
+
 To verify that kube-dns is correctly resolving domain names within the cluster, you can perform a DNS lookup from a pod. Here’s how to launch a temporary pod for testing DNS resolution using the busybox image, the FQDN name for Kubernetes service is in format "svcname.namespace.svc.cluster.local". kube-dns service help how to solve cluster internal and external FQDN to IP address.
+{{< tabs >}}
+{{% tab title="Verify internal dns" %}}
 
 4. Verify whether kube-dns can resolve cluster internal svc
 
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  kubernetes.default.svc.cluster.local
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Internal" style="info" %}}
+
 expected output
 ```
 Server:         10.96.0.10
@@ -211,11 +271,16 @@ Address: 10.96.0.1
 
 pod "dns-test" deleted
 ```
+{{% /tab %}}
+{{% tab title="Verify public DNS" %}}
 
 5. Verify whether kube-dns can resolve public fqdn dns name
 ```bash
 kubectl run dns-test --image=busybox --restart=Never --rm -it -- nslookup  www.google.com
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Public" style="info" %}}
+
 expected output
 ```
 Server:         10.96.0.10
@@ -247,6 +312,8 @@ Address: 2607:f8b0:4004:c07::68
 
 pod "dns-test" deleted
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 Above two commands does the following:
 
@@ -273,28 +340,33 @@ Exposes the service externally using a cloud provider's load balancer or an on-p
 ![LoadBalancer svc ](https://learn.microsoft.com/en-us/azure/aks/media/concepts-network/aks-loadbalancer.png)
 
 
-#### Expose deployment with LoadBalancer Service
+### Expose deployment with LoadBalancer Service
 
 Let's use `kubectl expose deployment` command to expose our Kubernetes Bootcamp deployment to the internet by creating a LoadBalancer service. The kubectl expose command is used to expose a Kubernetes deployment, pod, or service to the internet or other parts of the cluster. When used within Azure Kubernetes Service (AKS), a managed Kubernetes platform, this command creates a service resource that defines how to access the Kubernetes workloads.  **--type=LoadBalancer**: Specifies the type of service to create. LoadBalancer services are public, cloud-provider-specific services that automatically provision an external load balancer (in this case, an Azure Load Balancer) to direct traffic to the service. This option makes the service accessible from outside the AKS cluster.
-
+{{< tabs >}}
+{{% tab title="expose" %}}
 1. expose kubernetes-bootcamp with LoadBalancer service 
 ```bash
 kubectl expose deployment kubernetes-bootcamp --port=80 --type=LoadBalancer --target-port=8080 --name=kubernetes-bootcamp-lb-svc 
 ```
-
+{{% /tab %}}
+{{% tab title="Verify" %}}
 2. Verify the exposed service
 ```bash
 kubectl get svc -l app=kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected outcome
 ```
 NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)        AGE
 kubernetes-bootcamp-lb-svc   LoadBalancer   10.96.250.234   4.157.216.24   80:32428/TCP   12m
 ```
 You should observe the **EXTERNAL-IP** status transition from **'Pending'** to an actual public IP address, serving as the entry point for the Kubernetes Bootcamp deployment. Coupled with PORT 80, this defines how to access the Kubernetes Bootcamp application.
+{{% /tab %}}
+{{% tab title="" %}}
 
-3. Access Bootcamp  from external
+Access Bootcamp  from external
 
 Access the Kubernetes Bootcamp application using the curl command or through your web browser."
 
@@ -302,13 +374,15 @@ Access the Kubernetes Bootcamp application using the curl command or through you
 ip=$(kubectl get svc -l app=kubernetes-bootcamp -o json | jq -r .items[0].status.loadBalancer.ingress[0].ip)
 curl http://$ip:80
 ```
+{{% /tab %}}
+{{% tab title="Expected Output External" style="info" %}}
 Expected result
 ```
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-855d5cc575-b97z8 | v=1
 ```
 
-
-
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Summary
 
@@ -341,6 +415,15 @@ az aks delete --name ${clustername} -g $resourcegroupname
 
 ### Review Questions
 
-- What is the role of a worker node in Kubernetes, and what are three key components that run on every Kubernetes Worker Node?
-- What is a Kubernetes Service, and why is it important?
-- Describe the difference between ClusterIP, NodePort, and LoadBalancer Service types in Kubernetes.
+1. What is the role of a worker node in Kubernetes, and what are three key components that run on every Kubernetes Worker Node?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
+2. What is a Kubernetes Service, and why is it important?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
+3. Describe the difference between ClusterIP, NodePort, and LoadBalancer Service types in Kubernetes.
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}

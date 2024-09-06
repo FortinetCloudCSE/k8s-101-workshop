@@ -14,7 +14,10 @@ We'll kick off by deploying a managed AKS cluster featuring a single worker node
 
 In your **Azure Cloud Shell**, click the 'copy to clipboard' icon at the top right corner to copy the command. Then, paste it into the terminal and press enter to execute.
 
-Below script will creaet a managed azure K8s (AKS) with one worker node, also update kubeconfig for access AKS.
+Below script will create a managed azure K8s (AKS) with one worker node, also update kubeconfig for access AKS.
+
+{{< tabs title="Create AKS" >}}
+{{% tab title="Provision" %}}
 
 1. Create AKS cluster
 
@@ -72,12 +75,16 @@ chmod +x aks.sh
 source aks.sh
 
 ```
+{{% /tab %}}
+{{% tab title="Verify" %}}
 
 2. Verify provisioned AKS cluster  
 
 ```bash
 az aks list --resource-group $resourcegroupname --output table
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected output:
 
 ```
@@ -86,7 +93,8 @@ Name    Location    ResourceGroup          KubernetesVersion    CurrentKubernete
 ------  ----------  ---------------------  -------------------  --------------------------  -------------------  -----------------------------------------------------------
 k8s50   eastus      k8s50-k8s101-workshop  1.27                 1.27.9                      Succeeded            k8s50-k8s50-k8s101-wor-02b500-eg9yx3nt.hcp.eastus.azmk8s.io
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Operate Kubernetes objects
 
@@ -114,23 +122,28 @@ kubectl relies on a configuration file found at ~/.kube/config for authenticatio
 
 ####  Download Kubectl
 
-Download the kubectl version that is compatible with your Kubernetes server version.
-
-1. Download Kubectl 
+Download the Kubectl version that is compatible with your Kubernetes server version.
+{{< tabs title="Kubectl" >}}
+{{% tab title="Download" %}} 
+Download Kubectl 
 ```bash
 curl -Lo $HOME/kubectl https://dl.k8s.io/release/v1.27.2/bin/linux/amd64/kubectl && chmod +x $HOME/kubectl && export PATH=$HOME:$PATH
 ```
-2. Verify the Version
+{{% /tab %}}
+{{% tab title="Verify" %}}
+
+Verify the Version
 ```bash
 kubectl version --short
 ```
 It will show you both client  **kubectl** version and server version.
 
-
+{{% /tab %}}
+{{< /tabs >}}
 
 - basic usage of kubectl
 
-The common format of a kubectl command is: **kubectl _ACTION RESOURCE_**
+The common format of a kubectl command is: <kbd>kubectl</kbd> <kbd>ACTION</kbd> <kbd>RESOURCE</kbd>
 
 This performs the specified action (like create, describe or delete) on the specified resource (like node or deployment). You can use --help after the subcommand to get additional info about possible parameters (for example: kubectl get nodes --help).
 
@@ -161,7 +174,7 @@ Deploy Commands:
 for example, you can use `kubectl get node` or `kubectl get node -o wide` to check cluster node detail
 
  
-3. Check Cluster node
+- Check Cluster node
 
 ```bash
 kubectl get node
@@ -195,6 +208,9 @@ To create a Pod:
 
 Pod can be created with `kubectl run`
 
+{{< tabs >}}
+{{% tab title="Create Pod" %}}
+
 1. Create a Pod with `kubectl run`
 
 
@@ -202,13 +218,17 @@ Pod can be created with `kubectl run`
 kubectl run juiceshop --image=bkimminich/juice-shop
 ``` 
 above will create a Pod with container juiceshop runing inside it. 
-
+{{% /tab %}}
+{{% tab title="Verify" %}}
 2. Verify the Pod creation
 
 use `kubectl get pod` to check the Pod
 ```bash
 kubectl get pod
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+
 expected output
 ```
 kubectl get pod
@@ -219,12 +239,19 @@ You might see the **STATUS** of Pod is **ContainerCreating** , but eventually, i
 
 use `kubectl logs po/juiceshop` to check the terminal log from Pod. you are expected see logs like **info: Server listening on port 3000** 
 
+{{% /tab %}}
+{{< /tabs >}}
 
-3. Check container log 
+3. Check container log
 
+{{< tabs title="Check Container log" >}}
+{{% tab title="get logs" %}}
 ```bash
 kubectl logs po/juiceshop
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+
 expected result
 ```
 info: All dependencies in ./package.json are satisfied (OK)
@@ -245,10 +272,15 @@ info: Domain https://www.alchemy.com/ is reachable (OK)
 info: Chatbot training data botDefaultTrainingData.json validated (OK)
 info: Server listening on port 3000
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 4. Create Pod from yamlfile
 
 Create Pod with `kubectl create -f <yamlfile>` or `kubectl apply -f <yamlfile>
+
+{{< tabs title"Pods with yamlfile" >}}
+{{% tab title="Create" %}}
 
 ```bash
 cat << EOF | tee juice-shop2.yaml
@@ -268,11 +300,17 @@ kubectl create -f juice-shop2.yaml
 `cat << EOF` is a shell syntax for a "here document" (heredoc). It allows you to provide a block of input text directly in the shell. The input continues until the token EOF (End Of File) is encountered again in the input stream.
 ``|`` is the pipe operator, which takes the output of the command on its left (the heredoc in this case) and uses it as the input for the command on its right. In the next following chapters, we are going to use this a lot.
 
-5. Verify the Pod creation 
+{{% /tab %}}
+{{% tab title = "Verify Create" %}}
+
+Verify the Pod creation 
 
 ```bash
 kubectl get pod
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Create" style="info" %}}
+
 expected result
 
 you shall see two Pod is running
@@ -281,26 +319,37 @@ NAME         READY   STATUS    RESTARTS   AGE
 juiceshop    1/1     Running   0          35s
 juiceshop2   1/1     Running   0          4s
 ```
-6. delete Pod
+{{% /tab %}}
+{{% tab title="Delete Pod" %}}
+
+delete Pod
 
 use `kubectl delete` to delete the Pod juiceshop2
 
 ```bash
 kubectl delete pod juiceshop2
 ```
-expected result
-you shall see juiceshop2 now deleted
 
-7. Check Pod again 
+you should see juiceshop2 now deleted
+
+{{% /tab %}}
+{{% tab title="Verify Delete" %}}
+
+Check Pod again 
 ```bash
 kubectl get pod
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Delete" style="info" %}}
+
 expected output
 
 ```
 NAME        READY   STATUS    RESTARTS   AGE
 juiceshop   1/1     Running   0          63s
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Labels
 
@@ -318,18 +367,24 @@ kubectl get pods -l run=juiceshop
 kubectl label pod juiceshop purpose=debug
 ```
 
-3. To display all the labels:
+{{< tabs >}}
+{{% tab title="Display Labels" %}}
+To display all the labels:
 
 ```bash
 kubectl get pod --show-labels
 ``` 
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
+
 Expected Output 
 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE   LABELS
 juiceshop   1/1     Running   0          4m7s   purpose=debug,run=juiceshop
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 
 ### What is a kubernetes Deployment 
 
@@ -346,6 +401,9 @@ While directly creating Pods might be suitable for learning purposes or specific
 ####  Deploying an Application with Deployment**
 
 Deploy your first application on Kubernetes using the `kubectl create deployment` command. This is an imperative command.It requires specifying the deployment name and the location of the application image (including the full repository URL for images not hosted on Docker Hub).
+
+{{< tabs title="Deploy an app" >}}
+{{% tab title="Deployment" %}}
 
 1. Deployment kubernetes-bootcamp application
 
@@ -364,15 +422,21 @@ Name: Specifies the name of the deployment, in this case, kubernetes-bootcamp.
 Image: Determines the container image to use for the Pods managed by this deployment, here gcr.io/google-samples/kubernetes-bootcamp:v1, which is a sample application provided by Google.
 By executing this command, you instruct Kubernetes to pull the specified container image, create a Pod for it, and manage its lifecycle based on the deployment's configuration. This process encapsulates the application in a scalable and manageable unit, facilitating easy updates, rollbacks, and scaling."
 
+{{% /tab %}}
+{{% tab title="Verify" %}}
+
 2. Verify the deployment
 
 ```bash
 kubectl get deployment -l app=kubernetes-bootcamp
 ```
-We see that there is 1 deployment running a single Pod of your app. Container(s) is running inside a Pod with shared storage and IP.
+
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 expected outcome
 
+We see that there is 1 deployment running a single Pod of your app. Container(s) is running inside a Pod with shared storage and IP.
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           20m
@@ -383,25 +447,35 @@ In this output:
 **kubernetes-bootcamp** is the name of the deployment managing your application.
 **READY 1/1** indicates that there is one **Pod** targeted by the deployment, and it is ready.   1/1 mean's the deployment expect 1 Pod  and Pod in ready status is also 1 which mean the actual deployed Pod meet the expected number (**replica**).  **UP-TO-DATE**: Indicates the number of replicas that have been updated to achieve the desired state. 1 suggests that one replica is up-to-date with the desired configuration.**AVAILABLE**: Shows the number of replicas that are available to serve requests. 1 means there is one replica available. 
 
-let's keep this deployment to explore what is **ReplicaSet** 
+{{% /tab %}}
+{{< /tabs >}}
+
+Let's keep this deployment to explore what is **ReplicaSet** 
 
 ### What is ReplicaSet 
 
 A **ReplicaSet** is a Kubernetes resource that ensures a specified number of replicas of a Pod are running at any given time. It is one of the key controllers used for Pod replication and management, offering both scalability and fault tolerance for applications. The primary purpose of a ReplicaSet is to maintain a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods. **Deployment** is a higher-level resource in Kubernetes that actually manages ReplicaSets and provides declarative updates to applications. 
 
-3 Check the ReplicaSet from Deployment
+{{< tabs title="ReplicaSet">}}
+{{% tab title="check" %}}
+
+1. Check the ReplicaSet from Deployment
 
 Use below command to check the ReplicaSet (rs) that created when using Deployment to scale the application.
 
 ```bash
 kubectl get rs -l app=kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Check Details" %}}
 
-4. Check detail of ReplicaSet from Deployment 
+2. Check detail of ReplicaSet from Deployment 
 
 ```bash
 kubectl describe rs kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 expected output
 ```
@@ -434,11 +508,19 @@ Events:
   ----    ------            ----  ----                   -------
   Normal  SuccessfulCreate  18m   replicaset-controller  Created pod: kubernetes-bootcamp-5485cc6795-cdwz7
 ```
-from above output , we can find a line saying **Controlled By:  Deployment/kubernetes-bootcamp** which indicate that ReplicaSet is controlled by Deployment.
+From above output , we can find a line saying **Controlled By:  Deployment/kubernetes-bootcamp** which indicate that ReplicaSet is controlled by Deployment.
+
+{{% /tab %}}
+{{< /tabs >}}
+
+
 
 ### Manage your Deployment 
 
 #### Scale you Application**
+
+{{< tabs title="Scaling">}}
+{{% tab title="Scale Out" %}}
 
 1. scale out deployment
 
@@ -447,11 +529,17 @@ To manually scale your deployment with more replicas
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
 ```
+{{% /tab %}}
+{{% tab title="Verify Scale Out" %}}
+
 2. Verify new deployment
 
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Out" style="info" %}}
+
 expected output
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
@@ -464,12 +552,18 @@ We can use `kubectl get pod` to list the pod, use `-l` to select which pod to li
 **app=kubernetes-bootcamp** is the label assigned to pod during creating.
 the expected pod will become 10. 
 
+{{% /tab %}}
+{{% tab title="Check new Pod" %}}
+
 3. Check the Pod created by deployment
 
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp
 ```
 10 Pod will be created.
+
+{{% /tab %}}
+{{% tab title="Scale In" %}}
 
 4. scale in deployment
 
@@ -479,11 +573,20 @@ To reduce resource usage by scaling in the deployment, modify the --replicas par
 kubectl scale deployment kubernetes-bootcamp --replicas=1
 ```
 
+{{% /tab %}}
+{{% tab title="Verify Scale In" %}}
+
 4. Verify the result 
 
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp -o wide
 ```
+
+{{% /tab %}}
+{{% tab title="Expected Output In" style="info" %}}
+
+
+
 expected output 
 
 You will observe some Pods in the **Terminating** state, and eventually, only 1 Pod will remain active.
@@ -513,8 +616,10 @@ Below diagram show a Pod can have 1 container or multiple container, with or wit
 
 all the containers within a single Pod in Kubernetes follow  "shared fate" principle. This means that containers in a Pod are scheduled on the same node (physical or virtual machine) and share the same lifecycle, network namespace, IP address, and storage volumes. 
 
-![Alt text for the image](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_pods.svg)
+![](https://kubernetes.io/docs/tutorials/kubernetes-basics/public/images/module_03_pods.svg)
 
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Namespace
 
@@ -540,17 +645,27 @@ One pattern this organization could follow is to partition the Kubernetes cluste
 
 Follow the steps below to explore how namespaces organize your deployments in Kubernetes. Execute each command sequentially: 
 
+{{< tabs title="Namespaces">}}
+{{% tab title="Create" %}}
+
 1. Create namespace:
 
 ```bash
 kubectl create namespace production
 kubectl create namespace development
 ```
+{{% /tab %}}
+{{% tab title="Verify" %}}
+
 2. Verify the namespace creation:
 ```bash
 kubectl get namespace production
 kubectl get namespace development
 ```
+
+{{% /tab %}}
+{{% tab title="Deploy app" %}}
+
 3. Deploy an application into namespace:
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --namespace=production
@@ -559,12 +674,16 @@ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kube
 
 ```
 
+{{% /tab %}}
+{{% tab title="Monitor" %}}
+
 4. Monitor the deployment's progress:
 ```bash
 kubectl rollout status deployment kubernetes-bootcamp -n development
 kubectl rollout status deployment kubernetes-bootcamp -n production
 ```
-
+{{% /tab %}}
+{{% tab title="Check details" %}}
 5. Check the deployment details: 
 ```bash
 kubectl get deployment kubernetes-bootcamp -n development
@@ -575,6 +694,8 @@ kubectl get pod -n=development
 or use `kubectl get all -n=production` and `kubectl get all -n=development` to list everything in that namespace.
 
 
+{{% /tab %}}
+{{% tab title="Delete" %}}
 
  6. Delete namespace and everything inside it
 
@@ -584,12 +705,23 @@ it will take a while to delete namespace. Do not interupt it.
 kubectl delete namespace production
 kubectl delete namespace development
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Review Questions
 
 1. Explain the role of a Deployment in Kubernetes. How does it simplify the process of scaling and managing application within the cluster?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 
 2. How do namespaces contribute to resource management and isolation in a Kubernetes cluster? Provide an example scenario where separating resources into different namespaces would be beneficial.
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 
 3. Describe how containers are organized within a Pod in Kubernetes and explain the advantages of this arrangement for container communication and resource sharing.
 
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}

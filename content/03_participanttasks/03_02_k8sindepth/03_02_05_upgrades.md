@@ -61,45 +61,57 @@ Continuous Integration and Continuous Delivery of applications with zero downtim
 #### Perform Rolling Update
 
 1. Create deployment with image set to kubernetes-bootcamp:v1
+{{< tabs >}}
+{{% tab title="create" %}}
 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=4
 kubectl expose deployment kubernetes-bootcamp --target-port=8080 --port=80
 ```
-
+{{% /tab %}}
+{{% tab title="Verify" %}}
 2.  Verify the deployment 
 ```bash
 kubectl get deployment
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Create" style="info" %}}
 
 Expected outcome
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   4/4   4           4          23s
 ```
-
+{{% /tab %}}
+{{% tab title="Check Service" %}}
 3. check the service 
 
 use curlpod from cluster-internal to check the service
 ```bash
 kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl  http://kubernetes-bootcamp.default.svc.cluster.local
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output Service Check" style="info" %}}
 expected outcome showing v=1
 ```
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-4m7p9 | v=1
 pod "curlpod" deleted
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 4. upgrade deployment 
 
 Upgrade the deployment with image set to kubernetes-bootcamp:v2
+{{< tabs >}}
+{{% tab title="Upgrade" %}}
 
 ```bash
 kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
 kubectl rollout status deployment/kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected outcome
 ```
 deployment.apps/kubernetes-bootcamp image updated
@@ -122,29 +134,35 @@ deployment "kubernetes-bootcamp" successfully rolled out
 ```
 you can find above that create new replicas first then delete old replicas to avoid service disruption.
 
-
+{{% /tab %}}
+{{% tab title="Service Check" %}}
 5. check the service
 
 check the service use curlpod
 ```bash
 kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl  http://kubernetes-bootcamp.default.svc.cluster.local
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output v=2" style="info" %}}
 expected outcome showing v=2
 ```
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-7c6644499c-lsxm9 | v=2
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 
 6. rollback to old version
 
 To rollback to orignal version, simple change the container image
+{{< tabs >}}
+{{% tab title="rollback" %}}
 
 ```bash
 kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v1 
 kubectl rollout status deployment/kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected outcome
 
 ```
@@ -165,26 +183,34 @@ Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas a
 Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
 deployment "kubernetes-bootcamp" successfully rolled out
 ```
-
+{{% /tab %}}
+{{% tab title="Check Service" %}}
 7. check the service use curlpod
 ```bash
 kubectl run curlpod --image=appropriate/curl --restart=Never --rm -it --  curl  http://kubernetes-bootcamp.default.svc.cluster.local
 ```
+
+{{% /tab %}}
+{{% tab title="Expected Output v=1" style="info" %}}
 
 expected outcome showing v=1
 ```
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5485cc6795-gvw6l | v=1
 pod "curlpod" deleted
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 #### Restart the deployment
 
 - Restarting a deployment using kubectl rollout restart deployment <deployment-name> can be necessary or beneficial for Refreshing the Application, Troubleshooting etc  in a Kubernetes environment. 
-
+{{< tabs >}}
+{{% tab title="check existing" %}}
 1. check existing deployment 
 ```bash
 kubectl get pod -o wide -l app=kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output existing" style="info" %}}
 expected output 
 ```
 NAME                                   READY   STATUS    RESTARTS   AGE     IP               NODE          NOMINATED NODE   READINESS GATES
@@ -193,6 +219,8 @@ kubernetes-bootcamp-5485cc6795-hqkd9   1/1     Running   0          4m54s   10.2
 kubernetes-bootcamp-5485cc6795-qb2jh   1/1     Running   0          4m55s   10.244.152.108   node-worker   <none>           <none>
 kubernetes-bootcamp-5485cc6795-zgcrd   1/1     Running   0          4m55s   10.244.152.107   node-worker   <none>           <none>
 ```
+{{% /tab %}}
+{{% tab title="restart" %}}
 2. restart the deployment
 
 Restart the deployment with default rolling update. 
@@ -200,22 +228,28 @@ Restart the deployment with default rolling update.
 ```bash
 kubectl rollout restart deployment kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{% tab title="verify deployment" %}}
 3. Verify the deployment
 
 ```bash
 kubectl rollout status deployment kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output restart" style="info" %}}
 expected output
 ```
 deployment "kubernetes-bootcamp" successfully rolled out
 ```
+{{% /tab %}}
+{{% tab title="get pod" %}}
 4. Verify the deployment after restart 
 
 ```bash
 kubectl get pod -o wide -l app=kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output final" style="info" %}}
 expected output
 
 ```
@@ -226,7 +260,8 @@ kubernetes-bootcamp-d9f576d69-hhqqm   1/1     Running   0          108s   10.244
 kubernetes-bootcamp-d9f576d69-w5tpc   1/1     Running   0          108s   10.244.152.115   node-worker   <none>           <none>
 ``` 
 Notice that the Pod's IP address has changed, and the deployment's **Pod template hash** has also been updated to new prefix (d9f576d69). This indicates that all resources have been recreated following the kubectl rollout restart command.
-
+{{% /tab %}}
+{{< /tabs >}}
 
 
 
@@ -241,12 +276,22 @@ kubectl delete deployment kubernetes-bootcamp
 #### Review and Questions
 
 1. Use `kubectl run` to create a POD with juice-shop image and add a label owner=dev 
-
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 2. Use `kubectl create deployment` to create a deployment for juice-shop with replicas=2 and image=bkimminich/juice-shop:v15.0.0
-
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 3. scale out juice-shop deployment from 2 replicas to 6 replicas 
-
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 4. use rolling upgrade to upgrade your juice-shop deployment to use version v16.0.0.
-
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 5. Use `kubectl` to find the specifcation for imagePullPolicy which is need for create a deployment.  and set the juice-shop deployment container imagePullPolicy to use "IfNotPresent".
- 
+ {{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}

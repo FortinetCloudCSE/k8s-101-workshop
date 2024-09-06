@@ -57,32 +57,45 @@ Benefits
 - Simple: Easy to remember and use for ad-hoc scaling operations.
 
 1. Check the existing Deployment 
-
+{{< tabs >}}
+{{% tab title="Check Deployment" %}}
 ```bash
 kubectl get deployment
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected output
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           63m
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 2. Scaling the deployment: 
 
+{{< tabs >}}
+{{% tab title="scale" %}}
 ```bash
 kubectl scale deployment kubernetes-bootcamp --replicas=10
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected output
 
 ```
 deployment.apps/kubernetes-bootcamp scaled
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 3. Check the Deployment status 
+{{< tabs >}}
+{{% tab title="check" %}}
 
 ```bash
 kubectl rollout status deployment kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 Expected output
 ```
 Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 of 10 updated replicas are available...
@@ -96,12 +109,16 @@ Waiting for deployment "kubernetes-bootcamp" rollout to finish: 8 of 10 updated 
 Waiting for deployment "kubernetes-bootcamp" rollout to finish: 9 of 10 updated replicas are available...
 deployment "kubernetes-bootcamp" successfully rolled out
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 4. Verify the Deployment
-
+{{< tabs >}}
+{{% tab title="Verify" %}}
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 After scaling, you should observe that the number of Pods has increased to meet the deployment's requirements. 
 
@@ -110,12 +127,16 @@ expected output
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          64m
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 5. Listing the Pods from Deployment
-
+{{< tabs >}}
+{{% tab title="list pods" %}}
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected output
 ```
 NAME                                  READY   STATUS    RESTARTS   AGE
@@ -132,8 +153,10 @@ kubernetes-bootcamp-bcbb7fc75-t4tkm   1/1     Running   0          44s
 ```
 
 This output confirms the deployment now runs 10 replicas of the Kubernetes Bootcamp application, demonstrating successful scaling.
-
+{{% /tab %}}
+{{< /tabs >}}
 6. delete the deployment 
+
 ```bash
 kubectl delete deployment kubernetes-bootcamp 
 ```
@@ -176,56 +199,70 @@ EOF
 kubectl apply -f kubernetes-bootcamp.yaml 
 ```
 2. Verify the deployment
-
+{{< tabs >}}
+{{% tab title="verify" %}}
 ```bash
 kubectl get deployment
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected output
 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           3s
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 3.  modify replicas in yaml file
 
  Now, use editor like vim to change the replicas=1 in the yaml file to replicas=10. Alternatively you can also use `sed` to change it 
+{{< tabs >}}
+{{% tab title="add replicas" %}}
 
 ```bash
 sed -i 's/replicas: 1/replicas: 10/' kubernetes-bootcamp.yaml
-
 ```
-4. Apply the change with `kubectl apply`
+{{% /tab %}}
+{{% tab title="apply" %}}
+ Apply the change with `kubectl apply`
 
  ```bash
  kubectl apply -f kubernetes-bootcamp.yaml
  ```
+{{% /tab %}}
+{{% tab title="verify" %}}
 
-5. Verify the result
+Verify the result
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected outcome
 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          99s
 ```
-
-6. clean up
+{{% /tab %}}
+{{% tab title="" %}}
+clean up
 ```bash
 kubectl delete -f kubernetes-bootcamp.yaml
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 
 
 #### 3. use kubectl edit 
 
 This approach involves manually editing the resource definition in a text editor (invoked by kubectl edit), where you can change any part of the resource. After saving and closing the editor, Kubernetes applies the changes. This method requires no separate kubectl apply, as kubectl edit directly applies the changes once the file is saved and closed.
 
-Benefit
-- Able to review and modify other configuration which is not in YAML file
+Benefit: Ablility to review and modify other configuration which is not in YAML file
+
+{{< tabs >}}
+{{% tab title="create" %}}
 
 1. create the deployment 
 
@@ -233,7 +270,8 @@ Benefit
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=1
 
 ```
-
+{{% /tab %}}
+{{% tab title="modify replicas" %}}
 2. Modify replicas with `kubectl edit` 
 ```bash
 kubectl edit deployment kubernetes-bootcamp
@@ -247,62 +285,78 @@ spec:
 ``` 
 
 then change replicas from 1 to 10, save the change and exit the EDITOR with press Ctrl-C follow :wq!. 
-
+{{% /tab %}}
+{{% tab title="Verify" %}}
 3. Verify the deployment 
 
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{% tab title="Delete" %}}
 4. delete deployment
 
 ```bash
 kubectl delete deployment kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 #### 4. Kubectl patch 
 
 kubectl patch directly updates specific parts of a resource without requiring you to manually edit a file or see the entire resource definition. It's particularly useful for making quick changes, like updating an environment variable in a Pod or changing the number of replicas in a deployment.
 
-Benefit
-- ideal for scripts and automation because you can specify the exact change in a single command line.
-
+Benefit: Ideal for scripts and automation because you can specify the exact change in a single command line.
+{{< tabs >}}
+{{% tab title="Create" %}}
 1. Create Deployment 
 ```bash
 kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=1
 ```
+{{% /tab %}}
+{{% tab title="Verify Create" %}}
 2. Verify the Deployment
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ``` 
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected result 
 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   1/1     1            1           33s
 ```
-
+{{% /tab %}}
+{{% tab title="Change replicas" %}}
 3. use `kubectl patch` to change replicas 
 
 ```bash
 kubectl patch deployment kubernetes-bootcamp --type='json' -p='[{"op": "replace", "path": "/spec/replicas", "value":10}]'
 
 ```
+{{% /tab %}}
+{{% tab title="Verify change" %}}
 4. Verify the Deployment
 ```bash
 kubectl get deployment kubernetes-bootcamp
 ``` 
+{{% /tab %}}
+{{% tab title="Expected Output Change" style="info" %}}
 expected result 
 
 ```
 NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          97s
 ```
+{{% /tab %}}
+{{% tab title="Delete" %}}
 5. Delete the Deployment
 ```bash
 kubectl delete deployment kubernetes-bootcamp
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 #### 5. use kubectl replace
 
 The kubectl replace -f command replaces a resource with the new state defined in the YAML file. If the resource doesn't exist, the command fails. This command requires that the resource be defined completely in the file being applied because it replaces the existing configuration with the new one provided.
@@ -310,6 +364,9 @@ The kubectl replace -f command replaces a resource with the new state defined in
 Deletion and Recreation: Under the hood, replace effectively deletes and then recreates the resource, which can lead to downtime for stateful applications or services. This method does not preserve unspecified fields or previous modifications made outside the YAML file.
 
 Usage: Use kubectl replace -f when you want to overwrite the resource entirely, and you are certain that the YAML file represents the complete and desired state of the resource.
+
+{{< tabs >}}
+{{% tab title="Create" %}}
 
 1. create deployment with image=gcr.io/google-samples/kubernetes-bootcamp:v1
 
@@ -336,10 +393,15 @@ spec:
 EOF
 kubectl create -f kubernetes-bootcamp.yaml
 ```
+
+{{% /tab %}}
+{{% tab title="Verify Deployment" %}}
 2. verify the deployment
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Deploy" style="info" %}}
 expected output
 
 ```
@@ -351,7 +413,8 @@ kubernetes-bootcamp-5485cc6795-szgqt   1/1     Running       0          4s
 kubernetes-bootcamp-5485cc6795-xw7l6   1/1     Running       0          4s
 ```
 the Pod has name from deployment template hash **kubernetes-bootcamp-5485cc6795**
-
+{{% /tab %}}
+{{% tab title="Modify" %}}
 2. Modify image in yaml file
 
  Modify container image in kubernetes-bootcamp.yaml. Modify this will affect the Pod template hash
@@ -360,16 +423,22 @@ the Pod has name from deployment template hash **kubernetes-bootcamp-5485cc6795*
 sed -i 's|image: gcr.io/google-samples/kubernetes-bootcamp:v1|image: jocatalin/kubernetes-bootcamp:v2|' kubernetes-bootcamp.yaml
 
 ```
+{{% /tab %}}
+{{% tab title="Apply" %}}
 3. apply the change 
 
 ```bash
 kubectl replace -f kubernetes-bootcamp.yaml
 ```
+{{% /tab %}}
+{{% tab title="Verify Change" %}}
 4. Verify deployment 
-
+v
 ```bash
 kubectl get pod -l app=kubernetes-bootcamp
 ```
+{{% /tab %}}
+{{% tab title="Expected Output Change" style="info" %}}
 Expected output 
 ```
 NAME                                   READY   STATUS        RESTARTS   AGE
@@ -386,17 +455,21 @@ kubernetes-bootcamp-7c6644499c-nzhj9   1/1     Running       0          7s
 ```
 
 You should observe the creation of new Pods with a new hash in their names, indicating an update. Concurrently, all previous Pods with the old hash in their names will be deleted, suggesting that the entire resource has been recreated.
-
+{{% /tab %}}
+{{% tab title="Delete" %}}
 5. Delete the deployment
 
 ```bash
 kubectl delete deployment kubernetes-bootcamp
 ``````
 
+{{% /tab %}}
+{{< /tabs >}}
+
 Risk of Downtime: For some resources, using kubectl replace can cause downtime since it may delete and recreate the resource, depending on the type and changes made. It's important to use this command with caution, especially for critical resources in production environments.
 
 
-Summary 
+### Summary 
 
 - kubectl scale: Quickly scales the number of replicas for a deployment, ideal for immediate, ad-hoc adjustments.
 

@@ -136,12 +136,18 @@ kubectl apply -f nginx-pod-with-configmap-secret.yaml
 
 #### Review Questions
 
-- how to access nginx Pod web page from container inside ?
-
-- delete Pod nginx-pod-with-configmap-secret  and create again, check the web page of nginx again ? did you see any difference ? why ?
-
-- Modify below nginx-deployment with VolumeMounts to use ConfigMap
-
+1. How to access nginx Pod web page from container inside ?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
+2. Delete Pod nginx-pod-with-configmap-secret  and create again, check the web page of nginx again ? did you see any difference ? why ?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
+3. Modify below nginx-deployment with VolumeMounts to use ConfigMap
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 nginx-deployment 
 
 ```bash

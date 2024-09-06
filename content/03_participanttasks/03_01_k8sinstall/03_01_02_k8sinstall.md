@@ -13,6 +13,7 @@ weight: 1
 
 To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your [Terraform deployment in Azure Cloud Shell](../../02_quickstart_overview_faq/02_01_quickstart/02_01_03_terraform.html). Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations. 
 
+
 1. Navigate to your project directory where your Kubernetes workshop materials are located:
     ```bash
     cd $HOME/k8s-101-workshop
@@ -44,17 +45,22 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
 
 3. Generate ssh-key for master and worker node
 
+{{< tabs "ssh keys">}}
+{{% tab title="delete kubeconfig" %}}
+   
    - delete existing kubeconfig
    ```bash
    rm -f ~/.kube/config
    ```
-
+{{% /tab %}}
+{{% tab title="delete knownhost" %}}
    - delete ssh knowhost
    ```bash
    rm -f /home/$(whoami)/.ssh/known_hosts
    
    ```
-
+{{% /tab %}}
+{{% tab title="get password" %}}
    - get the password for VM **which will be needed when use ssh-copy-id to copy ssh key** into the master node. Make sure to copy the password to a notepad. You will need this to login to Master node in next steps. 
 
    ```bash
@@ -62,13 +68,15 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    terraform output -json | jq -r .linuxvm_password.value
    echo $vmpassword
    ```
-
+{{% /tab %}}
+{{% tab title="gen ssh key" %}}
    - generate ssh-key 
 
    ```bash
    [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
    ```
-
+{{% /tab %}}
+{{% tab title="copy to master" %}}
    - copy ssh-key to master node, enter password  when prompted.
 
    ```bash
@@ -78,7 +86,8 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
    ```
 
-
+{{% /tab %}}
+{{% tab title="copy to worker" %}}
    - copy ssh-key to worker node, enter password  when prompted.
    
    ```bash
@@ -87,6 +96,8 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    username=$(terraform output -json | jq -r .linuxvm_username.value)
    ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
    ```
+{{% /tab %}}
+{{< /tabs >}}
 
 4. Install kubernetes master node: 
 
@@ -143,18 +154,25 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
 
 
 8. Verify the installation 
+{{< tabs >}}
+{{% tab title="Verify" %}}
    - **From your Azure shell**, watch the node getting "Ready". it will take a while to get worker node become "Ready".
 
    ```bash
    watch kubectl get node 
    ```
+   
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
    expected outcome
    ```
    NAME          STATUS   ROLES           AGE   VERSION
    node-worker   Ready    <none>          14m   v1.26.1
    nodemaster    Ready    control-plane   18m   v1.26.1
    ```
-   
+ 
+{{% /tab %}}
+{{< /tabs >}}  
 
 ### **OPTIONAL** Re-Install Kubernetes
 
@@ -326,12 +344,22 @@ We do not delve into the details of the script used for installing the Kubernete
  
 
 ### Review Questions
-
-- What is the kube-API FQDN name in kubeconfig ?
-- What is the version of this Kubernetes server ?
-- What is the container runtime name and version ?
-- Describe general step to add a new VM as worker node in this cluster 
-
+1. What is the kube-API FQDN name in kubeconfig ?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
+2. What is the version of this Kubernetes server ?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
+3. What is the container runtime name and version ?
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
+4. Describe general step to add a new VM as worker node in this cluster 
+{{% expand title="Click for Answer..." %}}
+    The Answer IS...
+{{% /expand %}}
 
 
 ### **IN CASE YOU RUNNING INTO PROBLEM**

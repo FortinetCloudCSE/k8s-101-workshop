@@ -1,6 +1,5 @@
 ---
-title: "Kubernetes TECWorkshop"
-linkTitle: "TECWorkshop"
+title: "Containers & Microservices 101: K8S Foundational"
 weight: 1
 archetype: home
 ---

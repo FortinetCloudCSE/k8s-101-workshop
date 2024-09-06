@@ -37,7 +37,10 @@ use `kubectl top node` and `kubectl top pod` to check the Pod and node resource 
 
 - when POD reach the CPU or memory limit, if HPA configured, new POD will be created according HPA policy.
 
-2. create deployment with CPU and Memory contrain
+2. create deployment with CPU and Memory constraints
+{{< tabs >}}
+{{% tab title="create resource constrained deployment" %}}
+
 
 ```bash
 cat <<EOF | tee nginx-deployment_resource.yaml
@@ -96,29 +99,38 @@ spec:
 EOF
 kubectl apply -f nginx-deployment_clusterIP.yaml
 ```
-3. check the deployment and service
+{{% /tab %}}
+{{% tab title="check " %}}
+check the deployment and service
 
 ```bash
 kubectl get deployment nginx-deployment
 kubectl get svc nginx-deployment
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 #### Use autoscale  (HPA) to scale your application
 
-- We can use `kubectl autoscale` command or use create a hpa yaml file then follow a `kubectl apply -f` to create hpa.
+3. We can use `kubectl autoscale` command or use create a hpa yaml file then follow a `kubectl apply -f` to create hpa.
 
-4a. use kubectl command to create hpa 
+{{< tabs >}}
+{{% tab title="kubectl hpa create" %}}
+use kubectl command to create hpa 
 
 ```bash
 kubectl autoscale deployment nginx-deployment --name=nginx-deployment-hpa --min=2 --max=10 --cpu-percent=50  --save-config
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output kubectl" style="info" %}}
  expected Outcome
 ```
 horizontalpodautoscaler.autoscaling/nginx-deployment-hpa autoscaled
 ```
+{{% /tab %}}
+{{% tab title="ALT Yamlfile hpa create" %}}
 
-4b. **or** use yaml file to create hpa
+**or** use yaml file to create hpa
 
 ```bash
 cat << EOF | tee > nginx-deployment-hpa.yaml
@@ -143,18 +155,24 @@ spec:
 EOF
 kubectl apply -f nginx-deployment-hpa.yaml
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 - **Target CPU Utilization**: This is set to 50%. It means the HPA will aim to adjust the number of Pods so that the average CPU utilization across all Pods is around 50% of the allocated CPU resources for each Pod.
 - **Scaling Out**: If the average CPU utilization across all Pods in the nginx-deployment exceeds 50%, the HPA will increase the number of Pods, making more resources available to handle the workload, until it reaches the maximum limit of 10 Pods.
 - **Scaling In**: If the average CPU utilization drops below 50%, indicating that the resources are underutilized, the HPA will decrease the number of Pods to reduce resource usage, but it won't go below the minimum of 2 Pod.
 
 
-5. Check Result 
+4. Check Result 
+
+{{< tabs >}}
+{{% tab title="Check" %}}
 
 use `kubectl get hpa nginx-deployment` to check deployment 
 ````bash
 kubectl get hpa nginx-deployment-hpa
 ````
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 Expected Outcome
 
@@ -162,7 +180,8 @@ Expected Outcome
 NAME                   REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
 nginx-deployment-hpa   Deployment/nginx-deployment   0%/50%    2         10        2          23s
 ```
-
+{{% /tab %}}
+{{< /tabs >}}
 For a deeper understanding, consider using the following command to conduct further observations" 
 
 use `kubectl get deployment nginx-deployment` to check the change of deployment. 
@@ -173,7 +192,7 @@ use `kubectl get hpa` and `kubectl describe hpa` to check the  size of replicas.
 
 since the nginx-deployment service is cluster-ip type service which can only be accessed from cluster internal, so we need to create a POD which can send http traffic to nginx-deployment service.
 
-6. create deployment for generate http traffic, in this deployment, we will use wget to similuate the real traffic towards ngnix-deployment cluster-ip service which has service name `http://nginx-deployment.default.svc.cluster.local`.
+5. create deployment for generate http traffic, in this deployment, we will use wget to similuate the real traffic towards ngnix-deployment cluster-ip service which has service name `http://nginx-deployment.default.svc.cluster.local`.
 
 ```bash
 cat <<EOF | tee infinite-calls-deployment.yaml
@@ -205,12 +224,12 @@ EOF
 kubectl apply -f infinite-calls-deployment.yaml
 ```
 
-7. check the creation of infinite-calls deployment 
+6. check the creation of infinite-calls deployment 
 
 ```bash
 kubectl get deployment infinite-calls
 ```
-8. check the log from infinite-calls Pods.
+7. check the log from infinite-calls Pods.
 {.items[0]} means use first Pod 
 
 ```bash
@@ -224,11 +243,14 @@ use `kubectl top pod` and `kubectl top node` to check the resource usage status
 user expected to see the number of Pod increased 
 
  
-9. you shall see that expected Pod now increased automatically without use attention.
+8. You shall see that expected Pod now increased automatically without use attention.
+{{< tabs >}}
+{{% tab title="check" %}}
 ```bash
 kubectl get pod -l app=nginx
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected outcome
 ```
 NAME                                READY   STATUS    RESTARTS   AGE
@@ -238,22 +260,33 @@ nginx-deployment-55c7f467f8-jx2k9   1/1     Running   0          19m
 nginx-deployment-55c7f467f8-r7vdv   1/1     Running   0          3m2s
 nginx-deployment-55c7f467f8-w6r8l   1/1     Running   0          3m17s
 ```
-10. use `kubectl get hpa` shall tell you that hpa is action  which increased the replicas from 2 to other numbers. 
+
+{{% /tab %}}
+{{< /tabs >}}
+9. Use `kubectl get hpa` shall tell you that hpa is action  which increased the replicas from 2 to other numbers. 
+{{< tabs >}}
+{{% tab title="get hpa" %}}
 ```bash
 kubectl get hpa
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 expected outcome 
 ```
 NAME        REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
 nginx-deployment-hpa   Deployment/nginx-deployment   50%/50%   2         10        5          11m
 ```
-
-11. check hpa detail
-
+{{% /tab %}}
+{{< /tabs >}}
+10. check hpa detail
+{{< tabs >}}
+{{% tab title="hpa detail" %}}
 ```bash
 kubectl describe hpa
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected outcome
 
 ```
@@ -278,19 +311,25 @@ Events:
   Normal  SuccessfulRescale  4m13s  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
   Normal  SuccessfulRescale  3m13s  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
-
-13. delete infinite-calls to stop generate the traffic
-
+11. delete infinite-calls to stop generate the traffic
+{{< tabs >}}
+{{% tab title="delete" %}}
 ```bash
 kubectl delete deployment infinite-calls
 ```
+{{% /tab %}}
+{{% tab title="verify" %}}
 
 after few minutes later, due to no more traffic is hitting the nginx server. hpa will scale in the number of Pod to save resource. 
 
 ```bash
 kubectl get hpa
 ```
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 
 expected output
 ```
@@ -298,13 +337,18 @@ NAME        REFERENCE                     TARGETS   MINPODS   MAXPODS   REPLICAS
 nginx-deployment-hpa   Deployment/nginx-deployment   0%/50%   2         10        5          12m
 
 ```
+{{% /tab %}}
+{{< /tabs >}}
+12. use `kubectl describe hpa` will tell you the reason why hpa scale in the number of Pod.
 
-14. use `kubectl describe hpa` will tell you the reason why hpa scale in the number of Pod.
+{{< tabs >}}
+{{% tab title="describe hpa" %}}
 
 ```bash
 kubectl describe hpa
 ```
-
+{{% /tab %}}
+{{% tab title="Expected Output" style="info" %}}
 expected outcome
 ```
 Name:                     nginx-deployment-hpa
@@ -331,6 +375,8 @@ Events:
   Normal  SuccessfulRescale  54s    horizontal-pod-autoscaler  New size: 5; reason: All metrics below target
   Normal  SuccessfulRescale  39s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
 ```
+{{% /tab %}}
+{{< /tabs >}}
 #### clean up
 
 ```bash
