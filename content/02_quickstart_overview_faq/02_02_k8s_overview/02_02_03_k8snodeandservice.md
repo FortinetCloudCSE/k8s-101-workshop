@@ -364,7 +364,7 @@ kubernetes-bootcamp-lb-svc   LoadBalancer   10.96.250.234   4.157.216.24   80:32
 ```
 You should observe the **EXTERNAL-IP** status transition from **'Pending'** to an actual public IP address, serving as the entry point for the Kubernetes Bootcamp deployment. Coupled with PORT 80, this defines how to access the Kubernetes Bootcamp application.
 {{% /tab %}}
-{{% tab title="" %}}
+{{% tab title="Access service" %}}
 
 Access Bootcamp  from external
 
@@ -417,13 +417,20 @@ az aks delete --name ${clustername} -g $resourcegroupname
 
 1. What is the role of a worker node in Kubernetes, and what are three key components that run on every Kubernetes Worker Node?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+A Kubernetes worker node is responsible for running containerized applications. It hosts the pods and provides the runtime environment.
+Three key components that run on every Kubernetes worker node are:
+Kubelet: Manages pods and their containers on the node.
+Container Runtime: (e.g., Docker, containerd) Runs the containers.
+Kube-proxy: Manages network rules for pod communication.
+These components work together to ensure proper execution and networking of pods on the worker node.
 {{% /expand %}}
 2. What is a Kubernetes Service, and why is it important?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+    A Kubernetes Service exposes applications running on a set of Pods to network traffic. It abstracts away the details of which Pods are running, allowing clients to reliably access the application without knowing its internal structure.
 {{% /expand %}}
 3. Describe the difference between ClusterIP, NodePort, and LoadBalancer Service types in Kubernetes.
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+ClusterIP: Internal access within the cluster.
+NodePort: Exposes the service on each node's IP at a static port.
+LoadBalancer: Exposes the service externally typically using a cloud provider's load balancer.
 {{% /expand %}}
