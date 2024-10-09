@@ -775,19 +775,76 @@ Commercial support is available at
 #### Review Questions
 1. Create juice-shop with v15.0.0 deployment and ClusterIP svc
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+   kubectl create deployment juice-shop --image=bkimminich/juice-shop:v15.0.0
+   kubectl expose deployment juice-shop --port=3000 --target-port=3000 --type=ClusterIP
 {{% /expand %}}
 2. Create juice-shop with v16.0.0 deployment and ClusterIP svc
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+   kubectl create deployment juice-shop-v16 --image=bkimminich/juice-shop:v16.0.0
+   kubectl expose deployment juice-shop-v16 --port=3000 --target-port=3000 --type=ClusterIP
 {{% /expand %}}
 3. Create https ingress rule with path /v15 point to v15.0.0 deployment
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+```bash
+```bash
+cat <<EOF  | tee nginx_ingress_rule_with_cert_${nodename}.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    konghq.com/strip-path: 'true'
+    cert-manager.io/cluster-issuer: selfsigned-issuer-test
+spec:
+  tls:
+  - hosts:
+    - ${nodename}
+  ingressClassName: kong
+  rules:
+  - host: ${nodename}
+    http:
+      paths:
+      - path: /v15
+        pathType: Prefix
+        backend:
+          service:
+            name: juice-shop-v15
+            port:
+              number: 3000
+EOF
+kubectl apply -f nginx_ingress_rule_with_cert_${nodename}.yaml
+```
 {{% /expand %}}
 4. Create https ingress rule with path /v16 point to v16.0.0 deployment
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+```bash
+cat <<EOF  | tee nginx_ingress_rule_with_cert_${nodename}.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    konghq.com/strip-path: 'true'
+    cert-manager.io/cluster-issuer: selfsigned-issuer-test
+spec:
+  tls:
+  - hosts:
+    - ${nodename}
+  ingressClassName: kong
+  rules:
+  - host: ${nodename}
+    http:
+      paths:
+      - path: /v16
+        pathType: Prefix
+        backend:
+          service:
+            name: juice-shop-v16
+            port:
+              number: 3000
+EOF
+kubectl apply -f nginx_ingress_rule_with_cert_${nodename}.yaml
+```
 {{% /expand %}}
 
 

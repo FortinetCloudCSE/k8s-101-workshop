@@ -93,7 +93,7 @@ nginx-deployment-55c7f467f8-rfdck   1/1     Running   0          7m2s
  kubectl create -f infinite-calls_client.yaml
  ```
 {{% /tab %}}
-{{% tab title="" %}}
+{{% tab title="check" %}}
 - verify the deployment
 ```bash
 kubectl get pod
@@ -207,14 +207,14 @@ This chapter provides a quick demonstration of deploying an application with Hor
 ### Review Questions 
 1. Describe how to make client application - infinite-calls to generate more traffic ?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+    increase replicas for infinite-calls deployment. 
 {{% /expand %}}
 2. How many minutes need to wait before you can see nginx pod start increasing.
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+    it depends on when HPA decides to scale after it sucessfully check the resource usage 
 {{% /expand %}}
 3. How to stop sending traffic to nginx deployment
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+kubectl delete deployment infinite-calls  or scale down infinite-calls replicas to 0. 
 {{% /expand %}}
 

@@ -37,7 +37,7 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
        export fqdn=${nodename}
        ssh -o "StrictHostKeyChecking=no"  -t $username@$nodename "export fqdn=${fqdn}; exec bash"
    }
-   alias ssh_worker="ssh_worker_function"' >> $HOME/.bashrc
+   alias ssh_master="ssh_master_function"' >> $HOME/.bashrc
    
    alias k='kubectl' >> $HOME/.bashrc
    source $HOME/.bashrc
@@ -346,19 +346,26 @@ We do not delve into the details of the script used for installing the Kubernete
 ### Review Questions
 1. What is the kube-API FQDN name in kubeconfig ?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+    https://k8sxx-master.eastus.cloudapp.azure.com:6443
 {{% /expand %}}
 2. What is the version of this Kubernetes server ?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+    Server Version: version.Info{Major:"1", Minor:"26", GitVersion:"v1.26.15", GitCommit:"1649f592f1909b97aa3c2a0a8f968a3fd05a7b8b", GitTreeState:"clean", BuildDate:"2024-03-14T00:54:27Z", GoVersion:"go1.21.8", Compiler:"gc", Platform:"linux/amd64"} 
 {{% /expand %}}
 3. What is the container runtime name and version ?
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+cri-o:/1.25.4, can found from "kubectl get node -o wide"
+nodemaster    Ready    control-plane   6m58s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.25.4
 {{% /expand %}}
 4. Describe general step to add a new VM as worker node in this cluster 
 {{% expand title="Click for Answer..." %}}
-    The Answer IS...
+Create a new VM (e.g., using a Terraform script or cloud provider's interface).
+Install required components: kubelet, container runtime (e.g., containerd), and CNI plugins.
+Obtain the join command from the master node (includes the necessary token and CA cert hash).
+Run the join command on the new VM to add it to the cluster as a worker node.
+Verify the new node's status in the cluster using kubectl get nodes.
+This process ensures the new VM is properly configured and securely joined to the existing Kubernetes cluster.
+
 {{% /expand %}}
 
 
