@@ -167,171 +167,12 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    expected outcome
    ```
    NAME          STATUS   ROLES           AGE   VERSION
-   node-worker   Ready    <none>          14m   v1.26.1
-   nodemaster    Ready    control-plane   18m   v1.26.1
+   node-worker   Ready    <none>          14m   v1.27.1
+   nodemaster    Ready    control-plane   18m   v1.27.1
    ```
  
 {{% /tab %}}
 {{< /tabs >}}  
-
-### **OPTIONAL** Re-Install Kubernetes
-
-### Use kubeadm to install Kubernetes 
-
-
-Run **kubectl** from **Azure Cloud Shell**
-
-To use the Kubernetes client tool kubectl from Azure Cloud Shell, make sure you've finished your  [Terraform deployment in Azure Cloud Shell](../../02_quickstart_overview_faq/02_01_quickstart/02_01_03_terraform.html). While kubectl is pre-installed in Azure Cloud Shell, its version might not match the Kubernetes server version you plan to install. To ensure compatibility, let's install the appropriate version of kubectl with the following command.
-
-1. Install kubectl 
-
-```bash
-curl -Lo $HOME/kubectl https://dl.k8s.io/release/v1.27.2/bin/linux/amd64/kubectl && chmod +x $HOME/kubectl && export PATH=$HOME:$PATH
-```
-
-2. Navigate to your project directory where your Kubernetes workshop materials are located:
-```bash
-cd $HOME/k8s-101-workshop
-```
-
-3. Create a script for later use
-
-it create alias `ssh_worker` and `ssh_master` for login into master and worker node.
-```bash
-echo 'ssh_worker_function() {
-    cd $HOME/k8s-101-workshop/terraform/
-    nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
-    username=$(terraform output -json | jq -r .linuxvm_username.value)
-    ssh -o "StrictHostKeyChecking=no" $username@$nodename
-}
-alias ssh_worker="ssh_worker_function"' >> $HOME/.bashrc
-
-echo 'ssh_master_function() {
-    cd $HOME/k8s-101-workshop/terraform/
-    nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-    username=$(terraform output -json | jq -r .linuxvm_username.value)
-    export fqdn=${nodename}
-    ssh -o "StrictHostKeyChecking=no"  -t $username@$nodename "export fqdn=${fqdn}; exec bash"
-}
-alias ssh_master="ssh_master_function"' >> $HOME/.bashrc
-
-alias k='kubectl' >> $HOME/.bashrc
-source $HOME/.bashrc
-```
-4. Generate and copy ssh-key for login master and worker node
-- delete existing kubeconfig
-```bash
-rm -f ~/.kube/config
-```
-- delete ssh knownhost
-```bash
-rm -f /home/$(whoami)/.ssh/known_hosts
-
-```
-- get the password for VM 
-
-When using ssh-copy-id to copy the SSH key to the master node, you'll be prompted to enter a password. Ensure you copy this password to a secure location, as it will be necessary for logging into the master node in subsequent steps. 
-
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-terraform output -json | jq -r .linuxvm_password.value
-echo $vmpassword
-```
-- generate ssh-key 
-
-generate ssh-key to login into master and worker node. 
-
-```bash
-[ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
-```
-- copy ssh-key to master node, enter password  when prompted.
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
-```
-- copy ssh-key to worker node, enter password  when prompted.
-
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh-copy-id -f  -o 'StrictHostKeyChecking=no' $username@$nodename
-```
-
-5. Install Kubernetes **master node**: 
-
-- ssh into master node to run Kubernetes master installation script 
-
-  This script use kubeadm to install Kubernetes control plane component on master node.this script also create a cluster and generate a **token** for worker node to join.
-
-*this step take around 4 minutes*
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh
-```
-6. Install Kubernetes **worker node** :
-- ssh into worker node to run Kubernetes worker installation script 
-
-  This script use kubeadm to install Kubernetes kubelet, kubeproxy etc on workder node
-
-*this step take around 3 minutes*
-
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/install_kubeadm_workernode.sh
-```
-
-7. Join worker node to cluster
-
-This script join worker node to Kubernetes cluster by use **token** created by kubeadm to join cluster.
-
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-scp -o 'StrictHostKeyChecking=no' $username@$nodename:workloadtojoin.sh .
-nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < ./workloadtojoin.sh
-```
-
-
-8. Prepare access Kubernetes from **azure shell**
-- To use Kubernetes from Azure Shell, copy **kubeconfig** configuration file from master node. the kubeconfig file by default use server internal IP, because Azure Shell is external to your Azure VM VNET, you have to change to use Kubernetes master node'spublic IP in kubeconfig file. Follow these steps:
-
-```bash
-cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-username=$(terraform output -json | jq -r .linuxvm_username.value)
-rm -rf $HOME/.kube/
-mkdir -p ~/.kube/
-scp -o 'StrictHostKeyChecking=no' $username@$nodename:~/.kube/config $HOME/.kube
-##replace internal ip with node public ip
-sed -i "s|server: https://[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}:6443|server: https://$nodename:6443|" $HOME/.kube/config
-
-```
-
-9. Verify the installation 
-
-- use `kubectl get node -o wide` or `watch kubectl get node`  to watch the node getting "Ready". it will take a while to get worker node become "Ready".
-```bash
-watch kubectl get node 
-```
-expected output
-```
-NAME          STATUS   ROLES           AGE   VERSION
-node-worker   Ready    <none>          14m   v1.26.1
-nodemaster    Ready    control-plane   18m   v1.26.1
-```
 
 
 ### Summary
@@ -350,12 +191,14 @@ We do not delve into the details of the script used for installing the Kubernete
 {{% /expand %}}
 2. What is the version of this Kubernetes server ?
 {{% expand title="Click for Answer..." %}}
-    Server Version: version.Info{Major:"1", Minor:"26", GitVersion:"v1.26.15", GitCommit:"1649f592f1909b97aa3c2a0a8f968a3fd05a7b8b", GitTreeState:"clean", BuildDate:"2024-03-14T00:54:27Z", GoVersion:"go1.21.8", Compiler:"gc", Platform:"linux/amd64"} 
+Client Version: v1.28.1
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.27.16
 {{% /expand %}}
 3. What is the container runtime name and version ?
 {{% expand title="Click for Answer..." %}}
-cri-o:/1.25.4, can found from "kubectl get node -o wide"
-nodemaster    Ready    control-plane   6m58s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.25.4
+cri-o:/1.27.4, can found from "kubectl get node -o wide"
+nodemaster    Ready    control-plane   6m58s   v1.27.1   10.0.0.4      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.27.4
 {{% /expand %}}
 4. Describe general step to add a new VM as worker node in this cluster 
 {{% expand title="Click for Answer..." %}}

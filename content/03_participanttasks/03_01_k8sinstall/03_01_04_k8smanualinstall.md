@@ -130,7 +130,7 @@ sudo sysctl --system
 
 ```bash
 OS="xUbuntu_22.04"
-VERSION="1.25"
+VERSION="1.27"
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /" | sudo tee  /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
 
@@ -172,7 +172,7 @@ install crictl which is the client tool for interactive with crio.
 ```bash
 DOWNLOAD_DIR="/usr/local/bin"
 sudo mkdir -p "$DOWNLOAD_DIR"
-CRICTL_VERSION="v1.25.0"
+CRICTL_VERSION="v1.27.1"
 ARCH="amd64"
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-$ARCH.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 ```
@@ -184,11 +184,11 @@ After this step, you can optionaly use `sudo crictl info` to check the status of
 kubeadm is the binary that responsible for k8s installation, kubelet is the agent(binary) on each worker node to take the instruction from kube-apiserver and then talk to CRI-O with CRI standard to manage life-cycle of container. kubectl is the client that talk to k8s API server for daily k8s operation. 
 Below script downloading specific versions of kubeadm, kubelet, and kubectl, placing them in the system path, configuring kubelet to run as a systemd service, and ensuring it starts automatically.
 
-**Download 1.26.1 version kubeadm and kubelet** 
+**Download 1.27.1 version kubeadm and kubelet** 
 
 ```
 #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
-RELEASE="v1.26.1"
+RELEASE="v1.27.1"
 ARCH="amd64"
 DOWNLOAD_DIR="/usr/local/bin"
 sudo mkdir -p "$DOWNLOAD_DIR"
@@ -207,7 +207,8 @@ sudo curl --insecure --retry 3 --retry-connrefused -fL "https://raw.githubuserco
 ```
 Download kubectl.
 ```
-sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
+KUBECTL_VERSION="v1.27.1"
+sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl
 sudo cp kubectl /usr/local/bin
 sudo chmod +x /usr/local/bin/kubectl
 ```
@@ -231,7 +232,7 @@ kubeadm will pull the core component of k8s, which are
 -coredns
 
 ```
-sudo kubeadm config images pull --cri-socket unix:///var/run/crio/crio.sock --kubernetes-version=v1.26.1 --v=5
+sudo kubeadm config images pull --cri-socket unix:///var/run/crio/crio.sock --kubernetes-version=$RELEASE --v=5
 ```
 
 **Config kubeadm init parameters** 
@@ -381,7 +382,7 @@ EOF
 sudo sysctl --system
 
 OS="xUbuntu_22.04"
-VERSION="1.25"
+VERSION="1.27"
 
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /" | sudo tee  /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
@@ -401,7 +402,7 @@ sudo systemctl start crio
 
 DOWNLOAD_DIR="/usr/local/bin"
 sudo mkdir -p "$DOWNLOAD_DIR"
-CRICTL_VERSION="v1.25.0"
+CRICTL_VERSION="v1.27.1"
 ARCH="amd64"
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-$ARCH.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 
@@ -409,7 +410,7 @@ curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernete
 
 
 #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
-RELEASE="v1.26.1"
+RELEASE="v1.27.1"
 ARCH="amd64"
 DOWNLOAD_DIR="/usr/local/bin"
 sudo mkdir -p "$DOWNLOAD_DIR"
@@ -425,7 +426,8 @@ sudo mkdir -p /etc/systemd/system/kubelet.service.d
 sudo curl --insecure --retry 3 --retry-connrefused -fL "https://raw.githubusercontent.com/kubernetes/release/$RELEASE_VERSION/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:$DOWNLOAD_DIR:g" | sudo tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sudo mkdir -p /etc/kubernetes/manifests
 
-sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
+KUBECTL_VERSION="v1.27.1"
+sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl
 
 sudo chmod +x /usr/local/bin/kubectl
 
@@ -471,8 +473,8 @@ kubectl get node -o wide
 expected outcome
 ```
 NAME          STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
-node-worker   Ready    <none>          78s   v1.26.1   10.0.0.5      <none>        Ubuntu 22.04.4 LTS   6.5.0-1015-azure   cri-o://1.25.4
-nodemaster    Ready    control-plane   14m   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.4 LTS   6.5.0-1015-azure   cri-o://1.25.4
+node-worker   Ready    <none>          54s   v1.27.1   10.0.0.4      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.27.4
+nodemaster    Ready    control-plane   10m   v1.27.1   10.0.0.5      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.27.4
 ```
 
 After Successfully Joining Worker Nodes to the Cluster
@@ -506,8 +508,8 @@ kubectl get node
 expected result.
 ```
 NAME          STATUS   ROLES           AGE     VERSION
-node-worker   Ready    <none>          5h36m   v1.26.1
-nodemaster    Ready    control-plane   5h49m   v1.26.1
+node-worker   Ready    <none>          5h36m   v1.27.1
+nodemaster    Ready    control-plane   5h49m   v1.27.1
 ```
 
  
