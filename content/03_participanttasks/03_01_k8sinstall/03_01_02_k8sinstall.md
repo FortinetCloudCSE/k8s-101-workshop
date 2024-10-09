@@ -167,8 +167,8 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
    expected outcome
    ```
    NAME          STATUS   ROLES           AGE   VERSION
-   node-worker   Ready    <none>          14m   v1.26.1
-   nodemaster    Ready    control-plane   18m   v1.26.1
+   node-worker   Ready    <none>          14m   v1.27.1
+   nodemaster    Ready    control-plane   18m   v1.27.1
    ```
  
 {{% /tab %}}
@@ -329,8 +329,8 @@ watch kubectl get node
 expected output
 ```
 NAME          STATUS   ROLES           AGE   VERSION
-node-worker   Ready    <none>          14m   v1.26.1
-nodemaster    Ready    control-plane   18m   v1.26.1
+node-worker   Ready    <none>          14m   v1.27.1
+nodemaster    Ready    control-plane   18m   v1.27.1
 ```
 
 
@@ -350,12 +350,14 @@ We do not delve into the details of the script used for installing the Kubernete
 {{% /expand %}}
 2. What is the version of this Kubernetes server ?
 {{% expand title="Click for Answer..." %}}
-    Server Version: version.Info{Major:"1", Minor:"26", GitVersion:"v1.26.15", GitCommit:"1649f592f1909b97aa3c2a0a8f968a3fd05a7b8b", GitTreeState:"clean", BuildDate:"2024-03-14T00:54:27Z", GoVersion:"go1.21.8", Compiler:"gc", Platform:"linux/amd64"} 
+Client Version: v1.28.1
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.27.16
 {{% /expand %}}
 3. What is the container runtime name and version ?
 {{% expand title="Click for Answer..." %}}
-cri-o:/1.25.4, can found from "kubectl get node -o wide"
-nodemaster    Ready    control-plane   6m58s   v1.26.1   10.0.0.4      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.25.4
+cri-o:/1.27.4, can found from "kubectl get node -o wide"
+nodemaster    Ready    control-plane   6m58s   v1.27.1   10.0.0.4      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.27.4
 {{% /expand %}}
 4. Describe general step to add a new VM as worker node in this cluster 
 {{% expand title="Click for Answer..." %}}
