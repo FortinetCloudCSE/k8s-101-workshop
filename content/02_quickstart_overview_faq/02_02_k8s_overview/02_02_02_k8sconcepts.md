@@ -717,16 +717,19 @@ kubectl delete namespace development
 
 2. How do namespaces contribute to resource management and isolation in a Kubernetes cluster? Provide an example scenario where separating resources into different namespaces would be beneficial.
 {{% expand title="Click for Answer..." %}}
+```bash
     namespaces provide a clean separation between different clients, enhancing security, resource management, and operational efficiency. It allows the SaaS provider to manage a multi-tenant environment effectively within a single Kubernetes cluster. 
     for example, Deploying a firewall container in a separate namespace within Kubernetes cluster offers several benefits:  Ensure that only authorized team members can modify firewall rules.
-Apply strict resource quotas to guarantee the firewall always has necessary resources.
-Implement network policies that allow the firewall to interact with all namespaces while restricting other cross-namespace communication.
-Perform updates to the firewall components without risking downtime for tenant applications.
+    Apply strict resource quotas to guarantee the firewall always has necessary resources.
+    Implement network policies that allow the firewall to interact with all namespaces while restricting other cross-namespace communication.
+    Perform updates to the firewall components without risking downtime for tenant applications.
+```
 {{% /expand %}}
 
 3. Describe how containers are organized within a Pod in Kubernetes and explain the advantages of this arrangement for container communication and resource sharing.
 
 {{% expand title="Click for Answer..." %}}
+```bash
 Network Sharing:
 All containers in a Pod share a single IP address
 They can communicate with each other using localhost
@@ -738,5 +741,5 @@ These volumes can be mounted into some or all containers in the Pod
 Containers can read from and write to these shared volumes
 Example: A shared volume mounted at /data in two containers allows them to exchange files
 This shared network and storage setup enables efficient inter-container communication and data exchange within the Pod, facilitating tight integration of related application components.
-
+```
 {{% /expand %}}

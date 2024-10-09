@@ -207,7 +207,7 @@ sudo curl --insecure --retry 3 --retry-connrefused -fL "https://raw.githubuserco
 ```
 Download kubectl.
 ```
-KUBECTL_VERSION="v1.27.1"
+KUBECTL_VERSION="v1.28.1"
 sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl
 sudo cp kubectl /usr/local/bin
 sudo chmod +x /usr/local/bin/kubectl
@@ -426,7 +426,7 @@ sudo mkdir -p /etc/systemd/system/kubelet.service.d
 sudo curl --insecure --retry 3 --retry-connrefused -fL "https://raw.githubusercontent.com/kubernetes/release/$RELEASE_VERSION/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:$DOWNLOAD_DIR:g" | sudo tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sudo mkdir -p /etc/kubernetes/manifests
 
-KUBECTL_VERSION="v1.27.1"
+KUBECTL_VERSION="v1.28.1"
 sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl
 
 sudo chmod +x /usr/local/bin/kubectl

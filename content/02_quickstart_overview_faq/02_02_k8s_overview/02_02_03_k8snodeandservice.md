@@ -417,12 +417,14 @@ az aks delete --name ${clustername} -g $resourcegroupname
 
 1. What is the role of a worker node in Kubernetes, and what are three key components that run on every Kubernetes Worker Node?
 {{% expand title="Click for Answer..." %}}
+```bash
 A Kubernetes worker node is responsible for running containerized applications. It hosts the pods and provides the runtime environment.
 Three key components that run on every Kubernetes worker node are:
 Kubelet: Manages pods and their containers on the node.
 Container Runtime: (e.g., Docker, containerd) Runs the containers.
 Kube-proxy: Manages network rules for pod communication.
 These components work together to ensure proper execution and networking of pods on the worker node.
+```
 {{% /expand %}}
 2. What is a Kubernetes Service, and why is it important?
 {{% expand title="Click for Answer..." %}}
@@ -430,7 +432,9 @@ These components work together to ensure proper execution and networking of pods
 {{% /expand %}}
 3. Describe the difference between ClusterIP, NodePort, and LoadBalancer Service types in Kubernetes.
 {{% expand title="Click for Answer..." %}}
+```bash
 ClusterIP: Internal access within the cluster.
 NodePort: Exposes the service on each node's IP at a static port.
 LoadBalancer: Exposes the service externally typically using a cloud provider's load balancer.
+```
 {{% /expand %}}

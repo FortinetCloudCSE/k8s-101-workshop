@@ -775,17 +775,20 @@ Commercial support is available at
 #### Review Questions
 1. Create juice-shop with v15.0.0 deployment and ClusterIP svc
 {{% expand title="Click for Answer..." %}}
+```bash
    kubectl create deployment juice-shop --image=bkimminich/juice-shop:v15.0.0
    kubectl expose deployment juice-shop --port=3000 --target-port=3000 --type=ClusterIP
+```
 {{% /expand %}}
 2. Create juice-shop with v16.0.0 deployment and ClusterIP svc
 {{% expand title="Click for Answer..." %}}
+```bash
    kubectl create deployment juice-shop-v16 --image=bkimminich/juice-shop:v16.0.0
    kubectl expose deployment juice-shop-v16 --port=3000 --target-port=3000 --type=ClusterIP
+```
 {{% /expand %}}
 3. Create https ingress rule with path /v15 point to v15.0.0 deployment
 {{% expand title="Click for Answer..." %}}
-```bash
 ```bash
 cat <<EOF  | tee nginx_ingress_rule_with_cert_${nodename}.yaml
 apiVersion: networking.k8s.io/v1

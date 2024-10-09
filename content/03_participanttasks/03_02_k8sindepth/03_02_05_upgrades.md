@@ -277,23 +277,32 @@ kubectl delete deployment kubernetes-bootcamp
 
 1. Use `kubectl run` to create a POD with juice-shop image and add a label owner=dev 
 {{% expand title="Click for Answer..." %}}
+```bash
 kubectl run juice-shop --image=juice-shop --labels=owner=dev
+```
 {{% /expand %}}
 2. Use `kubectl create deployment` to create a deployment for juice-shop with replicas=2 and image=bkimminich/juice-shop:v15.0.0
 {{% expand title="Click for Answer..." %}}
+```bash
 kubectl create deployment juice-shop --image=bkimminich/juice-shop:v15.0.0 --replicas=2
+```
 {{% /expand %}}
 3. scale out juice-shop deployment from 2 replicas to 6 replicas 
 {{% expand title="Click for Answer..." %}}
+```bash
 kubectl scale deployment juice-shop --replicas=6
+```
 {{% /expand %}}
 4. use rolling upgrade to upgrade your juice-shop deployment to use version v16.0.0.
 {{% expand title="Click for Answer..." %}}
+```bash
 kubectl set image deployment/juice-shop juice-shop=bkimminich/juice-shop:v16.0.0
+```
 {{% /expand %}}
 5. Use `kubectl` to find the specifcation for imagePullPolicy which is need for create a deployment.  and set the juice-shop deployment container imagePullPolicy to use "IfNotPresent".
  {{% expand title="Click for Answer..." %}}
+```bash
 kubectl explain deployment.spec.template.spec.containers.imagePullPolicy
 kubectl patch deployment juice-shop --type=json -p='[{"op": "add", "path": "/spec/template/spec/containers/0/imagePullPolicy", "value": "IfNotPresent"}]'
-
+```
 {{% /expand %}}
