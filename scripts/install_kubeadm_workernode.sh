@@ -28,7 +28,7 @@ EOF
 sudo sysctl --system
 
 OS="xUbuntu_22.04"
-VERSION="1.25"
+VERSION="1.27"
 
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /" | sudo tee  /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
@@ -48,7 +48,7 @@ sudo systemctl start crio
 
 DOWNLOAD_DIR="/usr/local/bin"
 sudo mkdir -p "$DOWNLOAD_DIR"
-CRICTL_VERSION="v1.25.0"
+CRICTL_VERSION="v1.27.1"
 ARCH="amd64"
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-$ARCH.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 function install_cni_binary() {
@@ -60,7 +60,7 @@ curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/container
 }
 
 #RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
-RELEASE="v1.26.1"
+RELEASE="v1.27.1"
 ARCH="amd64"
 DOWNLOAD_DIR="/usr/local/bin"
 sudo mkdir -p "$DOWNLOAD_DIR"
@@ -76,7 +76,8 @@ sudo mkdir -p /etc/systemd/system/kubelet.service.d
 sudo curl --insecure --retry 3 --retry-connrefused -fL "https://raw.githubusercontent.com/kubernetes/release/$RELEASE_VERSION/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:$DOWNLOAD_DIR:g" | sudo tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 sudo mkdir -p /etc/kubernetes/manifests
 
-sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
+KUBECTL_VERSION="v1.27.1"
+sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl
 
 sudo chmod +x /usr/local/bin/kubectl
 

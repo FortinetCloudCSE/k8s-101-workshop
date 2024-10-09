@@ -127,7 +127,7 @@ Download the Kubectl version that is compatible with your Kubernetes server vers
 {{% tab title="Download" %}} 
 Download Kubectl 
 ```bash
-curl -Lo $HOME/kubectl https://dl.k8s.io/release/v1.27.2/bin/linux/amd64/kubectl && chmod +x $HOME/kubectl && export PATH=$HOME:$PATH
+curl -Lo $HOME/kubectl https://dl.k8s.io/release/v1.28.2/bin/linux/amd64/kubectl && chmod +x $HOME/kubectl && export PATH=$HOME:$PATH
 ```
 {{% /tab %}}
 {{% tab title="Verify" %}}
