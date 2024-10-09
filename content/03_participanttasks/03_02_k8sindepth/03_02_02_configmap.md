@@ -144,7 +144,7 @@ kubectl exec -it nginx-pod-with-configmap-secret --  curl localhost:80
 {{% /expand %}}
 2. Delete Pod nginx-pod-with-configmap-secret  and create again, check the web page of nginx again ? did you see any difference ? why ?
 {{% expand title="Click for Answer..." %}}
-you should not see any difference, as The ConfigMap and Secret remain unchanged in the cluster.
+  you should not see any difference, as The ConfigMap and Secret remain unchanged in the cluster.
 {{% /expand %}}
 3. Modify below nginx-deployment with VolumeMounts to use ConfigMap
 {{% expand title="Click for Answer..." %}}

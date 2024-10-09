@@ -191,24 +191,29 @@ We do not delve into the details of the script used for installing the Kubernete
 {{% /expand %}}
 2. What is the version of this Kubernetes server ?
 {{% expand title="Click for Answer..." %}}
+```bash
 Client Version: v1.28.1
 Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
 Server Version: v1.27.16
+```
 {{% /expand %}}
 3. What is the container runtime name and version ?
 {{% expand title="Click for Answer..." %}}
+```bash
 cri-o:/1.27.4, can found from "kubectl get node -o wide"
 nodemaster    Ready    control-plane   6m58s   v1.27.1   10.0.0.4      <none>        Ubuntu 22.04.5 LTS   6.5.0-1025-azure   cri-o://1.27.4
+```
 {{% /expand %}}
 4. Describe general step to add a new VM as worker node in this cluster 
 {{% expand title="Click for Answer..." %}}
+```bash
 Create a new VM (e.g., using a Terraform script or cloud provider's interface).
 Install required components: kubelet, container runtime (e.g., containerd), and CNI plugins.
 Obtain the join command from the master node (includes the necessary token and CA cert hash).
 Run the join command on the new VM to add it to the cluster as a worker node.
 Verify the new node's status in the cluster using kubectl get nodes.
 This process ensures the new VM is properly configured and securely joined to the existing Kubernetes cluster.
-
+```
 {{% /expand %}}
 
 

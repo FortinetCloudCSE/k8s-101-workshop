@@ -215,6 +215,6 @@ This chapter provides a quick demonstration of deploying an application with Hor
 {{% /expand %}}
 3. How to stop sending traffic to nginx deployment
 {{% expand title="Click for Answer..." %}}
-kubectl delete deployment infinite-calls  or scale down infinite-calls replicas to 0. 
+    kubectl delete deployment infinite-calls  or scale down infinite-calls replicas to 0. 
 {{% /expand %}}
 
