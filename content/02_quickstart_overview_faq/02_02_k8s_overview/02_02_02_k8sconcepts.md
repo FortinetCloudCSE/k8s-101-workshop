@@ -134,7 +134,7 @@ curl -Lo $HOME/kubectl https://dl.k8s.io/release/v1.28.2/bin/linux/amd64/kubectl
 
 Verify the Version
 ```bash
-kubectl version --short
+kubectl version
 ```
 It will show you both client  **kubectl** version and server version.
 
