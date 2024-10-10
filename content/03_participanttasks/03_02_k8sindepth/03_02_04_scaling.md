@@ -167,7 +167,7 @@ kubectl apply -f nginx-deployment-hpa.yaml
 {{< tabs >}}
 {{% tab title="Check" %}}
 
-use `kubectl get hpa nginx-deployment` to check deployment 
+use `kubectl get hpa nginx-deployment-hpa` to check deployment 
 ````bash
 kubectl get hpa nginx-deployment-hpa
 ````

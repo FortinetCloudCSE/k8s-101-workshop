@@ -65,7 +65,7 @@ To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your 
 
    ```bash
    cd $HOME/k8s-101-workshop/terraform/
-   terraform output -json | jq -r .linuxvm_password.value
+   vmpassword=$(terraform output -json | jq -r .linuxvm_password.value)
    echo $vmpassword
    ```
 {{% /tab %}}
