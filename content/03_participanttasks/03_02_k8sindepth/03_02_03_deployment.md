@@ -246,7 +246,7 @@ NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
 kubernetes-bootcamp   10/10   10           10          99s
 ```
 {{% /tab %}}
-{{% tab title="" %}}
+{{% tab title="Delete" %}}
 clean up
 ```bash
 kubectl delete -f kubernetes-bootcamp.yaml

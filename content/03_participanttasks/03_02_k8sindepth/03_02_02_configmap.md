@@ -148,51 +148,51 @@ kubectl exec -it nginx-pod-with-configmap-secret --  curl localhost:80
 {{% /expand %}}
 3. Modify below nginx-deployment with VolumeMounts to use ConfigMap
 {{% expand title="Click for Answer..." %}}
-{{% /expand %}}
-nginx-deployment 
+  nginx-deployment 
 
-```bash
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
+  ```bash
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    labels:
       app: nginx
-  template:
-    metadata:
-      labels:
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
         app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
-```
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+          - containerPort: 80
+  ```
 
-ConfigMap 
-
-```bash
-cat << EOF | tee nginx_deployment_cm.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-webpage
-data:
-  index.html: |
-    <html>
-    <head>
-    <title>Welcome to NGINX!</title>
-    </head>
-    <body>
-    <h1>Hello, Kubernetes!</h1>
-    </body>
-    </html>
-
-kubectl create -f nginx_deployment_cm.yaml
-```
+  ConfigMap 
+  
+  ```bash
+  cat << EOF | tee nginx_deployment_cm.yaml
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: nginx-webpage
+  data:
+    index.html: |
+      <html>
+      <head>
+      <title>Welcome to NGINX!</title>
+      </head>
+      <body>
+      <h1>Hello, Kubernetes!</h1>
+      </body>
+      </html>
+  
+  kubectl create -f nginx_deployment_cm.yaml
+  ```
+{{% /expand %}}
