@@ -136,56 +136,63 @@ kubectl apply -f nginx-pod-with-configmap-secret.yaml
 
 #### Review Questions
 
-- how to access nginx Pod web page from container inside ?
-
-- delete Pod nginx-pod-with-configmap-secret  and create again, check the web page of nginx again ? did you see any difference ? why ?
-
-- Modify below nginx-deployment with VolumeMounts to use ConfigMap
-
-nginx-deployment 
-
+1. How to access nginx Pod web page from container inside ?
+{{% expand title="Click for Answer..." %}}
 ```bash
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  labels:
-    app: nginx
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
+kubectl exec -it nginx-pod-with-configmap-secret --  curl localhost:80 
+```
+{{% /expand %}}
+2. Delete Pod nginx-pod-with-configmap-secret  and create again, check the web page of nginx again ? did you see any difference ? why ?
+{{% expand title="Click for Answer..." %}}
+  you should not see any difference, as The ConfigMap and Secret remain unchanged in the cluster.
+{{% /expand %}}
+3. Modify below nginx-deployment with VolumeMounts to use ConfigMap
+{{% expand title="Click for Answer..." %}}
+  nginx-deployment 
+
+  ```bash
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    labels:
       app: nginx
-  template:
-    metadata:
-      labels:
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
         app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
-```
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+          - containerPort: 80
+  ```
 
-ConfigMap 
-
-```bash
-cat << EOF | tee nginx_deployment_cm.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-webpage
-data:
-  index.html: |
-    <html>
-    <head>
-    <title>Welcome to NGINX!</title>
-    </head>
-    <body>
-    <h1>Hello, Kubernetes!</h1>
-    </body>
-    </html>
-
-kubectl create -f nginx_deployment_cm.yaml
-```
+  ConfigMap 
+  
+  ```bash
+  cat << EOF | tee nginx_deployment_cm.yaml
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: nginx-webpage
+  data:
+    index.html: |
+      <html>
+      <head>
+      <title>Welcome to NGINX!</title>
+      </head>
+      <body>
+      <h1>Hello, Kubernetes!</h1>
+      </body>
+      </html>
+  
+  kubectl create -f nginx_deployment_cm.yaml
+  ```
+{{% /expand %}}
