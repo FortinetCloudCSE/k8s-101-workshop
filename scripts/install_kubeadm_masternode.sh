@@ -5,149 +5,126 @@ nodename=$(hostname)
 
 error_handler() {
     echo -e "\e[31mAn error occurred. Exiting...\e[0m" >&2
-    tput bel
-    tput bel
+    tput bel || true
+    tput bel || true
 }
-
 trap error_handler ERR
 
-sudo apt-get update -y
-sudo apt-get install socat conntrack -y
-sudo apt-get install jq -y
-sudo apt-get install apt-transport-https ca-certificates -y
-sudo apt-get install hey -y
+# Kubernetes 101 default versions. Override before running if needed:
+#   export K8S_MINOR=v1.35
+#   export CALICO_VERSION=v3.31.6
+K8S_MINOR="${K8S_MINOR:-v1.36}"
+CALICO_VERSION="${CALICO_VERSION:-v3.32.1}"
+POD_CIDR="${POD_CIDR:-10.244.0.0/16}"
+SERVICE_CIDR="${SERVICE_CIDR:-10.96.0.0/12}"
+CLUSTERDNSIP="10.96.0.10"
+ARCH="amd64"
 
-cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+sudo swapoff -a || true
+sudo sed -i.bak '/ swap / s/^/#/' /etc/fstab || true
+
+sudo apt-get update -y
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg jq socat conntrack iproute2 hey
+
+cat <<'MODULES' | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
-EOF
+MODULES
 sudo modprobe overlay
 sudo modprobe br_netfilter
 
-cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+cat <<'SYSCTL' | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward                 = 1
-EOF
+SYSCTL
 sudo sysctl --system
 
-OS="xUbuntu_22.04"
-VERSION="1.27"
-echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /" | sudo tee  /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
-
-
-mkdir -p /usr/share/keyrings
-sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp
-sudo mv -f /usr/share/keyrings/libcontainers-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-archive-keyring.gpg
-
-sudo curl -L --retry 3 --retry-delay 5 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp
-sudo mv -f /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg.tmp /usr/share/keyrings/libcontainers-crio-archive-keyring.gpg
-
-sudo apt-get update
-sudo apt-get install cri-o cri-o-runc -y
-
+# Install and configure containerd as the Kubernetes CRI runtime.
+sudo apt-get install -y containerd
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 sudo systemctl daemon-reload
-sudo systemctl enable crio
-sudo systemctl start crio
+sudo systemctl enable --now containerd
 
-DOWNLOAD_DIR="/usr/local/bin"
-sudo mkdir -p "$DOWNLOAD_DIR"
-CRICTL_VERSION="v1.27.1"
-ARCH="amd64"
-curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/cri-tools/releases/download/$CRICTL_VERSION/crictl-$CRICTL_VERSION-linux-$ARCH.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
-function install_cni_binary() {
-CNI_PLUGINS_VERSION="v1.1.1"
-ARCH="amd64"
-DEST="/opt/cni/bin"
-sudo mkdir -p "$DEST"
-curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/containernetworking/plugins/releases/download/$CNI_PLUGINS_VERSION/cni-plugins-linux-$ARCH-$CNI_PLUGINS_VERSION.tgz" | sudo tar -C "$DEST" -xz
-}
-#RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
-RELEASE="v1.27.1"
-ARCH="amd64"
-DOWNLOAD_DIR="/usr/local/bin"
-sudo mkdir -p "$DOWNLOAD_DIR"
-cd $DOWNLOAD_DIR
-sudo curl --insecure --retry 3 --retry-connrefused -fL --remote-name-all https://dl.k8s.io/release/$RELEASE/bin/linux/$ARCH/{kubeadm,kubelet}
-sudo chmod +x {kubeadm,kubelet}
+# Install kubeadm/kubelet/kubectl from the current Kubernetes community repository.
+sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL "https://pkgs.k8s.io/core:/stable:/${K8S_MINOR}/deb/Release.key" | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+cat <<EOF_REPO | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${K8S_MINOR}/deb/ /
+EOF_REPO
+sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update -y
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
 
-RELEASE_VERSION="v0.4.0"
-curl --insecure --retry 3 --retry-connrefused -fL "https://raw.githubusercontent.com/kubernetes/release/$RELEASE_VERSION/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:$DOWNLOAD_DIR:g" | sudo tee /etc/systemd/system/kubelet.service
-
-sudo mkdir -p /etc/systemd/system/kubelet.service.d
-
-sudo curl --insecure --retry 3 --retry-connrefused -fL "https://raw.githubusercontent.com/kubernetes/release/$RELEASE_VERSION/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:$DOWNLOAD_DIR:g" | sudo tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-
-KUBECTL_VERSION="v1.27.1" 
-sudo curl --insecure --retry 3 --retry-connrefused -fLO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$ARCH/kubectl
-
-sudo chmod +x /usr/local/bin/kubectl
-alias k='kubectl'
-
-sudo systemctl enable --now kubelet
-
-sudo kubeadm config images pull --cri-socket unix:///var/run/crio/crio.sock --kubernetes-version=$RELEASE --v=5
+# Configure crictl so kubeadm/kubelet use containerd consistently.
+cat <<'CRICTL' | sudo tee /etc/crictl.yaml
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 10
+debug: false
+CRICTL
 
 local_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-CLUSTERDNSIP="10.96.0.10"
-cat <<EOF | sudo tee /etc/default/kubelet
-KUBELET_EXTRA_ARGS=--node-ip=$local_ip,--cluster-dns=$CLUSTERDNSIP
-EOF
+cat <<EOF_KUBELET | sudo tee /etc/default/kubelet
+KUBELET_EXTRA_ARGS=--node-ip=${local_ip} --cluster-dns=${CLUSTERDNSIP}
+EOF_KUBELET
+sudo systemctl enable --now kubelet
 
 IPADDR=$local_ip
-NODENAME=`hostname | tr -d '-'`
-POD_CIDR="10.244.0.0/16"
-SERVICE_CIDR="10.96.0.0/12"
-FQDN="localhost"
-echo $IPADDR $NODENAME  | sudo tee -a  /etc/hosts
+NODENAME=$(hostname | tr -d '-')
+FQDN="${fqdn:-localhost}"
+grep -q " ${NODENAME}$" /etc/hosts || echo "$IPADDR $NODENAME" | sudo tee -a /etc/hosts
 
-sudo kubeadm reset -f
-sudo kubeadm init --cri-socket=unix:///var/run/crio/crio.sock --apiserver-advertise-address=$IPADDR  --apiserver-cert-extra-sans=$IPADDR,$FQDN  --service-cidr=$SERVICE_CIDR --pod-network-cidr=$POD_CIDR --node-name $NODENAME  --token-ttl=0 -v=5
+sudo kubeadm reset -f || true
+sudo rm -rf /etc/cni/net.d/*
+sudo kubeadm config images pull --cri-socket unix:///run/containerd/containerd.sock --v=5
+sudo kubeadm init \
+  --cri-socket=unix:///run/containerd/containerd.sock \
+  --apiserver-advertise-address="$IPADDR" \
+  --apiserver-cert-extra-sans="$IPADDR,$FQDN" \
+  --service-cidr="$SERVICE_CIDR" \
+  --pod-network-cidr="$POD_CIDR" \
+  --node-name "$NODENAME" \
+  --token-ttl=0 \
+  -v=5
 
-mkdir -p /home/${username}/.kube
-sudo cp -f /etc/kubernetes/admin.conf /home/${username}/.kube/config
-sudo chown ${username}:${username} /home/${username}/.kube/config
+mkdir -p "/home/${username}/.kube"
+sudo cp -f /etc/kubernetes/admin.conf "/home/${username}/.kube/config"
+sudo chown "${username}:${username}" "/home/${username}/.kube/config"
 sudo mkdir -p /root/.kube
-sudo cp -f /home/${username}/.kube/config /root/.kube/config 
-kubectl --kubeconfig /home/${username}/.kube/config config set-cluster kubernetes --server "https://$local_ip:6443"
+sudo cp -f "/home/${username}/.kube/config" /root/.kube/config
+kubectl --kubeconfig "/home/${username}/.kube/config" config set-cluster kubernetes --server "https://${local_ip}:6443"
 
-kubeadm token create --print-join-command > /home/${username}/workloadtojoin.sh
-kubeadm config print join-defaults  > /home/${username}/kubeadm-join.default.yaml
-echo '#sudo kubeadm join --config kubeadm-join.default.yaml' | sudo tee -a  /home/${username}/workloadtojoin.sh
-sed -i 's/^kubeadm join/sudo kubeadm join/g' /home/${username}/workloadtojoin.sh
-chmod +x /home/${username}/workloadtojoin.sh
-cat /home/${username}/workloadtojoin.sh
+kubeadm token create --print-join-command > "/home/${username}/workloadtojoin.sh"
+sed -i 's/^kubeadm join/sudo kubeadm join --cri-socket unix:\/\/\/run\/containerd\/containerd.sock/g' "/home/${username}/workloadtojoin.sh"
+chmod +x "/home/${username}/workloadtojoin.sh"
+cat "/home/${username}/workloadtojoin.sh"
 
-cd $HOME
-#sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/latest/download/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
-sudo curl --insecure --retry 3 --retry-connrefused -fL https://github.com/projectcalico/calico/releases/download/v3.25.0/calicoctl-linux-amd64 -o /usr/local/bin/calicoctl
-
+# Install Calico CNI using the Tigera operator.
+cd "$HOME"
+sudo curl --retry 3 --retry-connrefused -fL "https://github.com/projectcalico/calico/releases/download/${CALICO_VERSION}/calicoctl-linux-${ARCH}" -o /usr/local/bin/calicoctl
 sudo chmod +x /usr/local/bin/calicoctl
-curl --insecure --retry 3 --retry-connrefused -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/tigera-operator.yaml
-kubectl --kubeconfig /home/${username}/.kube/config create -f tigera-operator.yaml
-kubectl get namespace tigera-operator
-kubectl rollout status deployment tigera-operator -n tigera-operator
-curl --insecure --retry 3 --retry-connrefused -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/custom-resources.yaml
-sed -i -e "s?blockSize: 26?blockSize: 24?g" custom-resources.yaml
+curl --retry 3 --retry-connrefused -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
+kubectl --kubeconfig "/home/${username}/.kube/config" apply -f tigera-operator.yaml
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment tigera-operator -n tigera-operator --timeout=180s
+
+curl --retry 3 --retry-connrefused -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/custom-resources.yaml"
+sed -i -e "s?192.168.0.0/16?${POD_CIDR}?g" custom-resources.yaml
 sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
-sed -i -e "s?192.168.0.0/16?10.244.0.0/16?g" custom-resources.yaml
-sed -i '/calicoNetwork:/a\    containerIPForwarding: Enabled ' custom-resources.yaml
-sed -i '/calicoNetwork:/a\    bgp: Disabled ' custom-resources.yaml
-kubectl --kubeconfig /home/${username}/.kube/config create namespace calico-system
-sleep 1
-kubectl  get namespace calico-system
-kubectl --kubeconfig /home/${username}/.kube/config apply  -f custom-resources.yaml
-sleep 30 
+# Keep this lab simple and avoid BGP requirements between Azure VMs.
+sed -i '/calicoNetwork:/a\    bgp: Disabled' custom-resources.yaml
+kubectl --kubeconfig "/home/${username}/.kube/config" apply -f custom-resources.yaml
 
-kubectl rollout status deployment calico-kube-controllers -n calico-system
-kubectl rollout status ds calico-node -n calico-system
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment calico-kube-controllers -n calico-system --timeout=300s
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status ds calico-node -n calico-system --timeout=300s
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment coredns -n kube-system --timeout=180s
+kubectl --kubeconfig "/home/${username}/.kube/config" get nodes -o wide
+kubectl --kubeconfig "/home/${username}/.kube/config" get pods -A
+cat "/home/${username}/workloadtojoin.sh"
 
-kubectl get tigerastatus
-
-kubectl rollout restart deployment coredns -n kube-system
-kubectl rollout status deployment coredns -n kube-system 
-install_cni_binary
-cat /home/${username}/workloadtojoin.sh
-[ $? -eq 0 ] && echo "installation done on master node"
+echo "installation done on master node"
 trap - ERR

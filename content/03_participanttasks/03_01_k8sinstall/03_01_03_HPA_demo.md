@@ -1,220 +1,138 @@
 ---
 title: "Task 2 - Deploy and Scalling Application"
 linkTitle: "Task 2 - Scaling Application"
-weight: 2 
+weight: 2
 ---
 
 ## Objective
 
+This task deploys an nginx application and demonstrates basic Kubernetes scaling with HPA.
 
-A quick demo using a few commands to demonstrate how Kubernetes can scale to handle increased web traffic.
-These include 
-- Creating a client deployment to simulate HTTP traffic.
-- Setting up a web application with auto-scaling using Horizontal Pod Autoscaler (HPA).
+The updated script keeps the original workshop flow but updates the supporting components:
 
-1. Deploy Demo Application and enable auto scalling (HPA)
-{{< tabs >}}
-{{% tab title="deploy" %}}
-The Deployed demo application include two Pods but able to auto scale if coming traffic reach certain limit.
-    
+- Local Path Provisioner for simple lab storage
+- Metrics Server for HPA CPU metrics
+- MetalLB for LoadBalancer testing
+- Kong Ingress Controller for ingress testing
+- cert-manager for a self-signed test certificate
+- nginx deployment and HPA
+
+## Deploy the application and HPA demo
+
+Run this from Azure Cloud Shell:
+
 ```bash
 cd $HOME/k8s-101-workshop/terraform/
-nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+master=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
-sed -i "s/localhost/$nodename/g" $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
-ssh -o 'StrictHostKeyChecking=no' $username@$nodename < $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh
- 
-```
-{{% /tab %}}
-{{% tab title="Check" %}}
 
-use `kubectl get pod` to check deployment.
-    
+scp -o 'StrictHostKeyChecking=no' $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh $username@$master:~/deploy_application_with_hpa_masternode.sh
+ssh -o 'StrictHostKeyChecking=no' -t $username@$master "bash ~/deploy_application_with_hpa_masternode.sh"
+```
+
+## Verify resources
+
 ```bash
-kubectl get pod
+kubectl get nodes
+kubectl get pods -A
+kubectl get deployment nginx-deployment
+kubectl get hpa
+kubectl get ingress
+kubectl get svc -A
 ```
-{{% /tab %}}
-{{% tab title="Expected Output" style="info" %}}
-expected outcome
-    
+
+Expected nginx deployment:
+
+```bash
+NAME               READY   UP-TO-DATE   AVAILABLE
+nginx-deployment   2/2     2            2
 ```
-NAME                                READY   STATUS    RESTARTS   AGE
-nginx-deployment-55c7f467f8-q26f2   1/1     Running   0          9m53s
-nginx-deployment-55c7f467f8-rfdck   1/1     Running   0          7m2s
+
+Expected HPA object:
+
+```bash
+NAME        REFERENCE                     TARGETS        MINPODS   MAXPODS
+nginx-hpa   Deployment/nginx-deployment   <unknown>/50%   2         10
 ```
-{{% /tab %}}
-{{< /tabs >}}
 
-2. Verify the deployment is successful 
-    - To confirm that the deployment of your Nginx service has been successfully completed, you can test the response from the Nginx server using the curl command:
-    
-    ```bash
-    cd $HOME/k8s-101-workshop/terraform/
-    nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
-    curl -k https://$nodename/default
-    ```
-    
-    - This command should return a response from the Nginx server, indicating that the service is active and capable of handling requests.
-    - With the Nginx service deployed and verified, we are now prepared to initiate benchmark traffic towards the Nginx service. This step will demonstrate Kubernetes' ability to dynamically scale out additional Nginx pods to accommodate the incoming request load.
+After Metrics Server starts collecting CPU metrics, the HPA target changes from `<unknown>` to a CPU percentage.
 
-3. Stress the nginx deployment
+## Generate load
 
-- Paste below command to create a client deployment to send http request towards nginx deployment to stress it.  this client deployment will create two Pod to keep issue http request towards nginx server.
+Run a temporary load generator from the cluster:
+
+```bash
+kubectl run -i --tty load-generator --rm --image=busybox:1.36 --restart=Never -- /bin/sh
+```
+
+Inside the shell, run:
+
+```bash
+while true; do wget -q -O- http://nginx-deployment.default.svc.cluster.local; done
+```
+
+In another terminal, watch HPA:
+
+```bash
+watch kubectl get hpa
+```
+
+You can also watch pods scale:
+
+```bash
+watch kubectl get pods -l app=nginx
+```
+
+## Stop load
+
+Press `CTRL+C` in the load generator shell, then type:
+
+```bash
+exit
+```
+
+## Cleanup
 
 {{< tabs >}}
-{{% tab title="stress" %}}    
- ```bash
- cat <<EOF | tee  infinite-calls_client.yaml
- apiVersion: apps/v1
- kind: Deployment
- metadata:
-   name: infinite-calls
-   labels:
-     app: infinite-calls
- spec:
-   replicas: 2
-   selector:
-     matchLabels:
-       app: infinite-calls
-   template:
-     metadata:
-       name: infinite-calls
-       labels:
-         app: infinite-calls
-     spec:
-       containers:
-       - name: infinite-calls
-         image: busybox
-         command:
-         - /bin/sh
-         - -c
-         - "while true; do wget -q -O- http://nginx-deployment.default.svc.cluster.local; done"
- EOF
- kubectl create -f infinite-calls_client.yaml
- ```
-{{% /tab %}}
-{{% tab title="check" %}}
-- verify the deployment
+{{% tab title="Cleanup Application" %}}
+
 ```bash
-kubectl get pod
+kubectl delete hpa nginx-hpa --ignore-not-found
+kubectl delete ingress nginx --ignore-not-found
+kubectl delete deployment nginx-deployment --ignore-not-found
+kubectl delete service nginx-deployment --ignore-not-found
+kubectl delete pod load-generator --ignore-not-found
 ```
 {{% /tab %}}
-{{% tab title="Expected Output" style="info" %}}
-- expected outcome
-```
-NAME                                READY   STATUS    RESTARTS   AGE
-infinite-calls-6865bf6c8b-8g4pg     1/1     Running   0          4s
-infinite-calls-6865bf6c8b-md9k7     1/1     Running   0          4s
-nginx-deployment-55c7f467f8-mn2kc   1/1     Running   0          3m21s
-nginx-deployment-55c7f467f8-skbtv   1/1     Running   0          3m21s
-```
-{{% /tab %}}
-{{< /tabs >}}
+{{% tab title="Cleanup Addons" %}}
 
-The client pod continuously sends HTTP requests (using wget) towards the ClusterIP service of the nginx deployment.
-
-
-4. Monitor Application Scaling up on master node
-
-- After initiating the stress test with **client deployment**, you can monitor the deployment as Kubernetes automatically scales out by adding new Pods to handle the increased load. Use the watch command alongside kubectl get pods to observe the scaling process in real time:
-{{< tabs >}}
-{{% tab title="monitor" %}}
-   
- ```bash
- watch kubectl get pods -l app=nginx 
- ```
-{{% /tab %}}
-{{% tab title="Expected Output" style="info" %}}
-
-
- - expect to see pod increasing as a response to the increased load.
- ```
- NAME                                READY   STATUS    RESTARTS   AGE
- nginx-deployment-55c7f467f8-d7bx9   1/1     Running   0          20s
- nginx-deployment-55c7f467f8-dx7ql   1/1     Running   0          20s
- nginx-deployment-55c7f467f8-b5h7z   1/1     Running   0          5m39s
- nginx-deployment-55c7f467f8-g4754   1/1     Running   0          20s
- nginx-deployment-55c7f467f8-hdbcc   1/1     Running   0          20s
- nginx-deployment-55c7f467f8-kbkw6   1/1     Running   0          35s
- nginx-deployment-55c7f467f8-bmzvg   1/1     Running   0          5m39s
- nginx-deployment-55c7f467f8-r6ndt   1/1     Running   0          35s
- nginx-deployment-55c7f467f8-xr2l7   1/1     Running   0          5s
- ```
-{{% /tab %}}
-{{< /tabs >}}
- - As **client deployment** continues to send traffic to the Nginx service, you will see the number of Pods gradually increase until reach configured limit - 10 Pods, demonstrating Kubernetes' Horizontal Pod Autoscaler (HPA) in action. This auto-scaling feature ensures that your application can adapt to varying levels of traffic by automatically adjusting the number of Pods based on predefined metrics such as CPU usage or request rate.
-
-5. Delete client deployment to stop sending client traffic
-
-    ```bash
-    kubectl delete deployment infinite-calls
-    ```
-    
-6. Monitor Application Scaling down on master node
-    - Once the traffic generated by client deployment starts to decrease and eventually ceases, watch as Kubernetes smartly scales down the application by terminating the extra Pods that were previously spawned. This behavior illustrates the system's efficient management of resources, scaling down to match the reduced demand. you need wait 5 minutes (default but configurable ) to see nginx start to decrease.
-        
-{{< tabs >}}
-{{% tab title="watch" %}}
- ```bash
- watch kubectl get pods
- ```
- {{% /tab %}}
-{{% tab title="Expected Output" style="info" %}}
-- expected outcome 
- 
- ```
- NAME                                READY   STATUS    RESTARTS   AGE
- nginx-deployment-55c7f467f8-dxmqt   1/1     Running   0          10m
- nginx-deployment-55c7f467f8-hdbcc   1/1     Running   0          5m40s
- nginx-deployment-55c7f467f8-kkr8r   1/1     Running   0          10m
- ```
-{{% /tab %}}
-{{< /tabs >}}
-
- - By executing this stress test and monitoring the application scaling, you gain insight into the powerful capabilities of Kubernetes in managing application workloads dynamically, ensuring optimal resource utilization and responsive application performance.
-
-7. Wrap up
-
-
-- By now, you should have observed how Kubernetes can dynamically scale your services without any manual intervention, showcasing the platform's powerful capabilities for managing application demand and resources.
-{{< tabs >}}
-{{% tab title="delete resources" %}}
-- Let's proceed by cleaning up and deleting the resources we've created, preparing our environment for further exploration into the intricacies of how Kubernetes operates.
- 
 ```bash
-kubectl delete ingress nginx
-kubectl delete svc nginx-deployment
-kubectl delete deployment nginx-deployment
-kubectl delete hpa nginx-hpa
- 
-```
-{{% /tab %}}
-{{% tab title="delete LB and ingress controller" %}}
-- Also delete loadbalancer and ingress controller
-    
-```bash
-kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.14.3/config/manifests/metallb-native.yaml
-kubectl delete -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.10.0/deploy/single/all-in-one-dbless.yaml
-kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
-kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl delete -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v3.5.0/deploy/single/all-in-one-dbless.yaml --ignore-not-found
+kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.18.2/cert-manager.yaml --ignore-not-found
+kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml --ignore-not-found
+kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml --ignore-not-found
+kubectl delete -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.31/deploy/local-path-storage.yaml --ignore-not-found
 ```
 {{% /tab %}}
 {{< /tabs >}}
+
 ### Summary
-This chapter provides a quick demonstration of deploying an application with Horizontal Pod Autoscaler (HPA). For a detailed understanding of how it works, please continue to the next section [Kubernetes in depth](../../03_participanttasks/03_02_k8sindepth.html)
- 
 
-### Review Questions 
-1. Describe how to make client application - infinite-calls to generate more traffic ?
+This chapter demonstrates deploying an application, exposing it through Kubernetes objects, installing Metrics Server, and using HPA to scale pods based on CPU utilization.
+
+### Review Questions
+
+1. Describe how to make the client application generate more traffic.
 {{% expand title="Click for Answer..." %}}
-    increase replicas for infinite-calls deployment. 
-{{% /expand %}}
-2. How many minutes need to wait before you can see nginx pod start increasing.
-{{% expand title="Click for Answer..." %}}
-    it depends on when HPA decides to scale after it sucessfully check the resource usage 
-{{% /expand %}}
-3. How to stop sending traffic to nginx deployment
-{{% expand title="Click for Answer..." %}}
-    kubectl delete deployment infinite-calls  or scale down infinite-calls replicas to 0. 
+Run a load generator pod and continuously call the nginx service.
 {{% /expand %}}
 
+2. How many minutes do you need to wait before nginx pods start increasing?
+{{% expand title="Click for Answer..." %}}
+It depends on when Metrics Server reports CPU data and when HPA decides to scale. Wait a few minutes and monitor with `kubectl get hpa`.
+{{% /expand %}}
+
+3. How do you stop sending traffic to nginx deployment?
+{{% expand title="Click for Answer..." %}}
+Stop or delete the load generator pod.
+{{% /expand %}}
