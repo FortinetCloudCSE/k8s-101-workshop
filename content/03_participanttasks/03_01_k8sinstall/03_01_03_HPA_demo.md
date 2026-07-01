@@ -27,7 +27,7 @@ master=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
 
 scp -o 'StrictHostKeyChecking=no' $HOME/k8s-101-workshop/scripts/deploy_application_with_hpa_masternode.sh $username@$master:~/deploy_application_with_hpa_masternode.sh
-ssh -o 'StrictHostKeyChecking=no' -t $username@$master "bash ~/deploy_application_with_hpa_masternode.sh"
+ssh -o 'StrictHostKeyChecking=no' -t $username@$master "export FQDN=${master}; bash ~/deploy_application_with_hpa_masternode.sh"
 ```
 
 ## Verify resources
@@ -56,6 +56,22 @@ nginx-hpa   Deployment/nginx-deployment   <unknown>/50%   2         10
 ```
 
 After Metrics Server starts collecting CPU metrics, the HPA target changes from `<unknown>` to a CPU percentage.
+
+
+## FortiAIGate readiness checks
+
+After this task completes, run these checks before starting a FortiAIGate deployment:
+
+```bash
+kubectl cluster-info
+kubectl get nodes -o wide
+kubectl get pods -A
+helm version
+kubectl get ingressclass
+kubectl get storageclass
+```
+
+For FortiAIGate, confirm that the cluster has a working CNI, Helm, ingress, and a storage design appropriate for the deployment.
 
 ## Generate load
 

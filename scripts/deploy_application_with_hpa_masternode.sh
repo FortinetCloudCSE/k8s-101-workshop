@@ -1,6 +1,6 @@
 #!/bin/bash -xe
 
-fqdn="${fqdn:-localhost}"
+fqdn="${FQDN:-${fqdn:-localhost}}"
 nodename=$(hostname)
 
 error_handler() {

@@ -25,11 +25,16 @@ This manual page explains the same flow step by step using the updated installat
 - Calico CNI
 - one master/control-plane VM and one worker VM
 
+
+{{< notice info >}}
+For FortiAIGate 8.0.1 lab readiness, this workshop pins Kubernetes to `v1.30`, which is above the FortiAIGate minimum of Kubernetes 1.25.0. The full FortiAIGate deployment still needs ingress, Helm, and storage prerequisites validated before installing FortiAIGate.
+{{< /notice >}}
+
 Default versions:
 
 ```bash
-K8S_MINOR=v1.36
-CALICO_VERSION=v3.32.1
+K8S_MINOR=v1.30
+CALICO_VERSION=v3.28.2
 POD_CIDR=10.244.0.0/16
 SERVICE_CIDR=10.96.0.0/12
 ```
@@ -50,8 +55,8 @@ ssh_master_function() {
     cd $HOME/k8s-101-workshop/terraform/
     nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
     username=$(terraform output -json | jq -r .linuxvm_username.value)
-    export fqdn=${nodename}
-    ssh -o "StrictHostKeyChecking=no" -t $username@$nodename "export fqdn=${fqdn}; exec bash"
+    export FQDN=${nodename}
+    ssh -o "StrictHostKeyChecking=no" -t $username@$nodename "export FQDN=${FQDN}; exec bash"
 }
 alias ssh_master="ssh_master_function"
 
@@ -182,10 +187,10 @@ sudo crictl info
 Run on both master and worker nodes.
 
 ```bash
-K8S_MINOR="${K8S_MINOR:-v1.36}"
+K8S_MINOR="${K8S_MINOR:-v1.30}"
 
 sudo mkdir -p -m 755 /etc/apt/keyrings
-curl -fsSL "https://pkgs.k8s.io/core:/stable:/${K8S_MINOR}/deb/Release.key" | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL "https://pkgs.k8s.io/core:/stable:/${K8S_MINOR}/deb/Release.key" | sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 cat <<EOF_REPO | sudo tee /etc/apt/sources.list.d/kubernetes.list
@@ -219,8 +224,11 @@ Run only on the master node.
 POD_CIDR="10.244.0.0/16"
 SERVICE_CIDR="10.96.0.0/12"
 local_ip=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
-NODENAME=$(hostname | tr -d '-')
-FQDN="${fqdn:-localhost}"
+NODENAME="node-master"
+# FQDN must be the Azure public DNS name for this student's master VM.
+# Support lowercase fqdn for backward compatibility, but prefer uppercase FQDN.
+FQDN="${FQDN:-${fqdn:-}}"
+: "${FQDN:?ERROR: FQDN is required. Example: export FQDN=<student>-master.<region>.cloudapp.azure.com}"
 
 sudo kubeadm reset -f || true
 sudo rm -rf /etc/cni/net.d/*
@@ -241,6 +249,7 @@ Configure kubectl on the master node:
 mkdir -p $HOME/.kube
 sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
+kubectl --kubeconfig "$HOME/.kube/config" config set-cluster kubernetes --server "https://${FQDN}:6443"
 ```
 
 Create the worker join command:
@@ -257,7 +266,7 @@ cat ~/workloadtojoin.sh
 Run only on the master node.
 
 ```bash
-CALICO_VERSION="${CALICO_VERSION:-v3.32.1}"
+CALICO_VERSION="${CALICO_VERSION:-v3.28.2}"
 POD_CIDR="10.244.0.0/16"
 
 curl -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
@@ -286,6 +295,9 @@ master=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 worker=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
 
+ssh -o 'StrictHostKeyChecking=no' $username@$master \
+"kubeadm token create --print-join-command | sed 's#^kubeadm join#sudo kubeadm join --cri-socket unix:///run/containerd/containerd.sock#' > ~/workloadtojoin.sh && chmod +x ~/workloadtojoin.sh && cat ~/workloadtojoin.sh"
+
 scp -o 'StrictHostKeyChecking=no' $username@$master:~/workloadtojoin.sh ./workloadtojoin.sh
 scp -o 'StrictHostKeyChecking=no' ./workloadtojoin.sh $username@$worker:~/workloadtojoin.sh
 ssh -o 'StrictHostKeyChecking=no' -t $username@$worker "bash ~/workloadtojoin.sh"
@@ -301,7 +313,7 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 rm -rf $HOME/.kube/
 mkdir -p ~/.kube/
 scp -o 'StrictHostKeyChecking=no' $username@$nodename:~/.kube/config $HOME/.kube/config
-sed -i "s|server: https://[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}:6443|server: https://$nodename:6443|" $HOME/.kube/config
+kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'; echo
 ```
 
 ### Verify
@@ -316,6 +328,6 @@ Expected result:
 
 ```bash
 NAME          STATUS   ROLES           VERSION
-node-worker   Ready    <none>          v1.36.x
-nodemaster    Ready    control-plane   v1.36.x
+node-worker   Ready    <none>          v1.30.x
+node-master   Ready    control-plane   v1.30.x
 ```

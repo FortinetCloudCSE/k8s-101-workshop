@@ -11,21 +11,27 @@ weight: 1
 
 This task builds a simple Kubernetes cluster with one control-plane node and one worker node.
 
-The scripts in this workshop now use the current Kubernetes package repository at `pkgs.k8s.io`, `containerd` as the container runtime, `kubeadm` for cluster bootstrap, and Calico as the CNI.
+The scripts in this workshop now use the Kubernetes package repository at `pkgs.k8s.io`, `containerd` as the container runtime, `kubeadm` for cluster bootstrap, and Calico as the CNI.
+
+{{< notice info >}}
+This lab pins Kubernetes to `v1.30` for repeatable workshop builds and FortiAIGate readiness. FortiAIGate 8.0.1 requires Kubernetes 1.25.0 or later, plus working CNI, Helm, ingress, and storage prerequisites.
+{{< /notice >}}
 
 Default versions used by the scripts:
 
 ```bash
-K8S_MINOR=v1.36
-CALICO_VERSION=v3.32.1
+K8S_MINOR=v1.30
+CALICO_VERSION=v3.28.2
 POD_CIDR=10.244.0.0/16
 SERVICE_CIDR=10.96.0.0/12
 ```
 
+The master and worker scripts are non-interactive. They automatically overwrite existing Kubernetes apt keyring files and use `apt-get -y`, so students should not see manual `y/N` prompts during package setup.
+
 If you need to pin a different supported Kubernetes minor version, export it before running the scripts, for example:
 
 ```bash
-export K8S_MINOR=v1.35
+export K8S_MINOR=v1.30
 ```
 
 ### Use Azure Cloud Shell as kubernetes client
@@ -54,8 +60,8 @@ ssh_master_function() {
     cd $HOME/k8s-101-workshop/terraform/
     nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
     username=$(terraform output -json | jq -r .linuxvm_username.value)
-    export fqdn=${nodename}
-    ssh -o "StrictHostKeyChecking=no" -t $username@$nodename "export fqdn=${fqdn}; exec bash"
+    export FQDN=${nodename}
+    ssh -o "StrictHostKeyChecking=no" -t $username@$nodename "export FQDN=${FQDN}; exec bash"
 }
 alias ssh_master="ssh_master_function"
 
@@ -122,8 +128,11 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f || true
 scp -o 'StrictHostKeyChecking=no' $HOME/k8s-101-workshop/scripts/install_kubeadm_masternode.sh $username@$nodename:~/install_kubeadm_masternode.sh
-ssh -o 'StrictHostKeyChecking=no' -t $username@$nodename "export fqdn=${nodename}; bash ~/install_kubeadm_masternode.sh"
+ssh -o 'StrictHostKeyChecking=no' -t $username@$nodename "export FQDN=${nodename}; export K8S_MINOR=v1.30; bash ~/install_kubeadm_masternode.sh"
 ```
+
+The `FQDN` value is unique for each student and is pulled from Terraform output. It is added to the Kubernetes API server certificate so `kubectl` can connect from Azure Cloud Shell without a TLS certificate error.
+
 
 5. Install Kubernetes packages and container runtime on the worker node.
 
@@ -134,7 +143,7 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 
 ssh -o 'StrictHostKeyChecking=no' $username@$nodename sudo kubeadm reset -f || true
 scp -o 'StrictHostKeyChecking=no' $HOME/k8s-101-workshop/scripts/install_kubeadm_workernode.sh $username@$nodename:~/install_kubeadm_workernode.sh
-ssh -o 'StrictHostKeyChecking=no' -t $username@$nodename "bash ~/install_kubeadm_workernode.sh"
+ssh -o 'StrictHostKeyChecking=no' -t $username@$nodename "export K8S_MINOR=v1.30; bash ~/install_kubeadm_workernode.sh"
 ```
 
 6. Join worker node to cluster.
@@ -144,6 +153,9 @@ cd $HOME/k8s-101-workshop/terraform/
 master=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 worker=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
+
+ssh -o 'StrictHostKeyChecking=no' $username@$master \
+"kubeadm token create --print-join-command | sed 's#^kubeadm join#sudo kubeadm join --cri-socket unix:///run/containerd/containerd.sock#' > ~/workloadtojoin.sh && chmod +x ~/workloadtojoin.sh && cat ~/workloadtojoin.sh"
 
 scp -o 'StrictHostKeyChecking=no' $username@$master:~/workloadtojoin.sh ./workloadtojoin.sh
 scp -o 'StrictHostKeyChecking=no' ./workloadtojoin.sh $username@$worker:~/workloadtojoin.sh
@@ -160,7 +172,7 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 rm -rf $HOME/.kube/
 mkdir -p ~/.kube/
 scp -o 'StrictHostKeyChecking=no' $username@$nodename:~/.kube/config $HOME/.kube/config
-sed -i "s|server: https://[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}:6443|server: https://$nodename:6443|" $HOME/.kube/config
+kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}'; echo
 ```
 
 8. Verify the installation.
@@ -184,8 +196,8 @@ watch kubectl get nodes
 
 ```bash
 NAME          STATUS   ROLES           AGE   VERSION
-node-worker   Ready    <none>          10m   v1.36.x
-nodemaster    Ready    control-plane   15m   v1.36.x
+node-worker   Ready    <none>          10m   v1.30.x
+node-master   Ready    control-plane   15m   v1.30.x
 ```
 
 Container runtime should show `containerd`, for example:
@@ -227,7 +239,7 @@ kubectl version
 kubectl get nodes
 ```
 
-Expected server version is the latest package available in the configured `K8S_MINOR` repository, for example `v1.36.x`.
+Expected server version is the package available in the configured `K8S_MINOR` repository, for example `v1.30.x`.
 {{% /expand %}}
 
 3. What is the container runtime name and version?
