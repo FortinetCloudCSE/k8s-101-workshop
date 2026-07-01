@@ -2,11 +2,14 @@
   "repoName":"k8s-101-workshop",
   "author":"Srija Reddy Allam, Andy Wang",
   "workshopTitle":"Containers & Microservices 101: K8s Foundational",
-  "themeVariant":"Xperts2024",
+  "themeVariant":"CloudCSEMovie",
   "logoBannerText":"K8s 101",
-  "logoBannerSubText":"Foundational",
+  "logoBannerSubText":"",
   "errorLevel":"warning",
   "googleServicesID":"G-5RZBH288ST",
+  "marketingCode": "FortiHugo202",
+  "videoHeaderSrc": "/videos/CloudsAnimated.mp4",
+  "videoHeaderInterval": "60",
   "shortcuts": [
   {
     "text": "Workshop PDF",
