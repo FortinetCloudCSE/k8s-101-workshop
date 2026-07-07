@@ -150,6 +150,8 @@ sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
 sed -i '/calicoNetwork:/a\    bgp: Disabled' custom-resources.yaml
 kubectl --kubeconfig "/home/${username}/.kube/config" apply --server-side -f custom-resources.yaml
 
+kubectl --kubeconfig "/home/${username}/.kube/config" wait --for=condition=Available installation/default --timeout=300s
+
 kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment calico-kube-controllers -n calico-system --timeout=300s
 kubectl --kubeconfig "/home/${username}/.kube/config" rollout status ds calico-node -n calico-system --timeout=300s
 kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment coredns -n kube-system --timeout=180s
