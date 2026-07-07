@@ -140,7 +140,7 @@ cd "$HOME"
 sudo curl --retry 3 --retry-connrefused -fL "https://github.com/projectcalico/calico/releases/download/${CALICO_VERSION}/calicoctl-linux-${ARCH}" -o /usr/local/bin/calicoctl
 sudo chmod +x /usr/local/bin/calicoctl
 curl --retry 3 --retry-connrefused -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
-kubectl --kubeconfig "/home/${username}/.kube/config" apply -f tigera-operator.yaml
+kubectl --kubeconfig "/home/${username}/.kube/config" apply --server-side -f tigera-operator.yaml
 kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment tigera-operator -n tigera-operator --timeout=180s
 
 curl --retry 3 --retry-connrefused -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/custom-resources.yaml"
@@ -148,7 +148,7 @@ sed -i -e "s?192.168.0.0/16?${POD_CIDR}?g" custom-resources.yaml
 sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
 # Keep this lab simple and avoid BGP requirements between Azure VMs.
 sed -i '/calicoNetwork:/a\    bgp: Disabled' custom-resources.yaml
-kubectl --kubeconfig "/home/${username}/.kube/config" apply -f custom-resources.yaml
+kubectl --kubeconfig "/home/${username}/.kube/config" apply --server-side -f custom-resources.yaml
 
 kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment calico-kube-controllers -n calico-system --timeout=300s
 kubectl --kubeconfig "/home/${username}/.kube/config" rollout status ds calico-node -n calico-system --timeout=300s
