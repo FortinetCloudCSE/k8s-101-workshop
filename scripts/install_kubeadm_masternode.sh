@@ -137,34 +137,50 @@ cat "/home/${username}/workloadtojoin.sh"
 
 # Install Calico CNI using the Tigera operator.
 cd "$HOME"
-sudo curl --retry 3 --retry-connrefused -fL "https://github.com/projectcalico/calico/releases/download/${CALICO_VERSION}/calicoctl-linux-${ARCH}" -o /usr/local/bin/calicoctl
-sudo chmod +x /usr/local/bin/calicoctl
-curl --retry 3 --retry-connrefused -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
-kubectl --kubeconfig "/home/${username}/.kube/config" apply --server-side -f tigera-operator.yaml
-kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment tigera-operator -n tigera-operator --timeout=180s
 
-curl --retry 3 --retry-connrefused -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/custom-resources.yaml"
+sudo curl --retry 3 --retry-connrefused -fL \
+  "https://github.com/projectcalico/calico/releases/download/${CALICO_VERSION}/calicoctl-linux-${ARCH}" \
+  -o /usr/local/bin/calicoctl
+sudo chmod +x /usr/local/bin/calicoctl
+
+curl --retry 3 --retry-connrefused -fLO \
+  "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
+
+kubectl --kubeconfig "/home/${username}/.kube/config" apply --server-side -f tigera-operator.yaml
+
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment tigera-operator -n tigera-operator --timeout=300s
+
+curl --retry 3 --retry-connrefused -fLO \
+  "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/custom-resources.yaml"
+
 sed -i -e "s?192.168.0.0/16?${POD_CIDR}?g" custom-resources.yaml
 sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
+
 # Keep this lab simple and avoid BGP requirements between Azure VMs.
 sed -i '/calicoNetwork:/a\    bgp: Disabled' custom-resources.yaml
+
 kubectl --kubeconfig "/home/${username}/.kube/config" apply --server-side -f custom-resources.yaml
 
-kubectl --kubeconfig "/home/${username}/.kube/config" wait --for=condition=Available installation/default --timeout=300s
+# Wait for Tigera operator to create calico-system namespace.
+for i in {1..90}; do
+  if kubectl --kubeconfig "/home/${username}/.kube/config" get ns calico-system >/dev/null 2>&1; then
+    echo "calico-system namespace exists"
+    break
+  fi
 
-kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment calico-kube-controllers -n calico-system --timeout=300s
-kubectl --kubeconfig "/home/${username}/.kube/config" rollout status ds calico-node -n calico-system --timeout=300s
-kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment coredns -n kube-system --timeout=180s
+  echo "Waiting for calico-system namespace... attempt $i/90"
+  sleep 10
+done
 
-# Helm is needed by FortiAIGate deployment workflows.
-curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+# Hard check before rollout.
+if ! kubectl --kubeconfig "/home/${username}/.kube/config" get ns calico-system >/dev/null 2>&1; then
+  echo "ERROR: calico-system namespace was not created."
+  kubectl --kubeconfig "/home/${username}/.kube/config" get pods -n tigera-operator || true
+  kubectl --kubeconfig "/home/${username}/.kube/config" logs -n tigera-operator deployment/tigera-operator || true
+  kubectl --kubeconfig "/home/${username}/.kube/config" describe installation default || true
+  exit 1
+fi
 
-kubectl --kubeconfig "/home/${username}/.kube/config" get nodes -o wide
-kubectl --kubeconfig "/home/${username}/.kube/config" get pods -A
-
-echo "API server certificate SANs:"
-sudo openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -text | grep -A2 "Subject Alternative Name" || true
-
-cat "/home/${username}/workloadtojoin.sh"
-echo "installation done on master node"
-trap - ERR
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment calico-kube-controllers -n calico-system --timeout=600s
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status ds calico-node -n calico-system --timeout=600s
+kubectl --kubeconfig "/home/${username}/.kube/config" rollout status deployment coredns -n kube-system --timeout=300s
