@@ -1,9 +1,11 @@
 ---
-title: "Task 1 - Setup Azure CloudShell"
+title: "Task 1 - Setup Azure Cloud Shell"
 weight: 2
 ---
 
-#### 1. **Setup your AzureCloud Shell**
+Azure Cloud Shell is a browser-based command-line environment built into the Azure portal. It includes the Azure CLI and common tools needed for Kubernetes tasks, ensuring a consistent environment for everyone without the need to install tools locally.
+
+#### 1. **Setup your Azure Cloud Shell**
 
 * Login to Azure Cloud Portal [https://portal.azure.com/](https://portal.azure.com/) with the provided login/password
 
