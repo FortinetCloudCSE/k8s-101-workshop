@@ -290,26 +290,29 @@ kubectl describe hpa
 expected outcome
 
 ```
-Name:                     nginx-deployment-hpa
-Namespace:                default
-Labels:                   <none>
-Annotations:              autoscaling.alpha.kubernetes.io/conditions:
-                            [{"type":"AbleToScale","status":"True","lastTransitionTime":"2024-02-22T07:57:16Z","reason":"ReadyForNewScale","message":"recommended size...
-                          autoscaling.alpha.kubernetes.io/current-metrics:
-                            [{"type":"Resource","resource":{"name":"cpu","currentAverageUtilization":48,"currentAverageValue":"4m"}}]
-CreationTimestamp:        Thu, 22 Feb 2024 07:57:01 +0000
-Reference:                Deployment/nginx-deployment
-Target CPU utilization:   50%
-Current CPU utilization:  48%
-Min replicas:             2
-Max replicas:             10
-Deployment pods:          5 current / 5 desired
+Name:                                                  nginx-deployment-hpa
+Namespace:                                             default
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Wed, 08 Jul 2026 16:21:40 +0000
+Reference:                                             Deployment/nginx-deployment
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  117% (11m) / 50%
+Min replicas:                                          2
+Max replicas:                                          10
+Deployment pods:                                       10 current / 10 desired
+Conditions:
+  Type            Status  Reason            Message
+  ----            ------  ------            -------
+  AbleToScale     True    ReadyForNewScale  recommended size matches current size
+  ScalingActive   True    ValidMetricFound  the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooManyReplicas   the desired replica count is more than the maximum replica count
 Events:
-  Type    Reason             Age    From                       Message
-  ----    ------             ----   ----                       -------
-  Normal  SuccessfulRescale  4m28s  horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
-  Normal  SuccessfulRescale  4m13s  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
-  Normal  SuccessfulRescale  3m13s  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Type    Reason             Age   From                       Message
+  ----    ------             ----  ----                       -------
+  Normal  SuccessfulRescale  58s   horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  43s   horizontal-pod-autoscaler  New size: 8; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  28s   horizontal-pod-autoscaler  New size: 10; reason: cpu resource utilization (percentage of request) above target
 ```
 {{% /tab %}}
 {{< /tabs >}}
@@ -351,29 +354,30 @@ kubectl describe hpa
 {{% tab title="Expected Output" style="info" %}}
 expected outcome
 ```
-Name:                     nginx-deployment-hpa
-Namespace:                default
-Labels:                   <none>
-Annotations:              autoscaling.alpha.kubernetes.io/conditions:
-                            [{"type":"AbleToScale","status":"True","lastTransitionTime":"2024-02-22T07:57:16Z","reason":"ReadyForNewScale","message":"recommended size...
-                          autoscaling.alpha.kubernetes.io/current-metrics:
-                            [{"type":"Resource","resource":{"name":"cpu","currentAverageUtilization":0,"currentAverageValue":"0"}}]
-CreationTimestamp:        Thu, 22 Feb 2024 07:57:01 +0000
-Reference:                Deployment/nginx-deployment
-Target CPU utilization:   50%
-Current CPU utilization:  0%
-Min replicas:             2
-Max replicas:             10
-Deployment pods:          2 current / 2 desired
+Name:                                                  nginx-deployment-hpa
+Namespace:                                             default
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Wed, 08 Jul 2026 16:21:40 +0000
+Reference:                                             Deployment/nginx-deployment
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  0% (0) / 50%
+Min replicas:                                          2
+Max replicas:                                          10
+Deployment pods:                                       2 current / 2 desired
+Conditions:
+  Type            Status  Reason            Message
+  ----            ------  ------            -------
+  AbleToScale     True    ReadyForNewScale  recommended size matches current size
+  ScalingActive   True    ValidMetricFound  the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooFewReplicas    the desired replica count is less than the minimum replica count
 Events:
-  Type    Reason             Age    From                       Message
-  ----    ------             ----   ----                       -------
-  Normal  SuccessfulRescale  13m    horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
-  Normal  SuccessfulRescale  13m    horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
-  Normal  SuccessfulRescale  12m    horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
-  Normal  SuccessfulRescale  7m55s  horizontal-pod-autoscaler  New size: 8; reason: cpu resource utilization (percentage of request) above target
-  Normal  SuccessfulRescale  54s    horizontal-pod-autoscaler  New size: 5; reason: All metrics below target
-  Normal  SuccessfulRescale  39s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+  Type    Reason             Age   From                       Message
+  ----    ------             ----  ----                       -------
+  Normal  SuccessfulRescale  10m   horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  10m   horizontal-pod-autoscaler  New size: 8; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  10m   horizontal-pod-autoscaler  New size: 10; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  96s   horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
 ```
 {{% /tab %}}
 {{< /tabs >}}

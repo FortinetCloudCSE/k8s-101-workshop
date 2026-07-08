@@ -51,8 +51,8 @@ nginx-deployment   2/2     2            2
 Expected HPA object:
 
 ```bash
-NAME        REFERENCE                     TARGETS        MINPODS   MAXPODS
-nginx-hpa   Deployment/nginx-deployment   <unknown>/50%   2         10
+NAME        REFERENCE                     TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+nginx-hpa   Deployment/nginx-deployment   <unknown>/50%   2         10        2          34s
 ```
 
 After Metrics Server starts collecting CPU metrics, the HPA target changes from `<unknown>` to a CPU percentage.
@@ -70,8 +70,6 @@ helm version
 kubectl get ingressclass
 kubectl get storageclass
 ```
-
-For FortiAIGate, confirm that the cluster has a working CNI, Helm, ingress, and a storage design appropriate for the deployment.
 
 ## Generate load
 

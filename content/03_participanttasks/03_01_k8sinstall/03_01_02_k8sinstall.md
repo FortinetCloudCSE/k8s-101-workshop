@@ -72,52 +72,26 @@ source $HOME/.bashrc
 
 3. Generate SSH key and copy it to both nodes.
 
-{{< tabs "ssh keys">}}
-{{% tab title="delete kubeconfig" %}}
-
 ```bash
 rm -f ~/.kube/config
-```
-{{% /tab %}}
-{{% tab title="delete knownhost" %}}
 
-```bash
 rm -f /home/$(whoami)/.ssh/known_hosts
-```
-{{% /tab %}}
-{{% tab title="get password" %}}
 
-```bash
 cd $HOME/k8s-101-workshop/terraform/
 vmpassword=$(terraform output -json | jq -r .linuxvm_password.value)
 echo $vmpassword
-```
-{{% /tab %}}
-{{% tab title="gen ssh key" %}}
 
-```bash
 [ ! -f ~/.ssh/id_rsa ] && ssh-keygen -q -N "" -f ~/.ssh/id_rsa
-```
-{{% /tab %}}
-{{% tab title="copy to master" %}}
 
-```bash
 cd $HOME/k8s-101-workshop/terraform/
 nodename=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh-copy-id -f -o 'StrictHostKeyChecking=no' $username@$nodename
-```
-{{% /tab %}}
-{{% tab title="copy to worker" %}}
 
-```bash
-cd $HOME/k8s-101-workshop/terraform/
 nodename=$(terraform output -json | jq -r .linuxvm_worker_FQDN.value)
 username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh-copy-id -f -o 'StrictHostKeyChecking=no' $username@$nodename
 ```
-{{% /tab %}}
-{{< /tabs >}}
 
 4. Install Kubernetes on the master node.
 
