@@ -50,7 +50,7 @@ kubectl expose deployment kubernetes-bootcamp --port 80 --type=NodePort --target
 However, using a YAML file provides more flexibility. Let's create a NodePort service using a YAML file.
 {{< tabs >}}
 {{% tab title=" Create NotePort" %}}
-Create NodePort service with YAML file
+1. Create NodePort service with YAML file
 
 ```bash
 cat << EOF | tee kubernetes-bootcamp-nodeportsvc.yaml
@@ -74,7 +74,7 @@ kubectl apply -f kubernetes-bootcamp-nodeportsvc.yaml
 ```
 {{% /tab %}}
 {{% tab title="Verify NodePort" %}}
-Verify the result
+2. Verify the result
 ```bash
 kubectl get svc kubernetes-bootcamp-nodeportsvc
 ```
@@ -92,7 +92,8 @@ the NATTED PORT on worker node that running POD is **30913**.
 NodePort service will  exposes the service on a static port which is **30913** in this example on every node in the cluster, including both master and worker nodes. This means you can access the service using the IP address of **any node** in the cluster followed by the NodePort. 
 {{% /tab %}}
 {{% tab title="Verify NodePort" %}}
-5. Verify the service 
+
+3. Verify the service 
 
 from azure shell , access the application via nodeport service 
 
@@ -113,7 +114,7 @@ Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-bcbb7fc75-q7sqc | v
 ```
 {{% /tab %}}
 {{% tab title="check endpoints" %}}
-6. Check the endpoints of service
+4. Check the endpoints of service
 
 you can find the actual endpoints for nodeport service through command
 ```bash
@@ -349,11 +350,11 @@ kong   ingress-controllers.konghq.com/kong   <none>       9h
  
 #### Create nginx deployment  
 
-4 Create nginx deployment
+Create nginx deployment
 
 {{< tabs >}}
 {{% tab title="create Nginx" %}}
-Create nginx deployment with replicas set to 2. the container also configured resource usage limition for cpu and memory.
+4. Create nginx deployment with replicas set to 2. the container also configured resource usage limition for cpu and memory.
 
 ```bash
 cd $HOME
@@ -419,7 +420,9 @@ EOF
 ```
 {{% /tab %}}
 {{% tab title="check deploy" %}}
-check created deployment
+
+6. check created deployment
+
 ```bash
 kubectl get deployment nginx-deployment
 ```
@@ -432,7 +435,8 @@ nginx-deployment   2/2     2            2           5m41s
 ```
 {{% /tab %}}
 {{% tab title="check svc" %}}
-check created svc 
+
+7. check created svc 
 ```bash
 kubectl get svc nginx-deployment
 ```
@@ -447,13 +451,13 @@ nginx-deployment   ClusterIP   10.103.221.158   <none>        80/TCP    4m53s
 {{% /tab %}}
 {{< /tabs >}}
 
-Install cert-manager  
+#### Install cert-manager  
 
 to support https, a certificate for ingress controller is required. user can choose "cert-manager" for manage and deploy certificate. 
 
 {{< tabs >}}
 {{% tab title="deploy cert-manager" %}}
-use below cli to deploy cert-manager which is used to issue certificate needed for service
+8. use below cli to deploy cert-manager which is used to issue certificate needed for service
 
 ```bash
 kubectl get namespace cert-manager || kubectl create namespace cert-manager 
@@ -467,7 +471,7 @@ kubectl rollout status deployment cert-manager-webhook -n cert-manager
 {{% tab title="Create Cert" %}}
 once deployed. we need to create a certificate for service. 
 
-7. Create certficate 
+9. Create certficate 
 
 ```bash
 cd $HOME/k8s-101-workshop/terraform/
@@ -507,7 +511,7 @@ use `kubectl get ClusterIssuer`, `kubectl get secret  test-tls-test` and `kubect
 
 {{% /tab %}}
 {{% tab title="Ingress rule" %}}
-8. create ingress rule for nginx svc 
+10. create ingress rule for nginx svc 
 
 ```bash
 cd $HOME/k8s-101-workshop/terraform/
@@ -542,7 +546,7 @@ kubectl apply -f nginx_ingress_rule_with_cert_${nodename}.yaml
 ```
 {{% /tab %}}
 {{% tab title="Verify ingress " %}}
-9. Verify ingress rule
+11. Verify ingress rule
 
 ```bash
 kubectl get ingress nginx
@@ -555,7 +559,7 @@ nginx   kong    k8s50-master.eastus.cloudapp.azure.com,k8s50-master.eastus.cloud
 ```
 {{% /tab %}}
 {{% tab title="Check ingress" %}}
-10. Check ingress detail
+12. Check ingress detail
 
 
 ```bash
@@ -585,7 +589,7 @@ Events:                                   <none>
 ```
 {{% /tab %}}
 {{% tab title="Verify Service" %}}
-10. verify service
+13. verify service
 ```bash
 curl -I -k https://$nodename/default
 ```
@@ -593,7 +597,7 @@ both shall return 200 OK with response from nginx server
 
 {{% /tab %}}
 {{% tab title="Verify no path" %}}
-11. verify with not configured path 
+14. verify with not configured path 
 
 ```bash
 curl -k https://$nodename/
@@ -615,7 +619,7 @@ now let's create another path but point to a different service.
 
 {{< tabs >}}
 {{% tab title="K8s bootcamp deployment" %}}
-12. create Kubernetes-bootcamp deployment and service
+15. create Kubernetes-bootcamp deployment and service
 
 ```bash
 cat << EOF | tee kubernetes-bootcamp.yaml
@@ -665,7 +669,7 @@ kubectl create -f kubernetes-bootcamp-clusterip.yaml
 ```
 {{% /tab %}}
 {{% tab title="Update ingress" %}}
-13. update the ingress rule 
+16. update the ingress rule 
 
 also add a new rule with path configured to /bootcamp with backendservice set to kubernetes-bootcamp-deployment
 
@@ -713,7 +717,7 @@ kubectl apply -f nginx_ingress_rule_with_cert_${nodename}_two_svc.yaml
 
 {{% /tab %}}
 {{% tab title="Verify Ingress" %}}
-14. Verify ingress rule with 
+17. Verify ingress rule with 
 
 verify bootcamp ingress rule with https url
 
@@ -772,6 +776,7 @@ Commercial support is available at
 ```
 {{% /tab %}}
 {{< /tabs >}}
+
 #### Review Questions
 1. Create juice-shop with v15.0.0 deployment and ClusterIP svc
 {{% expand title="Click for Answer..." %}}

@@ -1,10 +1,10 @@
 ---
-title: "Fortinet XPerts 2024"
+title: "Fortinet XPerts 2026"
 weight: 1
 archetype: home
 ---
 
-{{< Xperts24Banner line1="K8s 101:" line2="Containers &amp; Microservices" line3="K8s Foundational" >}}
+<!-- {{< Xperts24Banner line1="K8s 101:" line2="Containers &amp; Microservices" line3="K8s Foundational" >}}-->
 
 ## Welcome to the Kubernets(K8s) 101 Workshop
 ACME is embarking on deploying a hyperscale web application.

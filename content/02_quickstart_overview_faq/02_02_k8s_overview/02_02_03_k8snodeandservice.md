@@ -1,5 +1,5 @@
 ---
-title: " K8S Node and Service"
+title: "K8S Node and Service"
 linkTitle: "Node and Service"
 weight: 3
 ---
