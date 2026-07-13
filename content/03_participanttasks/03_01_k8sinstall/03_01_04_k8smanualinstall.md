@@ -111,6 +111,51 @@ username=$(terraform output -json | jq -r .linuxvm_username.value)
 ssh-copy-id -f -o 'StrictHostKeyChecking=no' $username@$nodename
 ```
 
+### Connect to the master node
+
+All of the following sections through **Install Calico CNI** run **on the master VM**, not in Azure Cloud Shell. Cloud Shell has no systemd, so `sudo`, `systemctl`, and `crictl` will fail there with `System has not been booted with systemd as init system`.
+
+Open a shell on the master node using the alias defined earlier:
+
+```bash
+ssh_master
+```
+
+Your prompt should change to the VM's user (for example `azureuser@node-master`). Confirm you are on the node and that `FQDN` came across with you:
+
+```bash
+hostname
+echo "$FQDN"
+```
+
+`ssh_master` exports `FQDN` onto the node automatically — the **Initialize the master node** step below needs it for the API server certificate.
+
+### Connect to the worker node
+
+The **Manual node preparation**, **Install containerd**, **Install kubeadm, kubelet, and kubectl**, and **Configure kubelet node IP** sections must also run on the worker VM. Open a **second Azure Cloud Shell tab** so you can keep the master session open, and connect:
+
+```bash
+ssh_worker
+```
+
+{{% notice note %}}
+You should be running this workshop from **Azure Cloud Shell**. To get a second, independent session, duplicate your Azure portal browser tab (right-click the tab → **Duplicate**, or open [portal.azure.com](https://portal.azure.com) in a new tab) and open Cloud Shell there. This keeps your master-node session live in the first tab while you prepare the worker node in the second.
+{{% /notice %}}
+
+Run those four sections on the worker, then stop — the worker does **not** run `kubeadm init` or Calico. It only joins the cluster later, in **Join the worker node**.
+
+{{% notice tip %}}
+If the `ssh_master` / `ssh_worker` aliases aren't available, connect directly from the `terraform/` directory:
+
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+username=$(terraform output -json | jq -r .linuxvm_username.value)
+master=$(terraform output -json | jq -r .linuxvm_master_FQDN.value)
+# master node (note: pass FQDN through for kubeadm init)
+ssh -o 'StrictHostKeyChecking=no' -t $username@$master "export FQDN=${master}; exec bash"
+```
+{{% /notice %}}
+
 ### Manual node preparation
 
 Run the following on both master and worker nodes.
@@ -161,7 +206,9 @@ sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 sudo systemctl daemon-reload
-sudo systemctl enable --now containerd
+sudo systemctl enable containerd
+sudo systemctl restart containerd
+sudo systemctl is-active --quiet containerd
 ```
 
 Create crictl configuration:
@@ -175,11 +222,12 @@ debug: false
 CRICTL
 ```
 
-Verify containerd:
+Verify containerd. Use `ctr`, which ships with containerd — `crictl` is not
+installed yet (it arrives with `kubeadm` in the next section):
 
 ```bash
 systemctl status containerd --no-pager
-sudo crictl info
+sudo ctr version
 ```
 
 ### Install kubeadm, kubelet, and kubectl
@@ -202,6 +250,13 @@ sudo apt-get update -y
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 sudo systemctl enable --now kubelet
+```
+
+Now that `kubeadm` has pulled in `cri-tools`, `crictl` is available. Verify it can
+talk to containerd through the CRI socket (using the `/etc/crictl.yaml` created earlier):
+
+```bash
+sudo crictl info
 ```
 
 ### Configure kubelet node IP
@@ -230,8 +285,17 @@ NODENAME="node-master"
 FQDN="${FQDN:-${fqdn:-}}"
 : "${FQDN:?ERROR: FQDN is required. Example: export FQDN=<student>-master.<region>.cloudapp.azure.com}"
 
-sudo kubeadm reset -f || true
-sudo rm -rf /etc/cni/net.d/*
+sudo kubeadm reset -f \
+  --cri-socket=unix:///run/containerd/containerd.sock || true
+sudo rm -rf \
+  /etc/kubernetes \
+  /etc/cni/net.d \
+  /var/lib/cni \
+  /var/lib/kubelet \
+  /var/lib/etcd
+rm -rf "$HOME/.kube"
+sudo systemctl restart containerd
+sudo systemctl restart kubelet || true
 sudo kubeadm config images pull --cri-socket unix:///run/containerd/containerd.sock
 sudo kubeadm init \
   --cri-socket=unix:///run/containerd/containerd.sock \
@@ -270,7 +334,9 @@ CALICO_VERSION="${CALICO_VERSION:-v3.28.2}"
 POD_CIDR="10.244.0.0/16"
 
 curl -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
-kubectl apply -f tigera-operator.yaml
+# Use server-side apply: the Calico operator CRDs are too large for client-side
+# apply, which fails with "metadata.annotations: Too long" and silently skips them.
+kubectl apply --server-side --force-conflicts -f tigera-operator.yaml
 kubectl rollout status deployment tigera-operator -n tigera-operator --timeout=180s
 
 curl -fLO "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/custom-resources.yaml"
@@ -279,8 +345,42 @@ sed -i -e "s?VXLANCrossSubnet?VXLAN?g" custom-resources.yaml
 sed -i '/calicoNetwork:/a\    bgp: Disabled' custom-resources.yaml
 kubectl apply -f custom-resources.yaml
 
-kubectl rollout status deployment calico-kube-controllers -n calico-system --timeout=300s
-kubectl rollout status ds calico-node -n calico-system --timeout=300s
+# The operator creates the calico-system namespace asynchronously. Poll for at
+# most five minutes; Kubernetes 1.30's kubectl does not support --for=create.
+calico_namespace_ready=false
+for attempt in $(seq 1 60); do
+  if kubectl get namespace calico-system >/dev/null 2>&1; then
+    calico_namespace_ready=true
+    break
+  fi
+
+  echo "Waiting for calico-system namespace... attempt ${attempt}/60"
+  sleep 5
+done
+
+if [ "$calico_namespace_ready" != true ]; then
+
+  echo "ERROR: Calico did not create the calico-system namespace."
+  kubectl get pods -n tigera-operator -o wide
+  kubectl logs -n tigera-operator deployment/tigera-operator --tail=200
+  kubectl describe installation default
+  echo "Stop here and resolve the Calico operator error before continuing."
+else
+  kubectl rollout status \
+    deployment/calico-kube-controllers \
+    -n calico-system \
+    --timeout=600s
+
+  kubectl rollout status \
+    daemonset/calico-node \
+    -n calico-system \
+    --timeout=600s
+
+  kubectl rollout status \
+    deployment/coredns \
+    -n kube-system \
+    --timeout=300s
+fi
 ```
 
 ### Join the worker node
@@ -300,8 +400,53 @@ ssh -o 'StrictHostKeyChecking=no' $username@$master \
 
 scp -o 'StrictHostKeyChecking=no' $username@$master:~/workloadtojoin.sh ./workloadtojoin.sh
 scp -o 'StrictHostKeyChecking=no' ./workloadtojoin.sh $username@$worker:~/workloadtojoin.sh
-ssh -o 'StrictHostKeyChecking=no' -t $username@$worker "bash ~/workloadtojoin.sh"
+
+# Reset any prior Kubernetes state on the worker before joining. Without this,
+# a re-run can fail preflight or retain stale kubelet and CNI state.
+ssh -o 'StrictHostKeyChecking=no' "$username@$worker" 'bash -s' <<'REMOTE'
+set -e
+sudo kubeadm reset -f \
+  --cri-socket=unix:///run/containerd/containerd.sock || true
+sudo rm -rf \
+  /etc/kubernetes \
+  /etc/cni/net.d \
+  /var/lib/cni \
+  /var/lib/kubelet
+sudo mkdir -p /etc/kubernetes/manifests
+sudo systemctl restart containerd
+sudo systemctl restart kubelet || true
+REMOTE
+
+ssh -o 'StrictHostKeyChecking=no' -t "$username@$worker" "sudo bash ~/workloadtojoin.sh"
 ```
+
+{{% notice note %}}
+If you are on the worker node directly (via `ssh_worker`) instead of driving it from Cloud Shell, you still need a fresh join command from the master. The worker cannot create its own bootstrap token, and `~/workloadtojoin.sh` exists only on the master unless it was copied previously.
+
+In the master-node session, generate a fresh command:
+
+```bash
+kubeadm token create --print-join-command | \
+  sed 's#^kubeadm join#sudo kubeadm join --cri-socket unix:///run/containerd/containerd.sock#'
+```
+
+Copy the complete command that this prints. Then, in the worker-node session, reset the old Kubernetes state:
+
+```bash
+sudo kubeadm reset -f \
+  --cri-socket=unix:///run/containerd/containerd.sock || true
+sudo rm -rf \
+  /etc/kubernetes \
+  /etc/cni/net.d \
+  /var/lib/cni \
+  /var/lib/kubelet
+sudo mkdir -p /etc/kubernetes/manifests
+sudo systemctl restart containerd
+sudo systemctl restart kubelet || true
+```
+
+Finally, paste and run the fresh `sudo kubeadm join ...` command from the master. Do not run an old `~/workloadtojoin.sh`; its token may be missing or expired.
+{{% /notice %}}
 
 ### Copy kubeconfig to Azure Cloud Shell
 
