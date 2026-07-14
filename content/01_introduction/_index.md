@@ -38,7 +38,7 @@ In this workshop, you will:
 
 - However, the choice often depends on factors such as existing cloud provider relationships, specific feature requirements, pricing, and the level of control and customization desired by the organization.
 
-In this workshop, we begin with **Azure Managed Kubernetes (AKS)** for an easy start, followed by a deep dive into **self-managed Kubernetes with kubeadm**, covering the installation of every component.
+<!-- In this workshop, we begin with **Azure Managed Kubernetes (AKS)** for an easy start, followed by a deep dive into **self-managed Kubernetes with kubeadm**, covering the installation of every component. -->
 
 ## Formatting Conventions
 - Yellow Highlighted Text: 

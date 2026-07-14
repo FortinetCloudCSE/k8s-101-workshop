@@ -10,15 +10,15 @@ weight: 2
  - 1.1 Setup Azure Cloud Shell
  - 1.2 Use Terraform to initialize two VMs for a self-managed Kubernetes installation
 
-## 2 [K8s Learning](02_quickstart_overview_faq/02_02_k8s_overview.html)
+ <!--  ## 2 [K8s Learning](02_quickstart_overview_faq/02_02_k8s_overview.html)
 
  - 2.1 Introduction to Kubernetes and its fundamental workings
- - 2.2 Quickstart with Azure AKS to cover basic Kubernetes concepts
+ - 2.2 Quickstart with Azure AKS to cover basic Kubernetes concepts -->
 
-## 3 [Self-Managed K8s Workshop Hands-on](03_participanttasks/03_01_k8sinstall.html)
- - 3.1 Task 1 : Install a self-managed Kubernetes cluster using **kubeadm**
- - 3.2 Task 2 : Deploy and Scale application
- - 3.3 K8s in Depth:  Deep dive into Kubernetes, including application deployment, upgrades, and exposure
+## 2 [Self-Managed K8s Workshop Hands-on](03_participanttasks/03_01_k8sinstall.html)
+ - 2.1 Task 1 : Install a self-managed Kubernetes cluster using **kubeadm**
+ - 2.2 Task 2 : Deploy and Scale application
+ - 2.3 K8s in Depth:  Deep dive into Kubernetes, including application deployment, upgrades, and exposure
 
 ## Guidance for Participants:
 
