@@ -1,8 +1,13 @@
 ---
-title: "cleanup"
-linkTitle: "cleanup"
+title: "Task 7 - Cleanup"
+linkTitle: "Task 7 - Cleanup"
 weight: 8
 ---
+
+
+{{< notice warning >}}
+Only complete this cleanup step if you are finished with the workshop. If you plan to continue with other labs like [AI-101](https://fortinetcloudcse.github.io/ai-101/) or [FortiAIGate Workshop](https://fortinetcloudcse.github.io/fortiaigate-demo-runbook/), skip the cleanup.
+{{< /notice >}}
 
 After completing all tasks with the Self-Managed Kubernetes, use the following command to delete the two Azure VMs:
 
