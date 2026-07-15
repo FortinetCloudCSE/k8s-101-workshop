@@ -52,7 +52,7 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
   resource_group_name   = data.azurerm_resource_group.resourcegroup.name
   location              = data.azurerm_resource_group.resourcegroup.location
   # size                  = "Standard_B2s"
-  size                  = "Standard_B4as_v2" # increase instance size for AI101 Lab
+  size                  = "Standard_D16as_v5" # increase instance size for FAIG Lab
   admin_username        = "ubuntu"
   admin_password        = "AdminPassword1234!"
   disable_password_authentication = false
@@ -62,6 +62,7 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
+    disk_size_gb         = 80
   }
 
   source_image_reference {
