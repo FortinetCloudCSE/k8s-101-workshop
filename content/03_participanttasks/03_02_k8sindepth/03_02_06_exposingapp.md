@@ -91,8 +91,7 @@ the NATTED PORT on worker node that running POD is **30913**.
 
 NodePort service will  exposes the service on a static port which is **30913** in this example on every node in the cluster, including both master and worker nodes. This means you can access the service using the IP address of **any node** in the cluster followed by the NodePort. 
 {{% /tab %}}
-{{% tab title="Verify NodePort" %}}
-
+{{% tab title="Verify Service" %}}
 3. Verify the service 
 
 from azure shell , access the application via nodeport service 
@@ -106,6 +105,7 @@ or
 curl http://$(whoami)-worker.eastus.cloudapp.azure.com:30913
 ```
 {{% /tab %}}
+
 {{% tab title="Expected Output Service" style="info" %}}
 expected outcome
 
