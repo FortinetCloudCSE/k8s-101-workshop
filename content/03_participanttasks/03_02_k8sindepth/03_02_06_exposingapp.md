@@ -84,7 +84,6 @@ expected Outcome
 ```
 NAME                              TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
 kubernetes-bootcamp-nodeportsvc   NodePort   10.103.189.68   <none>        80:30913/TCP   24s
-
 ```
 
 the NATTED PORT on worker node that running POD is **30913**.
@@ -101,14 +100,13 @@ use
 curl http://$(whoami)-master.eastus.cloudapp.azure.com:30913
 ``` 
 or 
+
 ```bash
 curl http://$(whoami)-worker.eastus.cloudapp.azure.com:30913
 ```
 {{% /tab %}}
-
 {{% tab title="Expected Output Service" style="info" %}}
 expected outcome
-
 ```
 Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-bcbb7fc75-q7sqc | v=1
 ```
@@ -202,7 +200,7 @@ kubectl get ipaddresspool -n metallb-system
 expected Outcome
 ```
 NAME         AUTO ASSIGN   AVOID BUGGY IPS   ADDRESSES
-first-pool   true          false             ["10.0.0.4/32"]
+first-pool   true          false             ["10.0.0.5/32"]
 ```
 {{% /tab %}}
 {{< /tabs >}}
@@ -245,7 +243,7 @@ kubectl get svc kubernetes-bootcamp-lb-svc
 expected outcome
 ```
 NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
-kubernetes-bootcamp-lb-svc   LoadBalancer   10.106.121.27   10.0.0.4      80:32537/TCP   26s
+kubernetes-bootcamp-lb-svc   LoadBalancer   10.106.121.27   10.0.0.5      80:32537/TCP   26s
 ```
 {{% /tab %}}
 {{% tab title="Curl Verify" %}}
@@ -326,7 +324,7 @@ kubectl get svc kong-proxy -n kong
 {{% tab title="Expected Output" style="info" %}}
 expected outcome
 ```
-kong-proxy   LoadBalancer   10.97.121.60   10.0.0.4      80:32477/TCP,443:31364/TCP   2m10s
+kong-proxy   LoadBalancer   10.97.121.60   10.0.0.5      80:32477/TCP,443:31364/TCP   2m10s
 ```
 {{% /tab %}}
 {{% tab title="Verify ingressClasses" %}}
@@ -555,7 +553,7 @@ kubectl get ingress nginx
 expected outcome
 ```
 NAME    CLASS   HOSTS               ADDRESS    PORTS     AGE
-nginx   kong    k8s50-master.eastus.cloudapp.azure.com,k8s50-master.eastus.cloudapp.azure.com    10.0.0.4   80, 443   7m58s
+nginx   kong    k8s50-master.eastus.cloudapp.azure.com,k8s50-master.eastus.cloudapp.azure.com    10.0.0.5   80, 443   7m58s
 ```
 {{% /tab %}}
 {{% tab title="Check ingress" %}}
@@ -572,7 +570,7 @@ expected outcome
 Name:             nginx
 Labels:           <none>
 Namespace:        default
-Address:          10.0.0.4
+Address:          10.0.0.5
 Ingress Class:    kong
 Default backend:  <default>
 TLS:
