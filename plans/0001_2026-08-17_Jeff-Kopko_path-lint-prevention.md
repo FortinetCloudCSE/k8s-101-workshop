@@ -2,7 +2,7 @@
 Date: 2026-08-17
 Owner: Jeff Kopko
 Slug: path-lint-prevention
-Status: Approved
+Status: Complete
 Supersedes: none
 Superseded-By: none
 Plan File: plans/0001_2026-08-17_Jeff-Kopko_path-lint-prevention.md
@@ -137,6 +137,16 @@ and the linter returned to exit 0 with a clean `git status`.
       tracked in the `ai-101` plan's follow-ups
 - [ ] If `pathtabs` is upstreamed to CentralRepo, drop the "copy from `ai-101`" pointer in
       `CLAUDE.md` and fill in this repo's `PATH_KEYS`
+- [x] **Merged 2026-08-17 via PR #104**, which also published the pre-existing 37-file
+      page-bundle migration `a55f83c` — flagged in the PR body rather than slipped in, since
+      it eliminates the 17 `image ... is not a resource` WARNs that pristine `main` emitted.
+      Post-merge: Pages deploy green, published pages spot-checked over HTTP (200s).
+- [x] **Build WARNs 3 -> 1, done in the same PR.** The two `is not a page or a resource`
+      link WARNs on `03_01_02_k8sinstall/index.md` were fixed with `/`-rooted content refs,
+      superseding the earlier `CLAUDE.md` note that called them cosmetic. The surviving
+      `menu` `url` PDF-shortcut WARN is unfixable from this repo and is now the documented
+      baseline; the upstream fix (relearn `errorignore` or `pageRef` in `hugo.jinja`) is
+      tracked in the `ai-101` plan's follow-ups.
 
 ## Risks / Open Questions
 
