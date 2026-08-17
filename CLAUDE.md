@@ -62,6 +62,7 @@ scripts/
   install_kubeadm_workernode.sh              — worker join
   deploy_application_with_hpa_masternode.sh  — sample app + HPA
   regression.sh                              — DESTRUCTIVE end-to-end lab rebuild (see gotchas)
+  lint_paths.py                              — deployment-path guardrail; empty vocabulary here (see Deployment paths)
 terraform/
   main.tf                — required_providers + provider block ONLY
   variables.tf           — single variable: username (no default)
@@ -71,7 +72,8 @@ terraform/
 repo_upgrade_spec.json   — files_to_copy / files_to_delete / folders_to_delete for the upgrade tool
 Dockerfile               — synced by the upgrade tool; NOT used by CI (see gotchas)
 Jenkinsfile              — content-lint pipeline; sets a GitHub commit status
-.github/workflows/static.yml — build + deploy to Pages on push to main
+.github/workflows/static.yml — build + deploy to Pages on push to main (template-owned, NEVER edit)
+.github/workflows/path-lint.yml — runs scripts/lint_paths.py on pull_request
 migration_log_dry_run_20260817_193337.csv — page-bundle migrator dry-run audit trail
 migration_log_run_20260817_193508.csv     — page-bundle migrator actual-run audit trail
 ```
@@ -99,7 +101,7 @@ docker rm "$CID"
 cd terraform && terraform apply -var="username=$(whoami)"
 ```
 
-There is no automated test suite. Content changes are validated by rendering locally and diffing the build log; lab changes by running the scripts against real Azure VMs.
+There is no automated test suite. Content changes are validated by rendering locally and diffing the build log; lab changes by running the scripts against real Azure VMs. The one automated check is `python3 scripts/lint_paths.py` (run by `path-lint.yml` on PRs) — it lints content conventions, not the build.
 
 **Known-good build baseline (verified on `jkopkoEdits` @ `a55f83c`):** exit 0, `Pages 48`, `Non-page files 25`, `Static files 13` — page and non-page counts are identical to pristine `main`. All 57 local `<img>` src occurrences in the output resolve, 0 broken. Log contains exactly 3 WARNs: 2 cosmetic link WARNs (see gotchas) and 1 pre-existing `menu` `url` vs `pageRef` WARN for the Workshop PDF shortcut. Pristine `main` by contrast emits 17 `image ... is not a resource` WARNs, all eliminated by the page-bundle migration.
 
@@ -142,7 +144,7 @@ There is no automated test suite. Content changes are validated by rendering loc
 
 - **The Jenkinsfile lint is advisory only.** It loops over `content/*/`, greps for `discussion|questions|q&a`, and `echo`s a warning if a directory has none — wrapped in `try/catch` that swallows all exceptions, so it never fails the build. The FortiDevSec SAST stage is **disabled** via `when { expression { false } }`. The pipeline's only real effect is setting a `ci/jenkins/build-status` GitHub commit status.
 
-- **Shortcodes come from the CentralRepo theme (hugo-theme-relearn):** `{{% notice %}}`, `{{< tabs >}}` / `{{% tab title="…" %}}`. Grep existing content before inventing new ones.
+- **Shortcodes come from the CentralRepo theme (hugo-theme-relearn):** `{{% notice %}}`, `{{< tabs >}}` / `{{% tab title="…" %}}`. Grep existing content before inventing new ones. All 33 existing `tabs` groups are a command-vs-"Expected Output" axis — if you ever need an *environment* axis, read **Deployment Paths** below first; a bare `tabs` group silently resets to its first tab on every page load.
 
 - **Page ordering is `weight` in front matter,** not filename. Numeric directory prefixes are cosmetic — note `03_02_k8sindepth/03_01_01_pods/` breaks the prefix convention with no ill effect.
 
@@ -151,6 +153,25 @@ There is no automated test suite. Content changes are validated by rendering loc
 - **`content/03_participanttasks/03_02_k8sindepth/test/index.md` has no front matter and is raw shell/YAML.** It builds and publishes as `test.html`. Pre-existing; deleting it would change the 48/25 build baseline.
 
 - **Deploy triggers only on push to `main`** (plus `workflow_dispatch`, which offers `runner_type` and `image_variant: prod|dev` inputs — `dev` swaps in `public.ecr.aws/k4n6m5h8/hugotester:latest`).
+
+## Deployment Paths
+
+**This workshop has exactly ONE deployment path: self-managed `kubeadm` on the two Azure VMs Terraform creates.** Everything in `content/` assumes it. Read this section before adding any second path, any "choose your environment" branch, or any `tabs` group whose tabs are environments rather than commands.
+
+- **AKS is dead here and is NOT a live choice.** It survives only as prose: the "begin with Azure Managed Kubernetes (AKS)" sentence at `content/01_introduction/_index.md:41` is HTML-commented out, and the whole AKS overview walkthrough exists only as disabled `*.md.txt` under `content/02_quickstart_overview_faq/02_02_k8s_overview/`. Do not treat any of that as a supported path, and do not wire it back up as one without going through the mechanism below. (Deleting the dead references is a separate, deliberately deferred follow-up — don't do it as a drive-by.)
+
+- **Any future path branch MUST go through a `pathtabs`-style shortcode that carries relearn's `groupid`, never a bare `{{< tabs >}}`.** Relearn synchronizes tab groups site-wide *only* when they share a `groupid` (`layouts/shortcodes/tabs.html`, persisted to `localStorage["<absBaseUri>/tab-selections"]`). A group without one — or one whose stored `itemid` is absent because a title changed by a character or gained an icon — falls back to its **first** tab, **silently, on every page load**. That is not hypothetical: `ai-101` shipped six path tab pairs in exactly that state, and participants' chosen path reset itself mid-workshop with nothing in the build log to show it.
+
+- **`ai-101` is the reference implementation — copy from it, do not reinvent.** `~/pythonProjects/ai-101/layouts/shortcodes/pathtabs.html` + `pathtab.html` hardcode the `groupid` and the tab titles so an author *cannot* express the broken form, and they `errorf` on a missing or duplicated path, which fails the Hugo build rather than warning. (Note this repo has no `layouts/` at all today — everything comes from CentralRepo inside the image — so adding these creates the first repo-local layout override. That is fine and expected; there is an open follow-up to upstream them to CentralRepo instead.)
+
+- **`scripts/lint_paths.py` enforces this, and its path vocabulary is deliberately empty.** Run it with `python3 scripts/lint_paths.py`; `.github/workflows/path-lint.yml` runs it on every PR touching `content/**`, `layouts/shortcodes/pathtab*.html`, the linter, or itself. With an empty vocabulary only two of its five checks are live:
+  - **live** — `handwritten-groupid`: a literal `groupid="deploy-path"` anywhere. Paths go through the shortcode, never by hand.
+  - **live** — `tilde-in-quotes`: `cd "~` anywhere. Bash does not expand `~` inside double quotes, so a participant pasting that gets "No such file or directory". Checked inside code fences too, which is where it lives. (Currently zero occurrences here; `ai-101` had 13.)
+  - inert — `path-tab-outside-pathtabs` (`PATH_TITLE_RE = None`), `token-outside-path-block` (`PATH_TOKENS = []`), `stale-handouts` (no `scripts/gen_handouts.py` here).
+
+- **Do NOT re-enable `PATH_TITLE_RE` by copying `ai-101`'s pattern — it fails CI immediately.** Its `\b(docker|compose|kubernetes|k8s|helm)\b` matches two legitimate existing tab titles, `"4.helm version"` and `"K8s bootcamp deployment"`. This repo's 33 live `tabs` groups are a **command vs "Expected Output"** axis, not a path axis; a path-title heuristic has no signal here. Leave those 33 groups alone — they must never share a `deploy-path` groupid.
+
+- **Keep `scripts/lint_paths.py` diffable against `ai-101`'s copy.** The two are structurally identical by design so a fix to one ports cheaply; all divergence is confined to the `CONFIG` block plus one `PATH_TITLE_RE is not None` guard. Turning a path on here should be a config edit, not a re-port.
 
 ## Environment Variables
 
@@ -176,6 +197,8 @@ GITHUB_TOKEN=     # only for CentralRepo/scripts/batch_repo_update.py (not run f
 **Change site chrome** (title, banner, analytics, sidebar links): edit `scripts/repoConfig.json`. Nothing else in this repo affects Hugo config.
 
 **Change the lab environment**: edit `terraform/azurevm_linux.tf` for VM shape/image, `scripts/install_kubeadm_*.sh` for cluster bootstrap. Both are walked through step-by-step in `content/03_participanttasks/` — update the content in the same change.
+
+**Add a second deployment path** (e.g. bring AKS back): read **Deployment Paths** above first. Copy `layouts/shortcodes/pathtabs.html` + `pathtab.html` from `ai-101`, fill in `PATH_KEYS` / `PATH_TITLE_RE` / `PATH_TOKENS` in `scripts/lint_paths.py`, then run the linter — expect to add `ALLOWLIST` entries for conceptual prose that names both paths. Never hand-write `groupid="deploy-path"`.
 
 **File a plan/spec/log**: root-level `plans/NNNN_YYYY-MM-DD_<git-username>_<slug>.md` (plus optional `.log.md`, `.spec.md`). **Not** `docs/plans/` — see the `docs/` gotcha. `NNNN` is a per-repo sequence; the log is optional; on completion, durable facts get promoted into this file and the plan is left to decay. `plans/README.md` has the details.
 
