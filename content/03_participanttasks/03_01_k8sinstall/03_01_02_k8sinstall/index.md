@@ -7,7 +7,7 @@ weight: 1
 
 ## Use kubeadm to install kubernetes
 
-![labafter](../../images/K8s%20workshopafter-101.png)
+{{< figure src="K8s-workshopafter-101.png" alt="labafter" >}}
 
 This task builds a simple Kubernetes cluster with one control-plane node and one worker node.
 
@@ -36,7 +36,7 @@ export K8S_MINOR=v1.30
 
 ### Use Azure Cloud Shell as kubernetes client
 
-To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your [Terraform deployment in Azure Cloud Shell](../../02_quickstart_overview_faq/02_01_quickstart/02_01_03_terraform.html). Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations.
+To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your [Terraform deployment in Azure Cloud Shell](/02_quickstart_overview_faq/02_01_quickstart/02_01_03_terraform). Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations.
 
 1. Navigate to your project directory where your Kubernetes workshop materials are located:
 
@@ -187,7 +187,7 @@ kubectl get nodes -o wide
 
 This chapter installs Kubernetes using kubeadm. The workshop creates one control-plane node and one worker node. The current script uses containerd instead of CRI-O and installs Kubernetes through `pkgs.k8s.io`.
 
-Continue to [deploy and scaling application](../../03_participanttasks/03_01_k8sinstall/03_01_03_hpa_demo.html).
+Continue to [deploy and scaling application](/03_participanttasks/03_01_k8sinstall/03_01_03_HPA_demo).
 
 ### Review Questions
 

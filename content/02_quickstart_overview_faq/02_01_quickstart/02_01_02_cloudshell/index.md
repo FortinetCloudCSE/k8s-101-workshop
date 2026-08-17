@@ -9,28 +9,28 @@ Azure Cloud Shell is a browser-based command-line environment built into the Azu
 
 * Login to Azure Cloud Portal [https://portal.azure.com/](https://portal.azure.com/) with the provided login/password
 
-    ![cloudshell1](../../images/cloudshell-01.jpg)
-    ![cloudshell2](../../images/cloudshell-02.jpg)
+    {{< figure src="cloudshell-01.jpg" alt="cloudshell1" >}}
+    {{< figure src="cloudshell-02.jpg" alt="cloudshell2" >}}
 
 * Click the link "Skip for now (14 days until this is required)" do not click the "Next" button
 
-    ![cloudshell3](../../images/cloudshell-03.jpg)
+    {{< figure src="cloudshell-03.jpg" alt="cloudshell3" >}}
 
 * Click the "Next" button
 
-    ![cloudshell4](../../images/cloudshell-04.jpg)
+    {{< figure src="cloudshell-04.jpg" alt="cloudshell4" >}}
 
 * Click on Cloud Shell icon on the Top Right side of the portal
 
-    ![cloudshell5](../../images/cloudshell-05.jpg)
+    {{< figure src="cloudshell-05.jpg" alt="cloudshell5" >}}
 
 * Select **Bash**
 
-    ![cloudshell6](../../images/cloudshell-06.png)
+    {{< figure src="cloudshell-06.png" alt="cloudshell6" >}}
 
 * Click on **Mount Storage Account**
 
-    ![cloudshell7](../../images/cloudshell-07.png)
+    {{< figure src="cloudshell-07.png" alt="cloudshell7" >}}
 * Select
   * Storage Account Subscription - **Internal-Training**
   * Apply
@@ -38,7 +38,7 @@ Azure Cloud Shell is a browser-based command-line environment built into the Azu
 
 * Click **Select existing Storage account**, Click Next
 
-    ![cloudshell8](../../images/cloudshell-08.png)
+    {{< figure src="cloudshell-08.png" alt="cloudshell8" >}}
 
 * in Select Storage account Step, 
 
@@ -48,11 +48,11 @@ Azure Cloud Shell is a browser-based command-line environment built into the Azu
    * File share: Use **cloudshellshare**
    * Click Select
 
-    ![cloudshell9](../../images/cloudshell-09.png)
+    {{< figure src="cloudshell-09.png" alt="cloudshell9" >}}
 
  {{< notice warning >}} Please make sure to use the existing ones. you wont be able to create any Resource Group or Storage account
   {{< /notice >}}  
 
 * After 1-2 minutes, You should now have access to Azure Cloud Shell console
 
-    ![cloudshell10](../../images/cloudshell-10.png)
+    {{< figure src="cloudshell-10.png" alt="cloudshell10" >}}
