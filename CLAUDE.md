@@ -177,6 +177,6 @@ GITHUB_TOKEN=     # only for CentralRepo/scripts/batch_repo_update.py (not run f
 
 **Change the lab environment**: edit `terraform/azurevm_linux.tf` for VM shape/image, `scripts/install_kubeadm_*.sh` for cluster bootstrap. Both are walked through step-by-step in `content/03_participanttasks/` — update the content in the same change.
 
-**File a plan/spec/log**: root-level `plans/YYYY-MM-DD_<git-username>_<slug>.md` (plus `.log.md`, optional `.spec.md`). **Not** `docs/plans/` — see the `docs/` gotcha.
+**File a plan/spec/log**: root-level `plans/NNNN_YYYY-MM-DD_<git-username>_<slug>.md` (plus optional `.log.md`, `.spec.md`). **Not** `docs/plans/` — see the `docs/` gotcha. `NNNN` is a per-repo sequence; the log is optional; on completion, durable facts get promoted into this file and the plan is left to decay. `plans/README.md` has the details.
 
 **Debug a broken published page**: run the CI build command above and diff the log against the known-good baseline (exit 0, 48 pages, 25 non-page files, 3 WARNs). `errorLevel` in `repoConfig.json` is `warning`, so Hugo warnings never fail the build — a page can render wrong with a green CI check. To verify images, extract srcs from `/tmp/out/**/*.html` accounting for unquoted attributes, strip the `/k8s-101-workshop` prefix, and test each path against the output root.
