@@ -89,7 +89,7 @@ Phases 0-4 are already merged in `ai-101`. Nothing in that repo is touched here.
 
 ## Files Changed
 
-- `scripts/lint_paths.py` (new, 337 lines) — ported from `ai-101`, vocabulary emptied,
+- `scripts/lint_paths.py` (new, 322 lines) — ported from `ai-101`, vocabulary emptied,
   `PATH_TITLE_RE` guarded, docstring rewritten for this repo's situation
 - `scripts/lint_paths.py.ref` (deleted) — staging copy, no longer needed
 - `.github/workflows/path-lint.yml` (new) — runs the linter on `pull_request`
