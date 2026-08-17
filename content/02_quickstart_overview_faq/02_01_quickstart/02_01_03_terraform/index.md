@@ -9,7 +9,7 @@ All the components required for Lab are deployed through terraform.
 
 Lab Architecture:
 
-![lab001](../../images/K8s%20workshop-101.png)
+{{< figure src="K8s-workshop-101.png" alt="lab001" >}}
 
 Perform the following steps in your Cloudshell console to create your environment.
 
@@ -23,7 +23,7 @@ cd k8s-101-workshop/terraform
 terraform init
 ```
 
-![lab11](../../images/terraform1.png)
+{{< figure src="terraform1.png" alt="lab11" >}}
 
     
 4. Run the following command to apply it
@@ -44,15 +44,15 @@ terraform apply  -var='username=se31' --auto-approve
     {{% /notice %}} 
 
 
-![lab12](../../images/terraform2.png)
+{{< figure src="terraform2.png" alt="lab12" >}}
     
 5. Terraform deployment takes atleast 10-15 min to complete.
 
-![lab13](../../images/terraformoutput.png)
+{{< figure src="terraformoutput.png" alt="lab13" >}}
 
 6. Once Terraform is complete you should see the output. Please copy the output to notepad.
 
-![output](output.png)
+{{< figure src="output.png" alt="output" >}}
 
 7. To print the node VM's login password, you can run this command 
 
@@ -60,4 +60,4 @@ terraform apply  -var='username=se31' --auto-approve
    terraform output -raw linuxvm_password
    ```
 
-![](linux_passwd.png)
+{{< figure src="linux_passwd.png" >}}

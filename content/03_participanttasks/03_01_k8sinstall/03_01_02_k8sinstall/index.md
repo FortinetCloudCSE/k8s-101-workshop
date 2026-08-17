@@ -7,7 +7,7 @@ weight: 1
 
 ## Use kubeadm to install kubernetes
 
-![labafter](../../images/K8s%20workshopafter-101.png)
+{{< figure src="K8s-workshopafter-101.png" alt="labafter" >}}
 
 This task builds a simple Kubernetes cluster with one control-plane node and one worker node.
 
