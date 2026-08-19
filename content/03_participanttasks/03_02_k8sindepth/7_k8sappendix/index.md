@@ -36,6 +36,30 @@ The Pod's entry remains in the system for a period after termination, allowing y
 
 Through these stages, Kubernetes manages the application's lifecycle, ensuring that the desired state specified by the Deployment configurations is maintained. Monitoring the Pod's lifecycle helps in managing and troubleshooting applications running on Kubernetes.
 
+{{% notice style="info" title="Preflight check" %}}
+
+Every command on this page selects the `kubernetes-bootcamp` Deployment with `-l app=kubernetes-bootcamp`, but this page never creates it — and the clean up at the end of [Task 6 - Exposing application](/03_participanttasks/03_02_k8sindepth/03_02_06_exposingapp) deletes it. Check it is there first, otherwise every command below returns nothing:
+
+```bash
+kubectl get deployment kubernetes-bootcamp
+```
+
+Expected output:
+
+```
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   1/1     1            1           63m
+```
+
+If `kubectl` reports it was not found, recreate it before continuing:
+
+```bash
+kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 --replicas=1
+```
+
+Delete it again with `kubectl delete deployment kubernetes-bootcamp` when you are done with this page.
+{{% /notice %}}
+
 we can use `kubectl get pod -l app=kubernetes-bootcamp` and `kuectl describe pod -l app=kubernetes-bootcamp` to check the detail state for a Pod.
 
 #### Useful Command for Pod 

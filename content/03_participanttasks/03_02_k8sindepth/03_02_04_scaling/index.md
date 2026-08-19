@@ -20,6 +20,27 @@ using the kubectl autoscale command to automatically scale a deployment based on
 
 The Resource Metrics API in Kubernetes is crucial for providing core metrics about Pods and nodes within a cluster, such as CPU and memory usage to enable feature like Horizontal Pod Autoscaler (HPA), Vertical Pod Autoscaler (VPA) and enable efficent resource scheduling.
 
+{{% notice style="info" title="Preflight check" %}}
+
+This task installs the Metrics Server and then creates its own `nginx-deployment` Deployment, Service and HPA, so the `default` namespace must not already have them. Confirm the cluster from [Task 1 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall) is healthy and empty:
+
+```bash
+kubectl get nodes
+kubectl get deployment
+```
+
+Both nodes must report `Ready`, and no Deployment should be listed — `kubectl` reports the empty list on stderr:
+
+```
+NAME          STATUS   ROLES           AGE   VERSION
+node-worker   Ready    <none>          10m   v1.30.x
+node-master   Ready    control-plane   15m   v1.30.x
+No resources found in default namespace.
+```
+
+If a node is missing or `NotReady`, go back to Task 1 and finish it. If `nginx-deployment` is already listed, it is left over from [Task 2 - Scaling Application](/03_participanttasks/03_01_k8sinstall/03_01_03_HPA_demo), whose `scripts/deploy_application_with_hpa_masternode.sh` creates a deployment with the same name. Remove it with `kubectl delete deployment nginx-deployment` and `kubectl delete svc nginx-deployment` before continuing.
+{{% /notice %}}
+
 1. copy/paste below command to enable resource-api
 ```bash
 curl  --insecure --retry 3 --retry-connrefused -fL "https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml" -o components.yaml

@@ -60,6 +60,27 @@ Continuous Integration and Continuous Delivery of applications with zero downtim
 
 #### Perform Rolling Update
 
+{{% notice style="info" title="Preflight check" %}}
+
+Step 1 below creates the `kubernetes-bootcamp` Deployment and Service from scratch, so neither may already exist. Confirm the cluster from [Task 1 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall) is healthy and empty:
+
+```bash
+kubectl get nodes
+kubectl get deployment
+```
+
+Both nodes must report `Ready`, and no Deployment should be listed — `kubectl` reports the empty list on stderr:
+
+```
+NAME          STATUS   ROLES           AGE   VERSION
+node-worker   Ready    <none>          10m   v1.30.x
+node-master   Ready    control-plane   15m   v1.30.x
+No resources found in default namespace.
+```
+
+If a node is missing or `NotReady`, go back to Task 1 and finish it. If `kubernetes-bootcamp` is already listed from [Task 3 - Deploy and Scale Deployments](/03_participanttasks/03_02_k8sindepth/03_02_03_deployment), run `kubectl delete deployment kubernetes-bootcamp` and `kubectl delete svc kubernetes-bootcamp` first — `kubectl create deployment` and `kubectl expose` both fail when the object already exists.
+{{% /notice %}}
+
 1. Create deployment with image set to kubernetes-bootcamp:v1
 {{< tabs >}}
 {{% tab title="create" %}}

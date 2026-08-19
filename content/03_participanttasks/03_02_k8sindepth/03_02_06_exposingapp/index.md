@@ -8,6 +8,44 @@ weight: 6
 
 Learn to expose your deployment through NodePort, LoadBalancer, and Ingress methods, and how to secure services with HTTPS certificates
 
+{{% notice style="info" title="Preflight check — do not re-install the addons if they are already present" %}}
+
+Task 2 may have already installed MetalLB, the Kong ingress controller and cert-manager on this cluster, at **newer versions** than the manifests used later on this page. Run these three checks first and follow the matching branch below.
+
+```bash
+kubectl get ipaddresspool -n metallb-system
+kubectl get svc kong-proxy -n kong
+kubectl get namespace cert-manager
+```
+
+**If the addons are present** (MetalLB shows the `first-pool` IP pool, Kong shows a `kong-proxy` LoadBalancer with an external IP, and the `cert-manager` namespace exists), for example:
+
+```
+NAME         AUTO ASSIGN   AVOID BUGGY IPS   ADDRESSES
+first-pool   true          false             ["10.0.0.5/32"]
+
+kong-proxy   LoadBalancer   10.97.121.60   10.0.0.5      80:32477/TCP,443:31364/TCP   2m10s
+```
+
+then **skip the install steps on this page and continue from the configuration/verification steps**:
+
+- Under **metallb loadbalancer** — skip step 1 *Install metallb LoadBalancer* and step 2 *create ippool for metallb*. Continue from step 3 *Verify created ipaddresspool*.
+- Under **Install Kong ingress controller** — skip step 1 *Install Kong as Ingress Controller*. Continue from step 2 *check installed load balancer*.
+- Under **Install cert-manager** — skip step 8 *deploy cert-manager*. Continue from step 9 *Create certficate*.
+
+Everything else on this page still applies, including the whole **NodePort** section, which does not depend on these addons.
+
+**If the addons are absent** — for example because you ran the *Cleanup Addons* step of [Task 2](/03_participanttasks/03_01_k8sinstall/03_01_03_HPA_demo), so the commands above report *not found* / no resources — then run every step on this page exactly as written, including the install steps.
+
+Never "fix" a version difference by re-applying the older manifests below over a newer installation, and do not delete a working newer installation in order to install the older one: leftover CRDs from the newer release can break the older controller in ways that are hard to diagnose during the lab.
+
+{{% /notice %}}
+
+{{% notice style="warning" title="Version note" %}}
+
+The install commands and the configuration steps on this page were authored against MetalLB v0.14.3, Kong ingress controller v2.10.0 and cert-manager v1.3.1. If Task 2 already installed the newer versions, the configuration steps below (ingress annotations, `ingressClassName`, `apiVersion` values) may need small adjustments for the newer Kong and cert-manager releases. If a step does not behave as documented, check the resource with `kubectl describe` before changing anything, and raise it with your lab administrator.
+
+{{% /notice %}}
 
 - In the previous chapter, we discussed Kubernetes ClusterIP services. This chapter will focus on exposing applications externally using NodePort, LoadBalancer, and Ingress services..
 {{< tabs >}}
@@ -127,6 +165,21 @@ kubernetes-bootcamp-nodeportsvc   10.244.152.116:8080,10.244.152.117:8080   20m
 ```
 {{% /tab %}}
 {{< /tabs >}}
+
+{{% notice style="warning" title="If the curl to port 30913 times out" %}}
+
+Reaching `http://$(whoami)-master.eastus.cloudapp.azure.com:30913` from the Azure Cloud Shell requires inbound TCP port **30913** to be permitted by the network security group attached to the lab subnet. **This workshop's Terraform does not create or modify any network security group** — it only reads the pre-created resource group — so port 30913 is not opened by anything in this repository.
+
+A timeout does not by itself mean the NodePort service is broken. Use the **check endpoints** step above to tell the two apart:
+
+```bash
+kubectl get ep -l app=kubernetes-bootcamp
+```
+
+If endpoints are listed, the service is healthy and the timeout is a network-path problem rather than a Kubernetes one. Ask your lab administrator to allow inbound TCP 30913 on the lab subnet's network security group if you need external access to the NodePort.
+
+{{% /notice %}}
+
 #### summary 
 
 Using NodePort services in Kubernetes, while useful for certain scenarios, comes with several disadvantages, especially when considering the setup where traffic is directed through the IP of a single worker node has limitation of Inefficient Load Balancing, Exposure to External Traffic,Lack of SSL/TLS Termination etc., so NodePort services are often not suitable for production environments, especially for high-traffic applications that require robust load balancing, automatic scaling, and secure exposure to the internet. For scenarios requiring exposure to external traffic, using an Ingress controller or a cloud provider's LoadBalancer service is generally recommended. These alternatives offer more flexibility, better load distribution, and additional features like SSL/TLS termination and path-based routing, making them more suitable for production-grade applications.
