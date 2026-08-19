@@ -1,7 +1,7 @@
 ---
 title: "Appendix - More info"
 linkTitle: "Appendix - More info"
-weight: 7
+weight: 8
 ---
 
 
