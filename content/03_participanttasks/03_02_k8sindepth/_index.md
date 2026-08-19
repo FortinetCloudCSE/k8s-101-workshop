@@ -1,7 +1,7 @@
 ---
-title: "2.2 Kubernetes in depth"
+title: "Kubernetes in depth"
 chapter: false
-linkTitle: "2.2 Kubernetes in depth"
+linkTitle: "Kubernetes in depth"
 weight: 3
 ---
 

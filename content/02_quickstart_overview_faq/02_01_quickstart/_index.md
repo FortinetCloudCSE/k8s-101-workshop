@@ -1,5 +1,5 @@
 ---
-title: "1.Quickstart"
+title: "Quickstart"
 weight: 1
 ---
 
