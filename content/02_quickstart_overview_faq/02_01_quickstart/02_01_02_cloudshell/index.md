@@ -43,7 +43,7 @@ Azure Cloud Shell is a browser-based command-line environment built into the Azu
 * in Select Storage account Step, 
 
    * Subscription: **Internal-Training**
-   * Resource Group: Select the Resource group from the drop down: **K8sXX-K8s101-workshop**
+   * Resource Group: Select the Resource group from the drop down: **k8sXX-k8s101-workshop**, where `k8sXX` is your assigned lab username
    * Storage Account: Use existing storage account from dropdown.
    * File share: Use **cloudshellshare**
    * Click Select
