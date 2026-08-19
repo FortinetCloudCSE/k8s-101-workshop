@@ -1,6 +1,6 @@
 ---
-title: "Task 2 - Deploy and Scalling Application"
-linkTitle: "Task 2 - Scaling Application"
+title: "Task 4 - Deploy and Scaling Application"
+linkTitle: "Task 4 - Scaling Application"
 weight: 2
 ---
 
@@ -16,6 +16,32 @@ The updated script keeps the original workshop flow but updates the supporting c
 - Kong Ingress Controller for ingress testing
 - cert-manager for a self-signed test certificate
 - nginx deployment and HPA
+
+{{% notice style="info" title="Preflight check" %}}
+
+This task builds on the two-node cluster from [Task 3 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall). Confirm that cluster is healthy and that the `default` namespace is still empty before you run the deploy script. From Azure Cloud Shell:
+
+```bash
+kubectl get nodes
+kubectl get pods
+```
+
+Both nodes must report `Ready`:
+
+```
+NAME          STATUS   ROLES           AGE   VERSION
+node-worker   Ready    <none>          10m   v1.30.x
+node-master   Ready    control-plane   15m   v1.30.x
+```
+
+The `default` namespace should have no workloads yet. `kubectl` reports an empty list on stderr:
+
+```
+No resources found in default namespace.
+```
+
+If a node is missing or `NotReady`, go back to Task 3 and finish it before continuing.
+{{% /notice %}}
 
 ## Deploy the application and HPA demo
 
@@ -129,13 +155,19 @@ tigera-operator      tigera-operator-576646c5b6-6twqm           1/1     Running 
 {{% tab title="4.helm version" %}}
 ```bash
 helm version
+helm list
 ```
 {{% /tab %}}
 {{% tab title="4.Expected Output" style="info" %}}
-Expected output
+Both commands must succeed. The exact version numbers depend on the helm build installed in your environment, so do not compare them literally — what matters is that `helm version` prints a `version.BuildInfo{...}` line rather than `command not found`, and that `helm list` returns without a connection error.
+
+`helm version` prints one line in this shape:
+
 ```
-version.BuildInfo{Version:"v4.1", GitCommit:"c94d381b03be117e7e57908edbf642104e00eb8f", GitTreeState:"clean", GoVersion:"go1.26.4", KubeClientVersion:"v1.35"}
+version.BuildInfo{Version:"...", GitCommit:"...", GitTreeState:"clean", GoVersion:"...", KubeClientVersion:"..."}
 ```
+
+`helm list` confirms helm can reach the cluster with your kubeconfig. With no releases installed it prints only the column header and exits `0`. An error mentioning the Kubernetes API server instead means your kubeconfig is not working — recheck the kubeconfig step in Task 3.
 {{% /tab %}}
 {{% tab title="5.Ingressclass" %}}
 ```bash
@@ -143,10 +175,14 @@ kubectl get ingressclass
 ```
 {{% /tab %}}
 {{% tab title="5.Expected Output" style="info" %}}
-Expected output
+Expected output — the deploy script you ran above installs the Kong Ingress Controller, so one IngressClass named `kong` must already exist:
+
 ```
-No resources found
+NAME   CONTROLLER                            PARAMETERS   AGE
+kong   ingress-controllers.konghq.com/kong   <none>       9h
 ```
+
+The `AGE` column just reflects how long ago the deploy script installed Kong, so your value will differ. If this list is empty, the Kong step of the deploy script did not complete — rerun it before continuing.
 {{% /tab %}}
 {{% tab title="6.Storage Class" %}}
 ```bash

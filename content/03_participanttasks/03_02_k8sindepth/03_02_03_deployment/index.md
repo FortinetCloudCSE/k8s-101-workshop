@@ -1,6 +1,6 @@
 ---
-title: "Task 3 - Deploy and Scale Deployments"
-linkTitle: "Task 3 - Deploy and Scale Deployments"
+title: "Task 7 - Deploy and Scale Deployments"
+linkTitle: "Task 7 - Deploy and Scale Deployments"
 weight: 3
 ---
 
@@ -13,6 +13,27 @@ Description: This module zeroes in on Deployments as the primary mechanism for d
 We've previously seen how to use kubectl create deployment Kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1 to create a deployment directly from the command line. However, Kubernetes also supports deploying applications using YAML or JSON manifests. This approach provides greater flexibility than using the kubectl CLI alone and facilitates version control of your deployment configurations.
 
 By defining deployments in YAML or JSON files, you can specify detailed configurations, manage them through source control systems, and apply changes systematically. This method enhances the maintainability and reproducibility of your deployments within a Kubernetes environment.
+
+{{% notice style="info" title="Preflight check" %}}
+
+This task creates the `kubernetes-bootcamp` Deployment from scratch, so the `default` namespace must not already have one. Confirm the cluster from [Task 3 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall) is healthy and empty:
+
+```bash
+kubectl get nodes
+kubectl get deployment
+```
+
+Both nodes must report `Ready`, and no Deployment should be listed — `kubectl` reports the empty list on stderr:
+
+```
+NAME          STATUS   ROLES           AGE   VERSION
+node-worker   Ready    <none>          10m   v1.30.x
+node-master   Ready    control-plane   15m   v1.30.x
+No resources found in default namespace.
+```
+
+If a node is missing or `NotReady`, go back to Task 3 and finish it. If `kubernetes-bootcamp` is already listed from an earlier task, delete it with `kubectl delete deployment kubernetes-bootcamp` first — `kubectl create` below fails when the object already exists.
+{{% /notice %}}
 
 1. Deployment kubernetes-bootcamp application
 

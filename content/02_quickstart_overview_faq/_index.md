@@ -5,30 +5,36 @@ weight: 2
 
 
 
-## 1 [Workshop Quickstart and Setup](02_quickstart_overview_faq/02_01_quickstart.html)
+## [Workshop Quickstart and Setup](/02_quickstart_overview_faq/02_01_quickstart)
 
- - 1.1 Setup Azure Cloud Shell
- - 1.2 Use Terraform to initialize two VMs for a self-managed Kubernetes installation
+ - Setup Azure Cloud Shell
+ - Use Terraform to initialize two VMs for a self-managed Kubernetes installation
 
- <!--  ## 2 [K8s Learning](02_quickstart_overview_faq/02_02_k8s_overview.html)
+ <!--  ## K8s Learning (02_quickstart_overview_faq/02_02_k8s_overview.html)
 
- - 2.1 Introduction to Kubernetes and its fundamental workings
- - 2.2 Quickstart with Azure AKS to cover basic Kubernetes concepts -->
+ - Introduction to Kubernetes and its fundamental workings
+ - Quickstart with Azure AKS to cover basic Kubernetes concepts -->
 
-## 2 [Self-Managed K8s Workshop Hands-on](03_participanttasks/03_01_k8sinstall.html)
- - 2.1 Task 1 : Install a self-managed Kubernetes cluster using **kubeadm**
- - 2.2 Task 2 : Deploy and Scale application
- - 2.3 K8s in Depth:  Deep dive into Kubernetes, including application deployment, upgrades, and exposure
+## [Self-Managed K8s Workshop Hands-on](/03_participanttasks/03_01_k8sinstall)
+
+[K8s install](/03_participanttasks/03_01_k8sinstall)
+
+ - Task 3 : Install a self-managed Kubernetes cluster using **kubeadm**
+ - Task 4 : Deploy and Scale application
+
+[Kubernetes in depth](/03_participanttasks/03_02_k8sindepth)
+
+ - Deep dive into Kubernetes, including application deployment, upgrades, and exposure
 
 ## Guidance for Participants:
 
 - Beginners: 
 
-If you're new to Kubernetes, you are encouraged to follow the workshop through sections 1, 2, 3.1, and 3.2. then take 3.3 with extend hours.
+If you're new to Kubernetes, work straight through in order: [Workshop Quickstart and Setup](/02_quickstart_overview_faq/02_01_quickstart), then [K8s install](/03_participanttasks/03_01_k8sinstall), then as much of [Kubernetes in depth](/03_participanttasks/03_02_k8sindepth) as time allows.
 
 - Experienced Users: 
 
-If you have prior Kubernetes experience, you may skip section 2 and progress directly from section 1 to section 3.
+If you have prior Kubernetes experience, move quickly through [K8s install](/03_participanttasks/03_01_k8sinstall) and spend your time in [Kubernetes in depth](/03_participanttasks/03_02_k8sindepth). Do not skip [Workshop Quickstart and Setup](/02_quickstart_overview_faq/02_01_quickstart) — it runs the provisioning form and the Terraform that creates the two Azure VMs every later task depends on.
 
 
 

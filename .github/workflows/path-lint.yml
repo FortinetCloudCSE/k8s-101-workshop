@@ -10,8 +10,19 @@
 # FILES_TO_COPY, so anything added there is reverted by the next template upgrade.
 name: Path lint
 
+# GitHub Actions does not expand YAML anchors, so the two path lists are
+# duplicated by necessity — keep them in sync.
 on:
   pull_request:
+    paths:
+      - "content/**"
+      - "layouts/shortcodes/pathtab*.html"
+      - "scripts/lint_paths.py"
+      - ".github/workflows/path-lint.yml"
+  # Direct pushes to main skip the pull_request trigger entirely — ai-101's
+  # d512c5c did exactly that and left a stale generated handout.
+  push:
+    branches: [main]
     paths:
       - "content/**"
       - "layouts/shortcodes/pathtab*.html"

@@ -1,6 +1,6 @@
 ---
-title: "Task 1 - Creating and Managing Pods"
-linkTitle: "Task 1 - Pods and init container"
+title: "Task 5 - Creating and Managing Pods"
+linkTitle: "Task 5 - Pods and init container"
 weight: 1
 ---
 
@@ -26,6 +26,27 @@ Pods in a Kubernetes cluster are used in two main ways:
 **Pods that run a single container:** The "one-container-per-Pod" model is the most common Kubernetes use case; in this case, you can think of a Pod as a wrapper around a single container; Kubernetes manages Pods rather than managing the containers directly.
 
 **Pods that run multiple containers:** that need to work together. A Pod can encapsulate an application composed of multiple co-located containers that are tightly coupled and need to share resources. These co-located containers form a single cohesive unit.
+
+{{% notice style="info" title="Preflight check" %}}
+
+This task needs the two-node cluster from [Task 3 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall). Confirm it is healthy and that the `default` namespace is empty before you create the first Pod. From Azure Cloud Shell:
+
+```bash
+kubectl get nodes
+kubectl get pods
+```
+
+Both nodes must report `Ready`, and there should be no Pods yet — `kubectl` reports the empty list on stderr:
+
+```
+NAME          STATUS   ROLES           AGE   VERSION
+node-worker   Ready    <none>          10m   v1.30.x
+node-master   Ready    control-plane   15m   v1.30.x
+No resources found in default namespace.
+```
+
+If a node is missing or `NotReady`, go back to Task 3 and finish it. If a Pod named `nginx` or `nginx-pod-manual` is already listed from an earlier run, delete it with `kubectl delete pod nginx` or `kubectl delete pod nginx-pod-manual` first, otherwise the manifests below fail as already existing.
+{{% /notice %}}
 
 Copy the below manifest file to create a Pod.
 

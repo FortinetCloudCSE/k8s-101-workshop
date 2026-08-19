@@ -1,6 +1,6 @@
 ---
-title: "Task 1 - Install Kubernetes"
-linkTitle: "Task 1 - K8s Installation"
+title: "Task 3 - Install Kubernetes"
+linkTitle: "Task 3 - K8s Installation"
 weight: 1
 ---
 
@@ -37,6 +37,26 @@ export K8S_MINOR=v1.30
 ### Use Azure Cloud Shell as kubernetes client
 
 To use Azure Cloud Shell as a Kubernetes client, ensure you have completed your [Terraform deployment in Azure Cloud Shell](/02_quickstart_overview_faq/02_01_quickstart/02_01_03_terraform). Azure Cloud Shell comes with kubectl pre-installed, facilitating Kubernetes operations.
+
+{{% notice style="info" title="Preflight check" %}}
+
+There is no cluster yet, so this check is about the two lab VMs. Confirm Terraform finished and that both VM DNS names are published. From Azure Cloud Shell:
+
+```bash
+cd $HOME/k8s-101-workshop/terraform/
+terraform output -raw linuxvm_master_FQDN; echo
+terraform output -raw linuxvm_worker_FQDN; echo
+```
+
+Expected output — one name per node, with your own username in place of `k8sxx`:
+
+```
+k8sxx-master.eastus.cloudapp.azure.com
+k8sxx-worker.eastus.cloudapp.azure.com
+```
+
+If either command errors or prints nothing, the VMs are not there. Finish [Task 2 - Run Terraform](/02_quickstart_overview_faq/02_01_quickstart/02_01_03_terraform) before continuing.
+{{% /notice %}}
 
 1. Navigate to your project directory where your Kubernetes workshop materials are located:
 

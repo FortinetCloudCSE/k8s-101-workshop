@@ -6,6 +6,7 @@
   "logoBannerText":"K8s 101",
   "logoBannerSubText":"",
   "errorLevel":"warning",
+  "errorignore": ["^k8s-101\\.pdf$"],
   "googleServicesID":"G-5RZBH288ST",
   "marketingCode": "FortiHugo202",
   "videoHeaderSrc": "/videos/CloudsAnimated.mp4",
