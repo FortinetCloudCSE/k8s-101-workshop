@@ -1,6 +1,6 @@
 ---
-title: "Task 2 - Deploy and Scalling Application"
-linkTitle: "Task 2 - Scaling Application"
+title: "Task 4 - Deploy and Scaling Application"
+linkTitle: "Task 4 - Scaling Application"
 weight: 2
 ---
 
@@ -19,7 +19,7 @@ The updated script keeps the original workshop flow but updates the supporting c
 
 {{% notice style="info" title="Preflight check" %}}
 
-This task builds on the two-node cluster from [Task 1 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall). Confirm that cluster is healthy and that the `default` namespace is still empty before you run the deploy script. From Azure Cloud Shell:
+This task builds on the two-node cluster from [Task 3 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall). Confirm that cluster is healthy and that the `default` namespace is still empty before you run the deploy script. From Azure Cloud Shell:
 
 ```bash
 kubectl get nodes
@@ -40,7 +40,7 @@ The `default` namespace should have no workloads yet. `kubectl` reports an empty
 No resources found in default namespace.
 ```
 
-If a node is missing or `NotReady`, go back to Task 1 and finish it before continuing.
+If a node is missing or `NotReady`, go back to Task 3 and finish it before continuing.
 {{% /notice %}}
 
 ## Deploy the application and HPA demo
@@ -167,7 +167,7 @@ Both commands must succeed. The exact version numbers depend on the helm build i
 version.BuildInfo{Version:"...", GitCommit:"...", GitTreeState:"clean", GoVersion:"...", KubeClientVersion:"..."}
 ```
 
-`helm list` confirms helm can reach the cluster with your kubeconfig. With no releases installed it prints only the column header and exits `0`. An error mentioning the Kubernetes API server instead means your kubeconfig is not working — recheck the kubeconfig step in Task 1.
+`helm list` confirms helm can reach the cluster with your kubeconfig. With no releases installed it prints only the column header and exits `0`. An error mentioning the Kubernetes API server instead means your kubeconfig is not working — recheck the kubeconfig step in Task 3.
 {{% /tab %}}
 {{% tab title="5.Ingressclass" %}}
 ```bash

@@ -19,8 +19,8 @@ weight: 2
 
 [K8s install](/03_participanttasks/03_01_k8sinstall)
 
- - Task 1 : Install a self-managed Kubernetes cluster using **kubeadm**
- - Task 2 : Deploy and Scale application
+ - Task 3 : Install a self-managed Kubernetes cluster using **kubeadm**
+ - Task 4 : Deploy and Scale application
 
 [Kubernetes in depth](/03_participanttasks/03_02_k8sindepth)
 

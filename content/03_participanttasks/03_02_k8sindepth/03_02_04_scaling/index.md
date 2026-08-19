@@ -1,6 +1,6 @@
 ---
-title: "Task 4 - Auto Scaling Deployment"
-linkTitle: "Task 4 - Auto Scaling Deployment"
+title: "Task 8 - Auto Scaling Deployment"
+linkTitle: "Task 8 - Auto Scaling Deployment"
 weight: 4
 ---
 
@@ -22,7 +22,7 @@ The Resource Metrics API in Kubernetes is crucial for providing core metrics abo
 
 {{% notice style="info" title="Preflight check" %}}
 
-This task installs the Metrics Server and then creates its own `nginx-deployment` Deployment, Service and HPA, so the `default` namespace must not already have them. Confirm the cluster from [Task 1 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall) is healthy and empty:
+This task installs the Metrics Server and then creates its own `nginx-deployment` Deployment, Service and HPA, so the `default` namespace must not already have them. Confirm the cluster from [Task 3 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall) is healthy and empty:
 
 ```bash
 kubectl get nodes
@@ -38,7 +38,7 @@ node-master   Ready    control-plane   15m   v1.30.x
 No resources found in default namespace.
 ```
 
-If a node is missing or `NotReady`, go back to Task 1 and finish it. If `nginx-deployment` is already listed, it is left over from [Task 2 - Scaling Application](/03_participanttasks/03_01_k8sinstall/03_01_03_HPA_demo), whose `scripts/deploy_application_with_hpa_masternode.sh` creates a deployment with the same name. Remove it with `kubectl delete deployment nginx-deployment` and `kubectl delete svc nginx-deployment` before continuing.
+If a node is missing or `NotReady`, go back to Task 3 and finish it. If `nginx-deployment` is already listed, it is left over from [Task 4 - Scaling Application](/03_participanttasks/03_01_k8sinstall/03_01_03_HPA_demo), whose `scripts/deploy_application_with_hpa_masternode.sh` creates a deployment with the same name. Remove it with `kubectl delete deployment nginx-deployment` and `kubectl delete svc nginx-deployment` before continuing.
 {{% /notice %}}
 
 1. copy/paste below command to enable resource-api

@@ -1,6 +1,6 @@
 ---
-title: "Task 6 - Exposing Applications with Loadbalancer and Ingress"
-linkTitle: "Task 6 -  Exposing application"
+title: "Task 10 - Exposing Applications with Loadbalancer and Ingress"
+linkTitle: "Task 10 - Exposing application"
 weight: 6
 ---
 
@@ -10,7 +10,7 @@ Learn to expose your deployment through NodePort, LoadBalancer, and Ingress meth
 
 {{% notice style="info" title="Preflight check — do not re-install the addons if they are already present" %}}
 
-Task 2 may have already installed MetalLB, the Kong ingress controller and cert-manager on this cluster, at **newer versions** than the manifests used later on this page. Run these three checks first and follow the matching branch below.
+Task 4 may have already installed MetalLB, the Kong ingress controller and cert-manager on this cluster, at **newer versions** than the manifests used later on this page. Run these three checks first and follow the matching branch below.
 
 ```bash
 kubectl get ipaddresspool -n metallb-system
@@ -35,7 +35,7 @@ then **skip the install steps on this page and continue from the configuration/v
 
 Everything else on this page still applies, including the whole **NodePort** section, which does not depend on these addons.
 
-**If the addons are absent** — for example because you ran the *Cleanup Addons* step of [Task 2](/03_participanttasks/03_01_k8sinstall/03_01_03_HPA_demo), so the commands above report *not found* / no resources — then run every step on this page exactly as written, including the install steps.
+**If the addons are absent** — for example because you ran the *Cleanup Addons* step of [Task 4](/03_participanttasks/03_01_k8sinstall/03_01_03_HPA_demo), so the commands above report *not found* / no resources — then run every step on this page exactly as written, including the install steps.
 
 Never "fix" a version difference by re-applying the older manifests below over a newer installation, and do not delete a working newer installation in order to install the older one: leftover CRDs from the newer release can break the older controller in ways that are hard to diagnose during the lab.
 
@@ -43,7 +43,7 @@ Never "fix" a version difference by re-applying the older manifests below over a
 
 {{% notice style="warning" title="Version note" %}}
 
-The install commands and the configuration steps on this page were authored against MetalLB v0.14.3, Kong ingress controller v2.10.0 and cert-manager v1.3.1. If Task 2 already installed the newer versions, the configuration steps below (ingress annotations, `ingressClassName`, `apiVersion` values) may need small adjustments for the newer Kong and cert-manager releases. If a step does not behave as documented, check the resource with `kubectl describe` before changing anything, and raise it with your lab administrator.
+The install commands and the configuration steps on this page were authored against MetalLB v0.14.3, Kong ingress controller v2.10.0 and cert-manager v1.3.1. If Task 4 already installed the newer versions, the configuration steps below (ingress annotations, `ingressClassName`, `apiVersion` values) may need small adjustments for the newer Kong and cert-manager releases. If a step does not behave as documented, check the resource with `kubectl describe` before changing anything, and raise it with your lab administrator.
 
 {{% /notice %}}
 

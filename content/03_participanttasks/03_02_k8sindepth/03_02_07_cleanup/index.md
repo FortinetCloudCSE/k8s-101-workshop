@@ -1,6 +1,6 @@
 ---
-title: "Task 7 - Cleanup"
-linkTitle: "Task 7 - Cleanup"
+title: "Task 11 - Cleanup"
+linkTitle: "Task 11 - Cleanup"
 weight: 7
 ---
 

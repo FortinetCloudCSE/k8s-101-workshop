@@ -1,6 +1,6 @@
 ---
-title: "Task 2 - Configuration"
-linkTitle: "Task 2 - configmap and secret"
+title: "Task 6 - Configuration"
+linkTitle: "Task 6 - configmap and secret"
 weight: 2
 ---
 

@@ -38,7 +38,7 @@ Through these stages, Kubernetes manages the application's lifecycle, ensuring t
 
 {{% notice style="info" title="Preflight check" %}}
 
-Every command on this page selects the `kubernetes-bootcamp` Deployment with `-l app=kubernetes-bootcamp`, but this page never creates it — and the clean up at the end of [Task 6 - Exposing application](/03_participanttasks/03_02_k8sindepth/03_02_06_exposingapp) deletes it. Check it is there first, otherwise every command below returns nothing:
+Every command on this page selects the `kubernetes-bootcamp` Deployment with `-l app=kubernetes-bootcamp`, but this page never creates it — and the clean up at the end of [Task 10 - Exposing application](/03_participanttasks/03_02_k8sindepth/03_02_06_exposingapp) deletes it. Check it is there first, otherwise every command below returns nothing:
 
 ```bash
 kubectl get deployment kubernetes-bootcamp

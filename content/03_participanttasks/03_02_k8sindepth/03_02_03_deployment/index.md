@@ -1,6 +1,6 @@
 ---
-title: "Task 3 - Deploy and Scale Deployments"
-linkTitle: "Task 3 - Deploy and Scale Deployments"
+title: "Task 7 - Deploy and Scale Deployments"
+linkTitle: "Task 7 - Deploy and Scale Deployments"
 weight: 3
 ---
 
@@ -16,7 +16,7 @@ By defining deployments in YAML or JSON files, you can specify detailed configur
 
 {{% notice style="info" title="Preflight check" %}}
 
-This task creates the `kubernetes-bootcamp` Deployment from scratch, so the `default` namespace must not already have one. Confirm the cluster from [Task 1 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall) is healthy and empty:
+This task creates the `kubernetes-bootcamp` Deployment from scratch, so the `default` namespace must not already have one. Confirm the cluster from [Task 3 - Install Kubernetes](/03_participanttasks/03_01_k8sinstall/03_01_02_k8sinstall) is healthy and empty:
 
 ```bash
 kubectl get nodes
@@ -32,7 +32,7 @@ node-master   Ready    control-plane   15m   v1.30.x
 No resources found in default namespace.
 ```
 
-If a node is missing or `NotReady`, go back to Task 1 and finish it. If `kubernetes-bootcamp` is already listed from an earlier task, delete it with `kubectl delete deployment kubernetes-bootcamp` first — `kubectl create` below fails when the object already exists.
+If a node is missing or `NotReady`, go back to Task 3 and finish it. If `kubernetes-bootcamp` is already listed from an earlier task, delete it with `kubectl delete deployment kubernetes-bootcamp` first — `kubectl create` below fails when the object already exists.
 {{% /notice %}}
 
 1. Deployment kubernetes-bootcamp application
