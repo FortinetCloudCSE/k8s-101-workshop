@@ -48,6 +48,17 @@ sudo apt-get update -y
 sudo apt-get install -y \
   -o Dpkg::Options::="--force-confdef" \
   -o Dpkg::Options::="--force-confold" \
+  software-properties-common
+
+# hey is published in Ubuntu's Universe repository, which may be disabled on
+# minimal cloud images. add-apt-repository is idempotent when Universe is
+# already enabled.
+sudo add-apt-repository -y universe
+sudo apt-get update -y
+
+sudo apt-get install -y \
+  -o Dpkg::Options::="--force-confdef" \
+  -o Dpkg::Options::="--force-confold" \
   apt-transport-https ca-certificates curl gpg jq socat conntrack iproute2 hey
 
 cat <<'MODULES' | sudo tee /etc/modules-load.d/k8s.conf
