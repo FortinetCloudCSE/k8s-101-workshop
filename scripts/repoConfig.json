@@ -6,6 +6,7 @@
   "logoBannerText":"K8s 101",
   "logoBannerSubText":"",
   "errorLevel":"warning",
+  "provisionApiBaseUrl": "https://func-cse-lab-provisioning.azurewebsites.net",
   "errorignore": ["^k8s-101\\.pdf$"],
   "googleServicesID":"G-5RZBH288ST",
   "marketingCode": "FortiHugo202",
