@@ -135,12 +135,12 @@ from azure shell , access the application via nodeport service
 
 use
 ```bash
-curl http://$(whoami)-master.eastus.cloudapp.azure.com:30913
+curl http://$(whoami)-master.centralus.cloudapp.azure.com:30913
 ``` 
 or 
 
 ```bash
-curl http://$(whoami)-worker.eastus.cloudapp.azure.com:30913
+curl http://$(whoami)-worker.centralus.cloudapp.azure.com:30913
 ```
 {{% /tab %}}
 {{% tab title="Expected Output Service" style="info" %}}
@@ -168,7 +168,7 @@ kubernetes-bootcamp-nodeportsvc   10.244.152.116:8080,10.244.152.117:8080   20m
 
 {{% notice style="warning" title="If the curl to port 30913 times out" %}}
 
-Reaching `http://$(whoami)-master.eastus.cloudapp.azure.com:30913` from the Azure Cloud Shell requires inbound TCP port **30913** to be permitted by the network security group attached to the lab subnet. **This workshop's Terraform does not create or modify any network security group** — it only reads the pre-created resource group — so port 30913 is not opened by anything in this repository.
+Reaching `http://$(whoami)-master.centralus.cloudapp.azure.com:30913` from the Azure Cloud Shell requires inbound TCP port **30913** to be permitted by the network security group attached to the lab subnet. **This workshop's Terraform does not create or modify any network security group** — it only reads the pre-created resource group — so port 30913 is not opened by anything in this repository.
 
 A timeout does not by itself mean the NodePort service is broken. Use the **check endpoints** step above to tell the two apart:
 
@@ -303,7 +303,7 @@ kubernetes-bootcamp-lb-svc   LoadBalancer   10.106.121.27   10.0.0.5      80:325
 8. Verify with curl or external browser 
 
 ```bash
-curl http://$(whoami)-master.eastus.cloudapp.azure.com
+curl http://$(whoami)-master.centralus.cloudapp.azure.com
 ```
 {{% /tab %}}
 {{% tab title="Expected Output Curl" style="info" %}}
@@ -606,7 +606,7 @@ kubectl get ingress nginx
 expected outcome
 ```
 NAME    CLASS   HOSTS               ADDRESS    PORTS     AGE
-nginx   kong    k8s50-master.eastus.cloudapp.azure.com,k8s50-master.eastus.cloudapp.azure.com    10.0.0.5   80, 443   7m58s
+nginx   kong    k8s50-master.centralus.cloudapp.azure.com,k8s50-master.centralus.cloudapp.azure.com    10.0.0.5   80, 443   7m58s
 ```
 {{% /tab %}}
 {{% tab title="Check ingress" %}}
@@ -627,11 +627,11 @@ Address:          10.0.0.5
 Ingress Class:    kong
 Default backend:  <default>
 TLS:
-  SNI routes k8s50-master.eastus.cloudapp.azure.com
+  SNI routes k8s50-master.centralus.cloudapp.azure.com
 Rules:
   Host                                    Path  Backends
   ----                                    ----  --------
-  k8s50-master.eastus.cloudapp.azure.com  
+  k8s50-master.centralus.cloudapp.azure.com  
                                           /default   nginx-deployment:80 (10.244.152.118:80,10.244.152.119:80)
   
 Annotations:                              cert-manager.io/cluster-issuer: selfsigned-issuer-test
