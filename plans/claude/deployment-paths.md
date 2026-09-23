@@ -1,0 +1,20 @@
+# Deployment Paths — Detail
+
+> Detail doc for `CLAUDE.md`. Read before adding any second deployment path, any "choose your environment" branch, or any `tabs` group whose tabs are environments rather than commands.
+
+**This workshop has exactly ONE deployment path: self-managed `kubeadm` on the two Azure VMs Terraform creates.** Everything in `content/` assumes it. Read this section before adding any second path, any "choose your environment" branch, or any `tabs` group whose tabs are environments rather than commands.
+
+- **AKS is dead here and is NOT a live choice.** It survives only as prose: the "begin with Azure Managed Kubernetes (AKS)" sentence at `content/01_introduction/_index.md:41` is HTML-commented out, and the whole AKS overview walkthrough exists only as disabled `*.md.txt` under `content/02_quickstart_overview_faq/02_02_k8s_overview/`. Do not treat any of that as a supported path, and do not wire it back up as one without going through the mechanism below. (Deleting the dead references is a separate, deliberately deferred follow-up — don't do it as a drive-by.)
+
+- **Any future path branch MUST go through a `pathtabs`-style shortcode that carries relearn's `groupid`, never a bare `{{< tabs >}}`.** Relearn synchronizes tab groups site-wide *only* when they share a `groupid` (`layouts/shortcodes/tabs.html`, persisted to `localStorage["<absBaseUri>/tab-selections"]`). A group without one — or one whose stored `itemid` is absent because a title changed by a character or gained an icon — falls back to its **first** tab, **silently, on every page load**. That is not hypothetical: `ai-101` shipped six path tab pairs in exactly that state, and participants' chosen path reset itself mid-workshop with nothing in the build log to show it.
+
+- **`ai-101` is the reference implementation — copy from it, do not reinvent.** `~/pythonProjects/ai-101/layouts/shortcodes/pathtabs.html` + `pathtab.html` hardcode the `groupid` and the tab titles so an author *cannot* express the broken form, and they `errorf` on a missing or duplicated path, which fails the Hugo build rather than warning. (Note this repo has no `layouts/` at all today — everything comes from CentralRepo inside the image — so adding these creates the first repo-local layout override. That is fine and expected; there is an open follow-up to upstream them to CentralRepo instead.)
+
+- **`scripts/lint_paths.py` enforces this, and its path vocabulary is deliberately empty.** Run it with `python3 scripts/lint_paths.py`; `.github/workflows/path-lint.yml` runs it on every PR touching `content/**`, `layouts/shortcodes/pathtab*.html`, the linter, or itself. With an empty vocabulary only two of its five checks are live:
+  - **live** — `handwritten-groupid`: a literal `groupid="deploy-path"` anywhere. Paths go through the shortcode, never by hand.
+  - **live** — `tilde-in-quotes`: `cd "~` anywhere. Bash does not expand `~` inside double quotes, so a participant pasting that gets "No such file or directory". Checked inside code fences too, which is where it lives. (Currently zero occurrences here; `ai-101` had 13.)
+  - inert — `path-tab-outside-pathtabs` (`PATH_TITLE_RE = None`), `token-outside-path-block` (`PATH_TOKENS = []`), `stale-handouts` (no `scripts/gen_handouts.py` here).
+
+- **Do NOT re-enable `PATH_TITLE_RE` by copying `ai-101`'s pattern — it fails CI immediately.** Its `\b(docker|compose|kubernetes|k8s|helm)\b` matches two legitimate existing tab titles, `"4.helm version"` and `"K8s bootcamp deployment"`. This repo's 33 live `tabs` groups are a **command vs "Expected Output"** axis, not a path axis; a path-title heuristic has no signal here. Leave those 33 groups alone — they must never share a `deploy-path` groupid.
+
+- **Keep `scripts/lint_paths.py` diffable against `ai-101`'s copy.** The two are structurally identical by design so a fix to one ports cheaply; all divergence is confined to the `CONFIG` block plus one `PATH_TITLE_RE is not None` guard. Turning a path on here should be a config edit, not a re-port.
